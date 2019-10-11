@@ -190,14 +190,18 @@ def add_noise(ion_data, amount):
     noise_data = pd.DataFrame(columns = ion_data.columns)
     noise_data['mz'] = np.random.uniform(mz_min, mz_max, amount * ion_data.shape[0])
     for model in ic_cols:
-        min_value = ion_data[model].min()
-        noise_data[model] = np.abs(np.random.normal(min_value * 2, min_value / 5, 
+        min_value = ion_data[model].mean()
+        noise_data[model] = np.abs(np.random.normal(min_value / 10, min_value / 50, 
                                        amount * ion_data.shape[0]))
     
     noise_data['z'] = 0
     noise_data['sequence'] = ""
     
     ion_data = pd.concat([ion_data, noise_data], ignore_index=True)
+    
+    ion_data.sort_values("mz", inplace=True)
+    
+    return ion_data
     
 
 def get_ion_data(nPeptides):

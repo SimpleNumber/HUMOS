@@ -200,7 +200,7 @@ def update_figure(selected_resolution, selected_agc, distribution, mit_clicked,
     boxCar = (method == 'bc')
     resolution = params.resolutions_list[selected_resolution]
     agc = params.agc_list[selected_agc]
-    centroid_spectrum, real_st, real_agc = mechanics.get_full_spectrum(ion_data, distribution,agc, max_it)
+    centroid_spectrum, real_st, real_agc = mechanics.get_full_spectrum(ion_data, distribution, agc, max_it)
     real_agcs = [real_agc]
     real_sts = [real_st]
     main_spectrum = mechanics.get_profile_spectrum(centroid_spectrum, resolution)
