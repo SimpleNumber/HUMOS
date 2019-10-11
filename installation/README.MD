@@ -12,21 +12,21 @@ Depending on the server configuration you might need *sudo rights* to use `pip` 
     
 ## 2. Copying files
 
-Download the latest vesion of repository from BitBucket either manually using [Downloads section](https://bitbucket.org/J_Bale/humos/downloads/), or use `curl` (for example).
+Download the latest vesion of repository from Github either manually using [Clone or download](https://github.com/SimpleNumber/HUMOS/archive/master.zip), or use `curl` (for example).
 Unpack the zip into some folder, for example `HUMOS`
 
 ```shell
-    curl -L https://bitbucket.org/J_Bale/humos/get/tip.zip -o humos.zip #downloads the last version
-    unzip humos.zip #there is a folder with not that pretty name, like J_Bale-humos-xxxx
-    mkdir HUMOS #let's make it prettier, obviosly you have to adjust all pathes to your system
-    cp -r J_Bale-humos-xxxx/* HUMOS/
-    rm -r J_Bale-humos-xxxx
+##    curl -L https://github.com/SimpleNumber/HUMOS/archive/master.zip -o humos.zip #downloads the last version
+##    unzip humos.zip #there is a folder with not that pretty name, like J_Bale-humos-xxxx
+##    mkdir HUMOS #let's make it prettier, obviosly you have to adjust all pathes to your system
+##    cp -r J_Bale-humos-xxxx/* HUMOS/
+##    rm -r J_Bale-humos-xxxx
 ```
 
 You can clone the complete repository, if you like
 
 ```
-    hg clone https://bitbucket.org/J_Bale/humos
+    git clone https://github.com/SimpleNumber/HUMOS.git
 ```
 
 ## 3. Python packages
