@@ -4,8 +4,7 @@
 
 ## 1. Requirements 
 
-**HUMOS** has very moderate requirements regarding computational power, however, if you want to set it up for multiple concurent users, for example,
-to be used during the workshop, you should consider using server with several available processors. More detailed discussion can be found below (#4).
+**HUMOS** has very moderate requirements regarding computational power, however, if you want to set it up for multiple concurent users, for example, to be used during the workshop, you should consider using server with several available processors. More detailed discussion can be found below (#4).
 
 Use your favorite package manager to install `python3` and `pip`. You will need *sudo rights* to perform the installation.
 Depending on the server configuration you might need *sudo rights* to use `pip` as well. Please, ask your system adminstrator to help you, if necessary.
@@ -16,11 +15,11 @@ Download the latest vesion of repository from Github either manually using [Clon
 Unpack the zip into some folder, for example `HUMOS`
 
 ```shell
-##    curl -L https://github.com/SimpleNumber/HUMOS/archive/master.zip -o humos.zip #downloads the last version
-##    unzip humos.zip #there is a folder with not that pretty name, like J_Bale-humos-xxxx
-##    mkdir HUMOS #let's make it prettier, obviosly you have to adjust all pathes to your system
-##    cp -r J_Bale-humos-xxxx/* HUMOS/
-##    rm -r J_Bale-humos-xxxx
+    curl -L https://github.com/SimpleNumber/HUMOS/archive/master.zip #downloads the last version
+    unzip HUMOS-master.zip #this creates folder called HUMOS-master, 
+    mkdir HUMOS #let's move it to folder HUMOS for simplicity
+    mv HUMOS-master/* HUMOS/
+    rmdir HUMOS-master
 ```
 
 You can clone the complete repository, if you like
@@ -28,6 +27,7 @@ You can clone the complete repository, if you like
 ```
     git clone https://github.com/SimpleNumber/HUMOS.git
 ```
+All files necessary for the installation are located in *installation* folder. 
 
 ## 3. Python packages
 
