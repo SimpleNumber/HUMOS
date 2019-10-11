@@ -168,7 +168,7 @@ app.layout = html.Div([
     html.Div([
         html.P('Department of Biochemistry and Molecular Biology, University of Southern Denmark'),
         html.P(['Do you have any questions and suggestions about HUMOS? Contact us via ',
-			    html.A('Bitbucket', href='https://bitbucket.org/J_Bale/humos'), 
+			    html.A('Github', href='https://github.com/SimpleNumber/HUMOS'), 
 			   u' write to vgor (\u0430t) bmb.sdu.dk or juliabubis (\u0430t) gmail.com'
                ])
             ], style={'textAlign': 'center'}),
