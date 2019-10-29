@@ -11,24 +11,6 @@ from pyteomics import mass
 from IsoSpecPy import IsoSpecPy
 from base64 import b64encode
 from os.path import splitext
-
-# generating list of unique peptides from given fasta file
-# only necessary once or if you want to change the fasta
-'''
-from pyteomics import fasta, parser
-
-peptides = []
-with fasta.read('./helps/sprot_human_021115_magic_pep_reversed.fasta') as f:
-    for n,s in f:
-        peptides += parser.cleave(s,rule=parser.expasy_rules['trypsin'], \
-                                  min_length=6, missed_cleavages=1)
-
-peptides = pd.Series([x for x in set(peptides) if len(x) < 20 ], name='sequence')
-badAA = peptides['sequence'].str.findall("[^ACDEFGHIKLMNPQRSTVWY]").apply(len) > 0
-peptides.drop(peptides.index[badAA], axis='index', inplace=True)
-peptides.drop_duplicates().to_csv('./helps/peptides.csv', index=False)
-print(len(peptides))
-'''
       
 def get_ions(pep_mass, charge=2):
     '''
