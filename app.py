@@ -140,7 +140,7 @@ app.layout = html.Div([
     html.Div([
             html.Div([
                     html.Center([
-                            html.H5('Spectral Resolution'),
+                            html.H5('Mass Spectral Resolution'),
                             html.P('The graph shows two adjacent TMT 10-plex reporter ions',
                                    style={'font-style': 'italic'}),
                             dcc.Graph(id='resolution-graph')

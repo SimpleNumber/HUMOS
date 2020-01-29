@@ -1,9 +1,9 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
-
 '''
 This file contains all parameters used for simulation
 '''
+
 peptide_collection_size = 100 #number of modeled peptides
 TIC = 1e9 #total ion current
 low_mass = 350 #low mass cutoff
