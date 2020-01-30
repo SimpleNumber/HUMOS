@@ -128,6 +128,7 @@ app.layout = html.Div([
                     html.Br(),
                     html.Br(),
                     html.Div([
+                                html.P(id='cycletime'),
                                 html.P(id='ms1-scan-n'),
                                 html.P(id='ms2-scan-n')
                             
@@ -204,7 +205,7 @@ def update_figure(selected_resolution, selected_agc, distribution, mit_clicked,
     real_agcs = [real_agc]
     real_sts = [real_st]
     main_spectrum = mechanics.get_profile_spectrum(centroid_spectrum, resolution)
-    ms1_scan_n, ms2_scan_n = mechanics.get_MS_counts('full', real_st, topN, params.ms2length, params.LC_time, resolution)
+    cycletime, ms1_scan_n, ms2_scan_n = mechanics.get_MS_counts('full', real_st, topN, params.ms2length, params.LC_time, resolution)
     
     if relayout_data == None:
         x_range = [min(centroid_spectrum[:,0]), max(centroid_spectrum[:,0])]
@@ -232,7 +233,7 @@ def update_figure(selected_resolution, selected_agc, distribution, mit_clicked,
             real_agcs.append(bc_spectra[bc_index][2])
             real_sts.append(bc_spectra[bc_index][1])
 
-        ms1_scan_n, ms2_scan_n = mechanics.get_MS_counts('boxcar', real_sts[1:], 
+        cycletime, ms1_scan_n, ms2_scan_n = mechanics.get_MS_counts('boxcar', real_sts[1:], 
                                                          topN, params.ms2length, params.LC_time, resolution)
         
     table = mechanics.make_table(real_sts, real_agcs, ['MS1'] + labels_bc, resolution)
@@ -308,7 +309,7 @@ def update_figure(selected_resolution, selected_agc, distribution, mit_clicked,
                             yaxis={'title': 'Intensity'},
         )
     
-    }, 
+    }
     ]
 
 def update_ms_counts(topN, method, data, selected_resolution ):
@@ -321,13 +322,14 @@ def update_ms_counts(topN, method, data, selected_resolution ):
         data = pd.DataFrame(data)
         data = data.iloc[:, 1:].apply(pd.to_numeric)
         if boxCar:
-            ms1_scan_n, ms2_scan_n = mechanics.get_MS_counts('boxcar', data.iloc[0,:], 
+            cycletime, ms1_scan_n, ms2_scan_n = mechanics.get_MS_counts('boxcar', data.iloc[0,:], 
                                                          topN, params.ms2length, params.LC_time, resolution)
         else:
-            ms1_scan_n, ms2_scan_n = mechanics.get_MS_counts('full', data.iloc[0,0], topN, 
+            cycletime, ms1_scan_n, ms2_scan_n = mechanics.get_MS_counts('full', data.iloc[0,0], topN, 
                                                              params.ms2length, params.LC_time, resolution)
             
-    return  'MS1 Scans in {} minutes: {}'.format(params.LC_time, ms1_scan_n),\
+    return  'MS Cycle length: {:.3f} sec'.format(cycletime * 1e-3),\
+            'MS1 Scans in {} minutes: {}'.format(params.LC_time, ms1_scan_n),\
             'MS2 Scans in {} minutes: {}'.format(params.LC_time, ms2_scan_n)
 
 app.callback(
@@ -346,7 +348,8 @@ app.callback(
       State('topN-slider', 'value')])(update_figure)
 
 app.callback(
-    [Output('ms1-scan-n', 'children'),
+    [Output('cycletime', 'children'),
+     Output('ms1-scan-n', 'children'),
      Output('ms2-scan-n', 'children')],    
     [Input('topN-slider', 'value'), 
      Input('method-choice', 'value'),

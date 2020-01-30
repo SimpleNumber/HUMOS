@@ -378,7 +378,7 @@ def get_MS_counts(scan_method, scan_time, topN, ms2time, time, resolution):
     nMS1 = int(60000 * time / cycletime)
     nMS2 = int(topN * nMS1)
     
-    return nMS1, nMS2
+    return cycletime, nMS1, nMS2
 
 def make_table( real_ats, real_agcs, labels, resolution):
     real_sts = [max(acc_time, params.transients[resolution]) for acc_time in real_ats]
