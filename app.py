@@ -124,6 +124,7 @@ app.layout = html.Div([
                                 max=40,
                                 value=15,
                                 marks={5*i: '{}'.format(5*i) for i in range(1,9)},
+                                tooltip={i: "top" for i in range(1, 41)},
                                 )], style={'width': '80%','padding-left':'3%', 'padding-right':'1%'}),
                     html.Br(),
                     html.Br(),
