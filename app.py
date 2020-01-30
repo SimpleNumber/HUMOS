@@ -206,7 +206,6 @@ def update_figure(selected_resolution, selected_agc, distribution, mit_clicked,
     real_agcs = [real_agc]
     real_sts = [real_st]
     main_spectrum = mechanics.get_profile_spectrum(centroid_spectrum, resolution)
-    cycletime, ms1_scan_n, ms2_scan_n = mechanics.get_MS_counts('full', real_st, topN, params.ms2length, params.LC_time, resolution)
     
     if relayout_data == None:
         x_range = [min(centroid_spectrum[:,0]), max(centroid_spectrum[:,0])]
@@ -233,9 +232,6 @@ def update_figure(selected_resolution, selected_agc, distribution, mit_clicked,
                                           name=bc_label))
             real_agcs.append(bc_spectra[bc_index][2])
             real_sts.append(bc_spectra[bc_index][1])
-
-        cycletime, ms1_scan_n, ms2_scan_n = mechanics.get_MS_counts('boxcar', real_sts[1:], 
-                                                         topN, params.ms2length, params.LC_time, resolution)
         
     table = mechanics.make_table(real_sts, real_agcs, ['MS1'] + labels_bc, resolution)
     resolution_spectrum = mechanics.get_profile_spectrum(tmt_spectrum, resolution, points=51)
@@ -318,7 +314,7 @@ def update_ms_counts(topN, method, data, selected_resolution ):
     boxCar = (method == 'bc')
     resolution = params.resolutions_list[selected_resolution]
     if data == None:
-       return 'Select topN', ''
+       return 'Select topN', '', ''
     else:
         data = pd.DataFrame(data)
         data = data.iloc[:, 1:].apply(pd.to_numeric)
