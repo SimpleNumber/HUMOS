@@ -71,8 +71,8 @@ app.layout = html.Div([
                             id='distribution',
                             options=[
                                     {'label': 'Equimolar', 'value': 'equal'},
-                                    {'label': 'Typical', 'value': 'lognormal'},
-                                    {'label': 'Typical + few majors', 'value': 'lognormal-major'}
+                                    {'label': 'Regular', 'value': 'lognormal'},
+                                    {'label': 'Regular with majors', 'value': 'lognormal-major'}
                                     ],
                             value='lognormal', 
                             ),style={'width': '80%','padding-left':'3%', 'padding-right':'10%',
