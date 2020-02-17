@@ -88,8 +88,7 @@ app.layout = html.Div([
                             value=2,
                             marks={i: str(resolution) for i,resolution in enumerate(params.resolutions_list)},
                             step=1,
-                            ),], style={'width': '80%','padding-left':'3%', 'padding-right':'10%'}),
-                    html.Br(),
+                            ),], style={'width': '80%','padding-left':'3%', 'padding-right':'10%', 'padding-bottom':'1%'}),
                     html.Br(),
                     html.H5('AGC Target'),
                     html.Div([dcc.Slider(
@@ -98,7 +97,7 @@ app.layout = html.Div([
                                 max=len(params.agc_list)-1,
                                 value=2,
                                 marks={i: '{:.0e}'.format(agc) for i, agc in enumerate(params.agc_list)},
-                                )], style={'width': '80%','padding-left':'3%', 'padding-right':'1%'}),
+                                )], style={'width': '80%','padding-left':'3%', 'padding-right':'10%', 'padding-bottom':'1%'}),
                     html.Br(),
                     
                             html.H5('Max Injection Time (ms)'),
@@ -115,8 +114,7 @@ app.layout = html.Div([
                                     {'label': 'Usual MS1', 'value': 'ms1'},
                                     ],
                             value='ms1', 
-                            ),),
-                    html.Br(),
+                            ), ),
                     html.H5('TopN'),
                     html.Div([dcc.Slider(
                                 id='topN-slider',
@@ -125,8 +123,7 @@ app.layout = html.Div([
                                 value=15,
                                 marks={5*i: '{}'.format(5*i) for i in range(1,9)},
                                 tooltip={i: "top" for i in range(1, 41)},
-                                )], style={'width': '80%','padding-left':'3%', 'padding-right':'1%'}),
-                    html.Br(),
+                                )], style={'width': '80%','padding-left':'3%', 'padding-right':'10%'}),
                     html.Br(),
                     html.Div([
                                 html.P(id='cycletime'),
