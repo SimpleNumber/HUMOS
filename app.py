@@ -75,8 +75,7 @@ app.layout = html.Div([
                                     {'label': 'Regular with majors', 'value': 'lognormal-major'}
                                     ],
                             value='lognormal', 
-                            ),style={'width': '80%','padding-left':'3%', 'padding-right':'10%',
-                                    'font':'CorierNew'}),
+                            ),style={'width': '80%','padding-left':'3%', 'padding-right':'10%'}),
                     ], style={'width':'400px'}),
                     
             html.Div([
@@ -88,8 +87,8 @@ app.layout = html.Div([
                             value=2,
                             marks={i: str(resolution) for i,resolution in enumerate(params.resolutions_list)},
                             step=1,
-                            ),], style={'width': '80%','padding-left':'3%', 'padding-right':'10%', 'padding-bottom':'1%'}),
-                    html.Br(),
+                            ),], style={'width': '80%','padding-left':'3%', 'padding-right':'10%', 'padding-bottom':'3%'}),
+                    
                     html.H5('AGC Target'),
                     html.Div([dcc.Slider(
                                 id='AGC-slider',
@@ -97,17 +96,16 @@ app.layout = html.Div([
                                 max=len(params.agc_list)-1,
                                 value=2,
                                 marks={i: '{:.0e}'.format(agc) for i, agc in enumerate(params.agc_list)},
-                                )], style={'width': '80%','padding-left':'3%', 'padding-right':'10%', 'padding-bottom':'1%'}),
-                    html.Br(),
+                                )], style={'width': '80%','padding-left':'3%', 'padding-right':'10%', 'padding-bottom':'3%'}),
                     
-                            html.H5('Max Injection Time (ms)'),
-                            dcc.Input(id='mit-box', type='number',size='25', value=100),
-                            html.Button('set', id='it-button'),
+                    html.H5('Max Injection Time (ms)'),
+                    dcc.Input(id='mit-box', type='number',size='25', value=100),
+                    html.Button('set', id='it-button'),
 
                     ],style={'width':'400px'}),
             
              html.Div([
-                    html.H5('Acquiring Method'),
+                    html.H5('Acquisition Method'),
                     html.Div(dcc.RadioItems(id='method-choice',
                             options=[
                                     {'label': 'BoxCar', 'value': 'bc'},
@@ -123,8 +121,8 @@ app.layout = html.Div([
                                 value=15,
                                 marks={5*i: '{}'.format(5*i) for i in range(1,9)},
                                 tooltip={i: "top" for i in range(1, 41)},
-                                )], style={'width': '80%','padding-left':'3%', 'padding-right':'10%'}),
-                    html.Br(),
+                                )], style={'width': '80%','padding-left':'3%', 'padding-right':'10%', 'padding-bottom': '3%'}),
+                            
                     html.Div([
                                 html.P(id='cycletime'),
                                 html.P(id='ms1-scan-n'),
@@ -133,7 +131,7 @@ app.layout = html.Div([
                             ], style={'width': '80%','padding-left':'3%', 'padding-right':'1%'})
                     ], style={'width':'400px'}),       
                              
-            ], style={ 'display':'flex', 'flex-wrap': 'wrap', 'padding-bottom': '4rem'}),
+            ], style={ 'display':'flex', 'flex-wrap': 'wrap', 'padding-bottom': '4rem', 'justify-content': 'space-around'}),
     
     #smaller graphs
     html.Div([
@@ -157,7 +155,7 @@ app.layout = html.Div([
                     style={'width':'600px', 'height':'525px'}),
             
             
-        ],style={ 'display':'flex', 'flex-wrap': 'wrap'}),
+        ],style={ 'display':'flex', 'flex-wrap': 'wrap', 'justify-content': 'space-around'}),
 
     #footer part            
     html.Div([
