@@ -87,7 +87,7 @@ app.layout = html.Div([
                             value=2,
                             marks={i: str(resolution) for i,resolution in enumerate(params.resolutions_list)},
                             step=1,
-                            ),], style={'width': '80%','padding-left':'3%', 'padding-right':'10%', 'padding-bottom':'3%'}),
+                            ),], style={'width': '80%','padding-left':'3%', 'padding-right':'10%', 'padding-bottom':'2em'}),
                     
                     html.H5('AGC Target'),
                     html.Div([dcc.Slider(
@@ -96,7 +96,7 @@ app.layout = html.Div([
                                 max=len(params.agc_list)-1,
                                 value=2,
                                 marks={i: '{:.0e}'.format(agc) for i, agc in enumerate(params.agc_list)},
-                                )], style={'width': '80%','padding-left':'3%', 'padding-right':'10%', 'padding-bottom':'3%'}),
+                                )], style={'width': '80%','padding-left':'3%', 'padding-right':'10%', 'padding-bottom':'2em'}),
                     
                     html.H5('Max Injection Time (ms)'),
                     dcc.Input(id='mit-box', type='number',size='25', value=100),
@@ -121,14 +121,14 @@ app.layout = html.Div([
                                 value=15,
                                 marks={5*i: '{}'.format(5*i) for i in range(1,9)},
                                 tooltip={i: "top" for i in range(1, 41)},
-                                )], style={'width': '80%','padding-left':'3%', 'padding-right':'10%', 'padding-bottom': '3%'}),
+                                )], style={'width': '80%','padding-left':'3%', 'padding-right':'10%', 'padding-bottom': '2em'}),
                             
                     html.Div([
                                 html.P(id='cycletime'),
                                 html.P(id='ms1-scan-n'),
                                 html.P(id='ms2-scan-n')
                             
-                            ], style={'width': '80%','padding-left':'3%', 'padding-right':'1%'})
+                            ], style={'width': '80%','padding-left':'3%', 'padding-right':'10%'})
                     ], style={'width':'400px'}),       
                              
             ], style={ 'display':'flex', 'flex-wrap': 'wrap', 'padding-bottom': '4rem', 'justify-content': 'space-around'}),
