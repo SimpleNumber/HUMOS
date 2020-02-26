@@ -390,11 +390,3 @@ def make_table( real_ats, real_agcs, labels, resolution):
     df.columns = labels
     df.insert(0, ' ', ['Ion accumulation time, ms', 'Accumulated ions', 'Scan time, ms'])
     return df
-
-def load_image(path):
-    '''
-    Loads an image from path and return base64 encoded string
-    '''
-    with open(path, 'rb') as image:
-        imagetype = splitext(path)[-1][1:]
-        return 'data:image/{};base64,'.format(imagetype) + b64encode(image.read()).decode()

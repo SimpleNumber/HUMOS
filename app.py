@@ -35,7 +35,7 @@ app.layout = html.Div([
     #header part
     html.Div([
         html.H1('HUMOS: How to Understand My Orbitrap Spectrum?', style={'flex-grow': '1'}),
-        html.Img(src=mechanics.load_image('./helps/humos_logo.png'),
+        html.Img(src='/assets/humos_logo.png',
                  style={'height': '80px', 'padding-left': '2rem', 'padding-right': '2rem',
                         'transform': 'rotate(-10deg) skewY(4deg)'}),
              ], style={'display': 'flex'}),
@@ -161,7 +161,7 @@ app.layout = html.Div([
 
     #footer part            
     html.Div([
-        html.Img(src=mechanics.load_image('./helps/sdu_logo.png'),
+        html.Img(src='/assets/sdu_logo.png',
                     style={'height': '30px', 'padding-top': '4rem'}),
             ], style={'textAlign': 'center'}),
     html.Div([
