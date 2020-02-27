@@ -11,15 +11,16 @@ Depending on the server configuration you might need *sudo rights* to use `pip` 
     
 ## 2. Copying files
 
-Download the latest vesion of repository from Github either manually using [Clone or download](https://github.com/SimpleNumber/HUMOS/archive/master.zip), or use `curl` (for example).
+Download the latest vesion of repository from Github either manually using [Clone or download](https://github.com/SimpleNumber/HUMOS/archive/master.zip), or use `wget` (for example).
 Unpack the zip into some folder, for example `HUMOS`
 
 ```shell
-    curl -L https://github.com/SimpleNumber/HUMOS/archive/master.zip #downloads the last version
-    unzip HUMOS-master.zip #this creates folder called HUMOS-master, 
+    wget https://github.com/SimpleNumber/HUMOS/archive/master.zip #downloads the last version
+    unzip master.zip #this creates folder called HUMOS-master, 
     mkdir HUMOS #let's move it to folder HUMOS for simplicity
     mv HUMOS-master/* HUMOS/
     rmdir HUMOS-master
+    rm master.zip
 ```
 
 You can clone the complete repository, if you like
@@ -86,15 +87,30 @@ This also demonizes `gunicorn` master process, set logging into `.gunicorn-log` 
 
 In the repository you can find shell script `humos.sh`, that simplifies running HUMOS. You might need to adjust the `HUMOSPATH` and `NUMWORKERS` variables in the script to
 match your requirements. The usage is:
-```
+```shell
     humos.sh [start|restart|stop]
 ```
 
 ## 4b. Starting single instance
 
 If you do not want to use `gunicorn` you can start the app with `flask` server provided with `dash`:
-```
+```shell
     python app.py
 ```
 
 ## 5. Enjoy your fresh HUMOS
+
+# Docker container
+
+HUMOS exists as Docker container as well. Run the following command to pull the latest build of the container from Docker Hub
+
+```shell
+    docker pull SimpleNumber\humos
+```
+
+Container expose port 8000, that can be rebound to any other port when running container. By changing environmental variable NUMWORKERS one can modify number of concurent workers serving user requests
+(default is 2) Later you can run HUMOS container using the following command, [port] is the **external** port you want to bind to HUMOS inside the container, and [N] is number of workers
+
+```shell
+    docker run -p [port]:8000 --rm --env NUMWORKERS=[N] humos
+```
