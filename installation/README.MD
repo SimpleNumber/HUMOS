@@ -46,7 +46,7 @@ You will need to have the following python packages installed:
 They are listed in `requirements.txt` that is downloaded as a part of repository and you can install all of them using the following command:
 
 ```shell
-    pip instlall -r requirements.txt
+    pip install -r requirements.txt
 ```
 
 To serve the app using several processors we will use `gunicorn`, if you want to run with single processor you can skip this step.
