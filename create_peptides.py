@@ -23,5 +23,5 @@ with fasta.read(fastaPath) as f:
 peptides = pd.Series([x for x in set(peptides) if len(x) < maxlength], name='sequence')
 badAA = peptides['sequence'].str.findall("[^ACDEFGHIKLMNPQRSTVWY]").apply(len) > 0 #remove non-standard AA
 peptides.drop(peptides.index[badAA], axis='index', inplace=True)
-peptides.drop_duplicates().to_csv('./helps/peptides.csv', index=False) #remove duplicate sequences
+peptides.drop_duplicates().to_csv('./assets/peptides.csv', index=False) #remove duplicate sequences
 print("Number of peptides in the list: {}".format(len(peptides)))

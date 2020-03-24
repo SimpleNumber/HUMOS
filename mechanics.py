@@ -88,7 +88,7 @@ def get_peptides(peptide_collection_size):
     
     Return peptides list
     '''
-    peptides = pd.read_csv('./helps/peptides.csv')
+    peptides = pd.read_csv('./assets/peptides.csv')
     peptide_slice = np.random.choice(peptides.index, peptide_collection_size, replace=False)
     return peptides.loc[peptide_slice, :].reset_index(drop=True)
 
