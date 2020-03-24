@@ -1,6 +1,6 @@
-# Installation of HUMOS
+**HUMOS** is a web application that requires a server to run. There are two ways how you can get **HUMOS**: either pull the docker container or install an instance of it manually. The first option is easier, while the second one allows better tuning **HUMOS** for your needs. Please see the corresponding sections below for more information.
 
-**HUMOS** is a web application that requires a server to run. In this guide we will use Linux to set it up. 
+# Manual installation of HUMOS
 
 ## 1. Requirements 
 
@@ -11,15 +11,16 @@ Depending on the server configuration you might need *sudo rights* to use `pip` 
     
 ## 2. Copying files
 
-Download the latest vesion of repository from Github either manually using [Clone or download](https://github.com/SimpleNumber/HUMOS/archive/master.zip), or use `curl` (for example).
+Download the latest vesion of repository from Github either manually using [Clone or download](https://github.com/SimpleNumber/HUMOS/archive/master.zip), or use `wget` (for example).
 Unpack the zip into some folder, for example `HUMOS`
 
 ```shell
-    curl -L https://github.com/SimpleNumber/HUMOS/archive/master.zip #downloads the last version
-    unzip HUMOS-master.zip #this creates folder called HUMOS-master, 
+    wget https://github.com/SimpleNumber/HUMOS/archive/master.zip #downloads the last version
+    unzip master.zip #this creates folder called HUMOS-master, 
     mkdir HUMOS #let's move it to folder HUMOS for simplicity
     mv HUMOS-master/* HUMOS/
     rmdir HUMOS-master
+    rm master.zip
 ```
 
 You can clone the complete repository, if you like
@@ -46,7 +47,7 @@ You will need to have the following python packages installed:
 They are listed in `requirements.txt` that is downloaded as a part of repository and you can install all of them using the following command:
 
 ```shell
-    pip instlall -r requirements.txt
+    pip install -r requirements.txt
 ```
 
 To serve the app using several processors we will use `gunicorn`, if you want to run with single processor you can skip this step.
@@ -86,15 +87,53 @@ This also demonizes `gunicorn` master process, set logging into `.gunicorn-log` 
 
 In the repository you can find shell script `humos.sh`, that simplifies running HUMOS. You might need to adjust the `HUMOSPATH` and `NUMWORKERS` variables in the script to
 match your requirements. The usage is:
-```
+```shell
     humos.sh [start|restart|stop]
 ```
 
 ## 4b. Starting single instance
 
 If you do not want to use `gunicorn` you can start the app with `flask` server provided with `dash`:
-```
+```shell
     python app.py
 ```
 
 ## 5. Enjoy your fresh HUMOS
+
+# Docker container
+
+If you are unfamiliar with Docker containers, check [Docker website](https://www.docker.com/get-started) to learn more. You will need to install Docker Engine suitable for your system before you can use any containers.
+
+When you have Docker installed, run the following command to pull the latest build of the container from Docker Hub
+
+```shell
+    docker pull simplenumber/humos_dock
+```
+
+Container expose port 8000, that can be rebound to any other port when running container. Environmental variable NUMWORKERS allows changing number of concurent workers serving user requests (default is 2). Later you can run HUMOS container using the following command.
+
+```shell
+    docker run -d -p [port]:8000 --rm --env NUMWORKERS=[N] simplenumber/humos_dock
+```
+
+The arguments are:
+
+   `-d` runs container in detached mode, i.e. the container will run in background. If you prefer to run in foreground substitute this key with `-it`, to attach STDIN and assign TTY for it.
+
+   `-p [port]:8000` binds the exposed port 8000 to [port] on container host, for example, you can use `-p 80:8000` to run **HUMOS** on a standard port.
+   
+   `--rm` instruct Docker Engine to clean up the container and its filesystem when it quits (so next time you will start with fresh **HUMOS** again)
+   
+   `--env` allows sending environmental variables to container, for example, `--env NUMWORKERS=8` will set NUMWORKERS variable to 8 and, thus, 8 worker processes will be created. Section [4a](#4a-setting-up-green-unicorn) have a discussion on how many workers you need. If you are happy with the default value (2) just ommit this key.
+
+To stop the container running in detached mode you should first find the Container ID by running the command. The ID is in the very first column.
+
+```shell
+    docker container ls | grep simplenumber/humos_dock
+```
+
+Later you can stop the container by running the following with the Container ID
+
+```shell
+    docker container stop [ContainerID]
+```
