@@ -88,7 +88,7 @@ def get_peptides(peptide_collection_size):
     
     Return peptides list
     '''
-    peptides = pd.read_csv('./helps/peptides.csv')
+    peptides = pd.read_csv('./assets/peptides.csv')
     peptide_slice = np.random.choice(peptides.index, peptide_collection_size, replace=False)
     return peptides.loc[peptide_slice, :].reset_index(drop=True)
 
@@ -378,7 +378,7 @@ def get_MS_counts(scan_method, scan_time, topN, ms2time, time, resolution):
     nMS1 = int(60000 * time / cycletime)
     nMS2 = int(topN * nMS1)
     
-    return nMS1, nMS2
+    return cycletime, nMS1, nMS2
 
 def make_table( real_ats, real_agcs, labels, resolution):
     real_sts = [max(acc_time, params.transients[resolution]) for acc_time in real_ats]
@@ -390,11 +390,3 @@ def make_table( real_ats, real_agcs, labels, resolution):
     df.columns = labels
     df.insert(0, ' ', ['Ion accumulation time, ms', 'Accumulated ions', 'Scan time, ms'])
     return df
-
-def load_image(path):
-    '''
-    Loads an image from path and return base64 encoded string
-    '''
-    with open(path, 'rb') as image:
-        imagetype = splitext(path)[-1][1:]
-        return 'data:image/{};base64,'.format(imagetype) + b64encode(image.read()).decode()

@@ -35,7 +35,7 @@ app.layout = html.Div([
     #header part
     html.Div([
         html.H1('HUMOS: How to Understand My Orbitrap Spectrum?', style={'flex-grow': '1'}),
-        html.Img(src=mechanics.load_image('./helps/humos_logo.png'),
+        html.Img(src='/assets/humos_logo.png',
                  style={'height': '80px', 'padding-left': '2rem', 'padding-right': '2rem',
                         'transform': 'rotate(-10deg) skewY(4deg)'}),
              ], style={'display': 'flex'}),
@@ -71,12 +71,11 @@ app.layout = html.Div([
                             id='distribution',
                             options=[
                                     {'label': 'Equimolar', 'value': 'equal'},
-                                    {'label': 'Typical', 'value': 'lognormal'},
-                                    {'label': 'Typical + few majors', 'value': 'lognormal-major'}
+                                    {'label': 'Regular', 'value': 'lognormal'},
+                                    {'label': 'Regular with majors', 'value': 'lognormal-major'}
                                     ],
                             value='lognormal', 
-                            ),style={'width': '80%','padding-left':'3%', 'padding-right':'10%',
-                                    'font':'CorierNew'}),
+                            ),style={'width': '80%','padding-left':'3%', 'padding-right':'10%'}),
                     ], style={'width':'400px'}),
                     
             html.Div([
@@ -88,9 +87,8 @@ app.layout = html.Div([
                             value=2,
                             marks={i: str(resolution) for i,resolution in enumerate(params.resolutions_list)},
                             step=1,
-                            ),], style={'width': '80%','padding-left':'3%', 'padding-right':'10%'}),
-                    html.Br(),
-                    html.Br(),
+                            ),], style={'width': '80%','padding-left':'3%', 'padding-right':'10%', 'padding-bottom':'2em'}),
+                    
                     html.H5('AGC Target'),
                     html.Div([dcc.Slider(
                                 id='AGC-slider',
@@ -98,25 +96,23 @@ app.layout = html.Div([
                                 max=len(params.agc_list)-1,
                                 value=2,
                                 marks={i: '{:.0e}'.format(agc) for i, agc in enumerate(params.agc_list)},
-                                )], style={'width': '80%','padding-left':'3%', 'padding-right':'1%'}),
-                    html.Br(),
+                                )], style={'width': '80%','padding-left':'3%', 'padding-right':'10%', 'padding-bottom':'2em'}),
                     
-                            html.H5('Max Injection Time (ms)'),
-                            dcc.Input(id='mit-box', type='number',size='25', value=100),
-                            html.Button('set', id='it-button'),
+                    html.H5('Max Injection Time (ms)'),
+                    dcc.Input(id='mit-box', type='number',size='25', value=100),
+                    html.Button('set', id='it-button'),
 
                     ],style={'width':'400px'}),
             
              html.Div([
-                    html.H5('Acquiring Method'),
+                    html.H5('Acquisition Method'),
                     html.Div(dcc.RadioItems(id='method-choice',
                             options=[
                                     {'label': 'BoxCar', 'value': 'bc'},
                                     {'label': 'Usual MS1', 'value': 'ms1'},
                                     ],
                             value='ms1', 
-                            ),),
-                    html.Br(),
+                            ), ),
                     html.H5('TopN'),
                     html.Div([dcc.Slider(
                                 id='topN-slider',
@@ -124,17 +120,18 @@ app.layout = html.Div([
                                 max=40,
                                 value=15,
                                 marks={5*i: '{}'.format(5*i) for i in range(1,9)},
-                                )], style={'width': '80%','padding-left':'3%', 'padding-right':'1%'}),
-                    html.Br(),
-                    html.Br(),
+                                tooltip={i: "top" for i in range(1, 41)},
+                                )], style={'width': '80%','padding-left':'3%', 'padding-right':'10%', 'padding-bottom': '2em'}),
+                            
                     html.Div([
+                                html.P(id='cycletime'),
                                 html.P(id='ms1-scan-n'),
                                 html.P(id='ms2-scan-n')
                             
-                            ], style={'width': '80%','padding-left':'3%', 'padding-right':'1%'})
+                            ], style={'width': '80%','padding-left':'3%', 'padding-right':'10%'})
                     ], style={'width':'400px'}),       
                              
-            ], style={ 'display':'flex', 'flex-wrap': 'wrap', 'padding-bottom': '4rem'}),
+            ], style={ 'display':'flex', 'flex-wrap': 'wrap', 'padding-bottom': '4rem', 'justify-content': 'space-around'}),
     
     #smaller graphs
     html.Div([
@@ -158,11 +155,11 @@ app.layout = html.Div([
                     style={'width':'600px', 'height':'525px'}),
             
             
-        ],style={ 'display':'flex', 'flex-wrap': 'wrap'}),
+        ],style={ 'display':'flex', 'flex-wrap': 'wrap', 'justify-content': 'space-around'}),
 
     #footer part            
     html.Div([
-        html.Img(src=mechanics.load_image('./helps/sdu_logo.png'),
+        html.Img(src='/assets/sdu_logo.png',
                     style={'height': '30px', 'padding-top': '4rem'}),
             ], style={'textAlign': 'center'}),
     html.Div([
@@ -204,7 +201,6 @@ def update_figure(selected_resolution, selected_agc, distribution, mit_clicked,
     real_agcs = [real_agc]
     real_sts = [real_st]
     main_spectrum = mechanics.get_profile_spectrum(centroid_spectrum, resolution)
-    ms1_scan_n, ms2_scan_n = mechanics.get_MS_counts('full', real_st, topN, params.ms2length, params.LC_time, resolution)
     
     if relayout_data == None:
         x_range = [min(centroid_spectrum[:,0]), max(centroid_spectrum[:,0])]
@@ -231,9 +227,6 @@ def update_figure(selected_resolution, selected_agc, distribution, mit_clicked,
                                           name=bc_label))
             real_agcs.append(bc_spectra[bc_index][2])
             real_sts.append(bc_spectra[bc_index][1])
-
-        ms1_scan_n, ms2_scan_n = mechanics.get_MS_counts('boxcar', real_sts[1:], 
-                                                         topN, params.ms2length, params.LC_time, resolution)
         
     table = mechanics.make_table(real_sts, real_agcs, ['MS1'] + labels_bc, resolution)
     resolution_spectrum = mechanics.get_profile_spectrum(tmt_spectrum, resolution, points=51)
@@ -308,7 +301,7 @@ def update_figure(selected_resolution, selected_agc, distribution, mit_clicked,
                             yaxis={'title': 'Intensity'},
         )
     
-    }, 
+    }
     ]
 
 def update_ms_counts(topN, method, data, selected_resolution ):
@@ -316,18 +309,19 @@ def update_ms_counts(topN, method, data, selected_resolution ):
     boxCar = (method == 'bc')
     resolution = params.resolutions_list[selected_resolution]
     if data == None:
-       return 'Select topN', ''
+       return 'Select topN', '', ''
     else:
         data = pd.DataFrame(data)
         data = data.iloc[:, 1:].apply(pd.to_numeric)
         if boxCar:
-            ms1_scan_n, ms2_scan_n = mechanics.get_MS_counts('boxcar', data.iloc[0,:], 
+            cycletime, ms1_scan_n, ms2_scan_n = mechanics.get_MS_counts('boxcar', data.iloc[0,:], 
                                                          topN, params.ms2length, params.LC_time, resolution)
         else:
-            ms1_scan_n, ms2_scan_n = mechanics.get_MS_counts('full', data.iloc[0,0], topN, 
+            cycletime, ms1_scan_n, ms2_scan_n = mechanics.get_MS_counts('full', data.iloc[0,0], topN, 
                                                              params.ms2length, params.LC_time, resolution)
             
-    return  'MS1 Scans in {} minutes: {}'.format(params.LC_time, ms1_scan_n),\
+    return  'MS Cycle length: {:.3f} sec'.format(cycletime * 1e-3),\
+            'MS1 Scans in {} minutes: {}'.format(params.LC_time, ms1_scan_n),\
             'MS2 Scans in {} minutes: {}'.format(params.LC_time, ms2_scan_n)
 
 app.callback(
@@ -346,7 +340,8 @@ app.callback(
       State('topN-slider', 'value')])(update_figure)
 
 app.callback(
-    [Output('ms1-scan-n', 'children'),
+    [Output('cycletime', 'children'),
+     Output('ms1-scan-n', 'children'),
      Output('ms2-scan-n', 'children')],    
     [Input('topN-slider', 'value'), 
      Input('method-choice', 'value'),
