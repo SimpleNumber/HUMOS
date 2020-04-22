@@ -9,8 +9,6 @@ import numpy as np
 import params
 from pyteomics import mass
 from IsoSpecPy import IsoSpecPy
-from base64 import b64encode
-from os.path import splitext
       
 def get_ions(pep_mass, charge=2):
     '''
@@ -150,13 +148,16 @@ def expand_isotopes(peptide, charge_states=[2,3]):
     mz = np.concatenate([get_ions(mz0, z) for z in charge_states])
     ic = np.concatenate([int0 * peptide['{}+'.format(z)] for z in charge_states])
     charge = np.concatenate([np.repeat(z, mz0.shape[0]) for z in charge_states])
-    result = pd.DataFrame({'mz': mz, 'ic': ic, 'z': charge})
+    #TODO consider if isotopes are necessary
+    isotope = np.concatenate([np.arange(mz0.shape[0]),  np.arange(mz0.shape[0])])
+    result = pd.DataFrame({'mz': mz, 'ic': ic, 'z': charge, 'iso': isotope})
     result['sequence'] = peptide['sequence']
     for model in params.ion_models:
         result['ic_{}'.format(model)] = result['ic'] * peptide[model]
         
     return result
 
+#TODO consider if add_noise is necessary
 def add_noise(ion_data, amount):
     '''
     Add noise peaks
@@ -185,7 +186,6 @@ def add_noise(ion_data, amount):
     
     return ion_data
     
-
 def get_ion_data(nPeptides):
     '''
     Generate pandas.DataFrame with all ion data
@@ -285,7 +285,7 @@ def get_full_spectrum(ion_data, distribution, agc_target, max_it):
     max_it: float, maximal injection time in milliseconds
     
     Return
-        tuple of three elements
+        tuple of six elements
         1. 2D array of mz and intensities
                 [[mz0, intensity0],
                  [mz1, intensity1],
@@ -293,11 +293,20 @@ def get_full_spectrum(ion_data, distribution, agc_target, max_it):
                  [mzN, intensityN]]        
         2. required scan time in milliseconds
         3. acquired number of ions
+        4. set of observed peptide sequences
+        5. maximum observed ion intensity under the distrubution
+        6. minimum observed ion intensity under the distribution
     '''
     intensities, scan_time, agc = sample_ions(ion_data, distribution, agc_target, max_it)
     dyn_range_filter = intensities > max(intensities.max() * 1e-4, 10)
     mzdata = np.stack((ion_data['mz'].values, intensities), axis=-1)
-    return mzdata[dyn_range_filter, :], scan_time*1000, agc
+    scan_ion_data = ion_data[dyn_range_filter]
+    peptides = set(scan_ion_data['sequence'])
+    max_int = scan_ion_data['ic_' + distribution].\
+                                iloc[np.argmax(mzdata[dyn_range_filter, 1])]
+    min_int = scan_ion_data['ic_' + distribution].\
+                                iloc[np.argmin(mzdata[dyn_range_filter, 1])]                            
+    return mzdata[dyn_range_filter, :], scan_time*1000, agc, peptides, max_int, min_int
 
 def get_boxcar_spectra(ion_data, distribution, agc_target, max_it, nBoxes, nScans):
     '''
@@ -313,7 +322,7 @@ def get_boxcar_spectra(ion_data, distribution, agc_target, max_it, nBoxes, nScan
     nScans: int, number of scans
     
     Return
-        one tuple of three elements per each boxcar scan
+        one tuple of six elements per each boxcar scan
         1. 2D array of mz and intensities
                 [[mz0, intensity0],
                  [mz1, intensity1],
@@ -321,6 +330,9 @@ def get_boxcar_spectra(ion_data, distribution, agc_target, max_it, nBoxes, nScan
                  [mzN, intensityN]]        
         2. required scan time in milliseconds
         3. acquired number of ions
+        4. set of observed peptide sequences
+        5. maximum observed ion intensity under the distrubution
+        6. minimum observed ion intensity under the distribution
     '''
     BCscans = []
     for scan in range(nScans):
@@ -346,7 +358,14 @@ def get_boxcar_spectra(ion_data, distribution, agc_target, max_it, nBoxes, nScan
         scan_counts = np.concatenate(scan_counts)
         dyn_range_filter = scan_counts > max(scan_counts.max() * 1e-4, 10)
         mzdata = np.stack((scan_mz, scan_counts), axis=-1)
-        BCscans.append((mzdata[dyn_range_filter, :], scan_time*1000, agc))
+        scan_ion_data = ion_data[ion_data['scan'] == scan][dyn_range_filter]
+        peptides = set(scan_ion_data['sequence'])
+        max_int = scan_ion_data['ic_' + distribution].\
+                                iloc[np.argmax(mzdata[dyn_range_filter, 1])]
+        min_int = scan_ion_data['ic_' + distribution].\
+                                iloc[np.argmin(mzdata[dyn_range_filter, 1])]
+        BCscans.append((mzdata[dyn_range_filter, :], scan_time*1000, agc,
+                        peptides, max_int, min_int))
     
     return BCscans
 

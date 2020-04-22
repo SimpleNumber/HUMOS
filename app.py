@@ -120,7 +120,7 @@ app.layout = html.Div([
                                 max=40,
                                 value=15,
                                 marks={5*i: '{}'.format(5*i) for i in range(1,9)},
-                                tooltip={i: "top" for i in range(1, 41)},
+                                tooltip={'placement': 'top'},
                                 )], style={'width': '80%','padding-left':'3%', 'padding-right':'10%', 'padding-bottom': '2em'}),
                             
                     html.Div([
@@ -197,7 +197,8 @@ def update_figure(selected_resolution, selected_agc, distribution, mit_clicked,
     boxCar = (method == 'bc')
     resolution = params.resolutions_list[selected_resolution]
     agc = params.agc_list[selected_agc]
-    centroid_spectrum, real_st, real_agc = mechanics.get_full_spectrum(ion_data, distribution, agc, max_it)
+    centroid_spectrum, real_st, real_agc, peptides, max_int, min_int = \
+        mechanics.get_full_spectrum(ion_data, distribution, agc, max_it)
     real_agcs = [real_agc]
     real_sts = [real_st]
     main_spectrum = mechanics.get_profile_spectrum(centroid_spectrum, resolution)
@@ -227,7 +228,24 @@ def update_figure(selected_resolution, selected_agc, distribution, mit_clicked,
                                           name=bc_label))
             real_agcs.append(bc_spectra[bc_index][2])
             real_sts.append(bc_spectra[bc_index][1])
+            peptides.update(bc_spectra[bc_index][3])
+            print("{} dynamic_range: {:.2f}".format(bc_label, 
+                                                    np.log10(bc_spectra[bc_index][4] /
+                                                             bc_spectra[bc_index][5])))
+            max_int = max(max_int, bc_spectra[bc_index][4])
+            min_int = min(min_int, bc_spectra[bc_index][5])
+    
         
+    bg_dyn_range = np.log10(ion_data['ic_' + distribution].max() /
+                            ion_data['ic_' + distribution].min())
+    
+    sp_dyn_range = np.log10(max_int / min_int)
+    
+    print("% observed peptides: {:.2f}".format(100 * len(peptides) /
+                                              params.peptide_collection_size))
+    print("Dynamic range\nBackground: {:.2f}\nSpectral: {:.2f}".format(bg_dyn_range,
+                                                               sp_dyn_range))
+    
     table = mechanics.make_table(real_sts, real_agcs, ['MS1'] + labels_bc, resolution)
     resolution_spectrum = mechanics.get_profile_spectrum(tmt_spectrum, resolution, points=51)
     resolution_traces = [go.Scatter(x=resolution_spectrum[0],
@@ -351,4 +369,4 @@ app.callback(
 server = app.server
 
 if __name__ == '__main__':
-    app.run_server()
+    app.run_server(debug=True)
