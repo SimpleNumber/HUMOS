@@ -41,24 +41,39 @@ app.layout = html.Div([
              ], style={'display': 'flex'}),
     
     #AGC info table
-    html.Div(dash_table.DataTable(
-            id='table',
-            style_cell_conditional=[{
-                                     'if': {'column_id': ''},
-                                     'fontWeight': 'bold'
-                                    }],
-            style_header={
-                    'backgroundColor': 'white',
-                    'fontWeight': 'bold',
-                    'borderBottom': '1px solid black'
-                         },
-                                                        
-            style_cell={
-                    'boxShadow': '0 0',
-                    'minWidth': '180px',
-                       },
-            ),
-            style={ 'display':'flex', 'font-size':'16px', 'font':'CorierNew'}),
+    html.Div([
+            html.Div([
+                    dash_table.DataTable(
+                    id='table',
+                    style_cell_conditional=[{
+                                             'if': {'column_id': ''},
+                                             'fontWeight': 'bold'
+                                            }],
+                    style_header={
+                            'backgroundColor': 'white',
+                            'fontWeight': 'bold',
+                            'borderBottom': '1px solid black'
+                                 },
+                                                                
+                    style_cell={
+                            'boxShadow': '0 0',
+                            'minWidth': '150px',
+                               },
+                    )], style={'height': '200px',
+                                'padding-top':'50px'
+                               }),
+            html.Center([
+                    html.H6('Dynamic range'),
+                    dcc.Graph(id='dynamic-range-bar')],
+                    style={'height': '250px'})], 
+            style={ 'display':'flex', 
+                   'font-size':'12px', 
+                   'font':'CorierNew',
+                   'flex-wrap': 'wrap',
+                   'padding-bottom': '4rem',
+                    'padding-left':'50px',
+                    'padding-right':'150px',
+                   'justify-content': 'space-between'}),
     
     #simulated mass spectrum        
     dcc.Graph(id='main-graph'),   
@@ -191,6 +206,7 @@ def get_zoom(relayout_data, min_x, max_x, min_y, max_y):
         y_range = [min_y, max_y]
     return x_range, y_range
 
+
 def update_figure(selected_resolution, selected_agc, distribution, mit_clicked, 
                   method, relayout_data, max_it, topN):
     #respond to changes in modeling parameters
@@ -218,10 +234,16 @@ def update_figure(selected_resolution, selected_agc, distribution, mit_clicked,
                               name='MS1 spectrum'
                               ),]
     labels_bc = []
+    bg_dyn_range = np.log10(ion_data['ic_' + distribution].max() /
+                            ion_data['ic_' + distribution].min())
+    
+    
+
     if boxCar:
         bc_spectra = mechanics.get_boxcar_spectra(ion_data, distribution,
                                                        agc, max_it, params.nBoxes, params.nScans)
         labels_bc = ['BoxCar scan {}'.format(i) for i in range(1, len(bc_spectra) +1 )]
+#        dyn_ranges_x += labels_bc
         for bc_index, bc_label in zip(range(len(bc_spectra)), labels_bc):
             bc_spectrum = mechanics.get_profile_spectrum(bc_spectra[bc_index][0], resolution)
             main_traces.append(go.Scatter(x=bc_spectrum[0],y=bc_spectrum[1], 
@@ -229,17 +251,18 @@ def update_figure(selected_resolution, selected_agc, distribution, mit_clicked,
             real_agcs.append(bc_spectra[bc_index][2])
             real_sts.append(bc_spectra[bc_index][1])
             peptides.update(bc_spectra[bc_index][3])
+            
+#            dyn_ranges_y.append(np.log10(bc_spectra[bc_index][4] /
+#                                                             bc_spectra[bc_index][5]))
             print("{} dynamic_range: {:.2f}".format(bc_label, 
                                                     np.log10(bc_spectra[bc_index][4] /
                                                              bc_spectra[bc_index][5])))
             max_int = max(max_int, bc_spectra[bc_index][4])
             min_int = min(min_int, bc_spectra[bc_index][5])
-    
-        
-    bg_dyn_range = np.log10(ion_data['ic_' + distribution].max() /
-                            ion_data['ic_' + distribution].min())
-    
     sp_dyn_range = np.log10(max_int / min_int)
+    dyn_ranges_x = ['Real', 'Spectral']
+    dyn_ranges_y = [bg_dyn_range, sp_dyn_range]   
+    
     
     print("% observed peptides: {:.2f}".format(100 * len(peptides) /
                                               params.peptide_collection_size))
@@ -283,6 +306,12 @@ def update_figure(selected_resolution, selected_agc, distribution, mit_clicked,
                              text ='experimental spectrum', 
                              line= {'color':'#ff7f0e'},
                              name=''),]
+    dynRange_traces = [go.Bar(y=dyn_ranges_x,
+                              x=dyn_ranges_y,
+                              width=0.5,
+                              orientation='h',
+                              name='Orders of magnitude'
+                             ),]
     
     return [
     [{"name": i, "id": i } for i in table.columns],
@@ -305,6 +334,7 @@ def update_figure(selected_resolution, selected_agc, distribution, mit_clicked,
                             showlegend=False,
                             xaxis={'title': 'm/z'},
                             yaxis={'title': 'Intensity'},
+                            
         )
     
     },
@@ -317,6 +347,21 @@ def update_figure(selected_resolution, selected_agc, distribution, mit_clicked,
                                    'range':[agc_spectrum[0,0]-0.15,agc_spectrum[0,0]+0.25,]},
                                    
                             yaxis={'title': 'Intensity'},
+        )
+    
+    },
+    {
+        'data': dynRange_traces,
+        'layout': go.Layout(
+                        margin={'t':0,
+                                'l':50,
+                                'b': 40},
+                        xaxis={ 'title': 'Orders of magnitude',
+                                'range':[1,10]},
+                        showlegend=False,
+                        width= 600,
+                        height=140,
+                            
         )
     
     }
@@ -347,7 +392,8 @@ app.callback(
      Output('table', 'data'),
      Output('main-graph', 'figure'), 
      Output('resolution-graph', 'figure'), 
-     Output('accuracy-graph', 'figure'),],  
+     Output('accuracy-graph', 'figure'),
+     Output('dynamic-range-bar','figure')],  
     [Input('resolution-slider', 'value'), 
      Input('AGC-slider', 'value'),
      Input('distribution', 'value'),
