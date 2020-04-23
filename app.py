@@ -202,21 +202,19 @@ def update_figure(selected_resolution, selected_agc, distribution, mit_clicked,
     real_agcs = [real_agc]
     real_sts = [real_st]
     main_spectrum = mechanics.get_profile_spectrum(centroid_spectrum, resolution)
-    
+     
     if relayout_data == None:
-        x_range = [min(centroid_spectrum[:,0]), max(centroid_spectrum[:,0])]
+        x_range = [min(main_spectrum[0]), max(main_spectrum[0])]
         y_range = [0, max(main_spectrum[1])]
     else:
         x_range, y_range = get_zoom(relayout_data,
-                                    min(centroid_spectrum[:,0]),
-                                    max(centroid_spectrum[:,0]),
+                                    min(main_spectrum[0]),
+                                    max(main_spectrum[0]),
                                     0,
-                                    max(main_spectrum[1])
-                                    )
+                                    max(main_spectrum[1]))
         
     main_traces = [go.Scatter(x=main_spectrum[0], y=main_spectrum[1],
-                              name='MS1 spectrum'
-                              ),]
+                                  name='MS1 spectrum')]
     labels_bc = []
     if boxCar:
         bc_spectra = mechanics.get_boxcar_spectra(ion_data, distribution,
@@ -242,7 +240,7 @@ def update_figure(selected_resolution, selected_agc, distribution, mit_clicked,
     sp_dyn_range = np.log10(max_int / min_int)
     
     print("% observed peptides: {:.2f}".format(100 * len(peptides) /
-                                              params.peptide_collection_size))
+                                              len(ion_data["sequence"].unique())))
     print("Dynamic range\nBackground: {:.2f}\nSpectral: {:.2f}".format(bg_dyn_range,
                                                                sp_dyn_range))
     
@@ -263,8 +261,8 @@ def update_figure(selected_resolution, selected_agc, distribution, mit_clicked,
                                     name='',
                                     mode='lines')]
     agc_spectrum_theoretical = mechanics.get_profile_spectrum(agc_spectrum, resolution, points=51)
-    agc_mass_experimental = list(map(lambda x: [mechanics.charge_space_effect(x[0], agc), x[1]],
-                                         agc_spectrum))
+    agc_mass_experimental = np.array([[mechanics.charge_space_effect(x[0], agc), x[1]]
+                                         for x in agc_spectrum])
     agc_spectrum_experimental = mechanics.get_profile_spectrum(agc_mass_experimental, resolution, points=51)
     agc_traces = [go.Scatter(x=agc_spectrum_theoretical[0], 
                              y=agc_spectrum_theoretical[1],
