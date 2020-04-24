@@ -43,6 +43,7 @@ app.layout = html.Div([
     #AGC info table and Dynamic range graph
     html.Div([
             html.Div([
+                    html.H5('Information table', title=''),
                     dash_table.DataTable(
                     id='table',
                     style_cell_conditional=[{
@@ -57,30 +58,35 @@ app.layout = html.Div([
                                                                 
                     style_cell={
                             'boxShadow': '0 0',
-                            'minWidth': '150px',
+                            'minWidth': '120px',
                                },
-                    )], style={'height': '200px',
-                                'padding-top':'50px',
-                               }),
+                    )], style={'height': '250px'}),
+            
             html.Div([
                     html.H5('Dynamic range', title=params.dyn_range_descript),
-                    dcc.Graph(id='dynamic-range-bar'),
-                    html.P(id='observed-peptides'),
+                    html.Div([
+                            dcc.Graph(id='dynamic-range-bar'),
+                            dcc.Graph(id='observed-peptides')
+                            ],
+                            style={'display':'flex', 'flex-wrap': 'wrap'}
+                        )
                     ],
                     style={'height': '250px'})], 
-            style={ 'display':'flex', 
+            style={'display':'flex', 
                    'font':'CorierNew',
                    'flex-wrap': 'wrap',
                    'padding-bottom': '0rem',
-                    'padding-left':'3%',
-                    'padding-right':'10%',
+                   'padding-left':'3%',
+                   'padding-right':'10%',
                    'justify-content': 'space-between'}),
     
     #simulated mass spectrum        
     dcc.Graph(id='main-graph'),   
     
+    #TODO Alignment of elements
     #model parameters switches
     html.Div([
+            #Block1 distribution and Acquisition method
             html.Div([
                     html.H5('Peptide distribution', 
                             title=params.pep_distr_descript),
@@ -91,46 +97,74 @@ app.layout = html.Div([
                                     {'label': 'Regular', 'value': 'lognormal'},
                                     {'label': 'Regular with majors', 'value': 'lognormal-major'}
                                     ],
-                            value='lognormal'
-                            ),style={'width': '80%','padding-left':'3%', 'padding-right':'10%', },
+                            value='lognormal'),
+                            style={'width': '80%','padding-left':'1%', 'padding-right':'10%'}
                                ),
                     html.H5('Acquisition Method', title=params.acquisition_discript),
-                    html.Div(dcc.RadioItems(id='method-choice',
+                    html.Div(dcc.RadioItems(
+                            id='method-choice',
                             options=[
                                     {'label': 'BoxCar', 'value': 'bc'},
                                     {'label': 'Usual MS1', 'value': 'ms1'},
                                     ],
-                            value='ms1', 
-                            ), )
+                            value='ms1'), 
+                            style={'width': '80%','padding-left':'1%', 'padding-right':'10%'}
+                            )
                     ], style={'width':'400px'}),
-                    
+            
+            #Block2 MS1 parameters
             html.Div([
-                    html.H5('Resolution', title=params.resolution_descript),
+                    html.H5('MS1 Resolution', title=params.resolution_descript),
                     html.Div([dcc.Slider(    
                             id='resolution-slider',
                             min=0,
-                            max=len(params.resolutions_list)-1,
+                            max=len(params.resolutions_list) - 1,
                             value=2,
                             marks={i: str(resolution) for i,resolution in enumerate(params.resolutions_list)},
-                            step=1,
-                            ),], style={'width': '80%','padding-left':'3%', 'padding-right':'10%', 'padding-bottom':'2em'}),
+                            step=1)
+                            ],
+                            style={'width': '80%','padding-left':'1%', 'padding-right':'10%', 'padding-bottom':'2em'}),
                     
-                    html.H5('AGC Target', title=params.AGC_discript),
+                    html.H5('MS1 AGC Target', title=params.AGC_discript),
                     html.Div([dcc.Slider(
                                 id='AGC-slider',
                                 min=0,
                                 max=len(params.agc_list)-1,
                                 value=2,
                                 marks={i: '{:.0e}'.format(agc) for i, agc in enumerate(params.agc_list)},
-                                )], style={'width': '80%','padding-left':'3%', 'padding-right':'10%', 'padding-bottom':'2em'}),
+                                    )
+                             ],
+                             style={'width': '80%','padding-left':'1%', 'padding-right':'10%', 'padding-bottom':'2em'}),
                     
-                    html.H5('Max Injection Time (ms)', title=params.IT_descript),
-                    dcc.Input(id='mit-box', type='number',size='25', value=100),
-                    html.Button('set', id='it-button'),
-
+                    html.H5('MS1 Max Injection Time (ms)', title=params.IT_descript),
+                    html.Div([
+                        dcc.Input(id='mit-box', type='number',size='20', value=100),
+                        html.Button('set', id='it-button'),
+                        ],
+                        style={'width': '80%','padding-left':'1%', 'padding-right':'10%', 'padding-bottom':'2em'}
+                        )
                     ],style={'width':'400px'}),
             
+             #Block3 MS2 parameters
              html.Div([
+                    html.H5('MS2 Resolution', title=params.resolutionMS2_descript),
+                    html.Div([dcc.Slider(    
+                            id='resolution-ms2-slider',
+                            min=0,
+                            max=len(params.resolutions_list) - 1,
+                            value=2,
+                            marks={i: str(resolution) for i,resolution in enumerate(params.resolutions_list)},
+                            step=1,
+                            ),], style={'width': '80%','padding-left':'1%', 'padding-right':'10%', 'padding-bottom':'1em'}),
+                    
+                    html.H5('MS2 Max Injection Time (ms)', title=params.IT_MS2_descript),
+                    html.Div([
+                            dcc.Input(id='mit-ms2-box', type='number',size='20', value=30),
+                            html.Button('set', id='it-ms2-button')
+                            ],
+                            style={'width': '80%','padding-left':'1%', 'padding-right':'10%', 'padding-bottom':'1em'}
+                        ),
+                    
                     html.H5('TopN', title=params.topN_discript),
                     html.Div([dcc.Slider(
                                 id='topN-slider',
@@ -139,30 +173,16 @@ app.layout = html.Div([
                                 value=15,
                                 marks={5*i: '{}'.format(5*i) for i in range(1,9)},
                                 tooltip={'placement': 'top'},
-                                )], style={'width': '80%','padding-left':'3%', 'padding-right':'10%', 'padding-bottom': '1em'}),
-                            
+                                )],
+                        style={'width': '80%','padding-left':'1%', 'padding-right':'10%', 'padding-bottom': '1em'}),
+                    
                     html.Div([
                                 html.P(id='cycletime'),
                                 html.P(id='ms1-scan-n'),
                                 html.P(id='ms2-scan-n')
                             
-                            ], style={'width': '80%','padding-left':'3%', 'padding-right':'10%'}),
-                    html.Header('Resolution for MS2 spectra', 
-                                title=params.resolutionMS2_descript,
-                                style={'font-size':'18px'}),
-                    html.Div([dcc.Slider(    
-                            id='resolution-ms2-slider',
-                            min=0,
-                            max=len(params.resolutions_list)-3,
-                            value=2,
-                            marks={i: str(resolution) for i,resolution in enumerate(params.resolutions_list[:-2])},
-                            step=1,
-                            ),], style={'width': '80%','padding-left':'3%', 'padding-right':'10%', 'padding-bottom':'1em'}),
-                    html.Header('Max Injection Time for MS2 (ms)', 
-                                title=params.IT_MS2_descript,
-                                style={'font-size':'18px'}),
-                    dcc.Input(id='mit-ms2-box', type='number',size='25', value=30),
-                    html.Button('set', id='it-ms2-button'),
+                            ], style={'width': '80%','padding-left':'1%', 'padding-right':'10%'})
+                    
                     ], style={'width':'400px'}),       
                              
             ], style={ 'display':'flex', 'flex-wrap': 'wrap', 'padding-bottom': '4rem', 'justify-content': 'space-around'}),
@@ -281,8 +301,8 @@ def update_figure(selected_resolution, selected_agc, distribution, mit_clicked,
     dyn_ranges_y = [bg_dyn_range, sp_dyn_range]   
     
     
-    print("% observed peptides: {:.2f}".format(100 * len(peptides) /
-                                              len(ion_data["sequence"].unique())))
+    observed_peptides = np.round(100 * len(peptides) / len(ion_data["sequence"].unique()),1)
+    
     print("Dynamic range\nBackground: {:.2f}\nSpectral: {:.2f}".format(bg_dyn_range,
                                                                sp_dyn_range))
     
@@ -323,12 +343,33 @@ def update_figure(selected_resolution, selected_agc, distribution, mit_clicked,
                              text ='experimental spectrum', 
                              line= {'color':'#ff7f0e'},
                              name=''),]
+        
     dynRange_traces = [go.Bar(y=dyn_ranges_x,
                               x=dyn_ranges_y,
                               width=0.5,
+                              text=['{:.2f}'.format(dr) for dr in dyn_ranges_y],
+                              textposition='auto',
                               orientation='h',
                               name='Orders of magnitude'
                              ),]
+    
+    obsPeptides_traces = [go.Bar(x=[0],
+                              y=[observed_peptides],
+                              width=1,
+                              orientation='v',
+                              name='% observed peptides',
+                              text=str(observed_peptides),
+                              textposition='inside',
+                              marker_color=['green']
+                             ),
+                          go.Bar(x=[0],
+                              y=[100 - observed_peptides],
+                              width=1,
+                              orientation='v',
+                              name='% missing peptides',
+                              marker_color=['red']
+                             )
+                       ]
     
     return [
     [{"name": i, "id": i } for i in table.columns],
@@ -374,16 +415,32 @@ def update_figure(selected_resolution, selected_agc, distribution, mit_clicked,
                                 'l':50,
                                 'b': 40},
                         xaxis={ 'title': 'Orders of magnitude',
-                                'range':[0,10]},
+                                'range':[0, 10]},
                         showlegend=False,
-                        width= 600,
+                        width= 500,
                         height=140,
                             
         )
     
     },
-    "% observed peptides: {:.2f}".format(100 * len(peptides) /
-                                              params.peptide_collection_size)
+    {
+        'data': obsPeptides_traces,
+        'layout': go.Layout(
+                        margin={'t':10,
+                                'l':40,
+                                'r':10,
+                                'b': 10},
+                        xaxis={'visible': False},
+                        yaxis={'title': '% observded petides',
+                               'range': [0, 100]},
+                        showlegend=False,
+                        barmode='stack',
+                        width= 100,
+                        height=140,
+                            
+        )
+    
+    }
     ]
 
 def update_ms_counts(topN, method, data, selected_resolution, ms2_resolution, mit_ms2 ):
@@ -415,7 +472,7 @@ app.callback(
      Output('resolution-graph', 'figure'), 
      Output('accuracy-graph', 'figure'),
      Output('dynamic-range-bar','figure'),
-     Output('observed-peptides', 'children')],  
+     Output('observed-peptides', 'figure')],  
     [Input('resolution-slider', 'value'), 
      Input('AGC-slider', 'value'),
      Input('distribution', 'value'),

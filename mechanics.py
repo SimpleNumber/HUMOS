@@ -106,8 +106,14 @@ def get_peptide_abundance(distribution, peptide_collection_size):
     if distribution == 'equal':
         return np.repeat(1, peptide_collection_size)
     elif distribution == 'lognormal':
-        return np.random.lognormal(9, 2.5, peptide_collection_size)
-    elif distribution == 'lognormal-major':#90% of abundance for N Major peaks
+        result = np.random.lognormal(9, 2, peptide_collection_size)
+        #trimming
+        overflow = result > np.exp(14)
+        result[overflow] = result[overflow] / np.exp(9)
+        underflow = result < np.exp(4)
+        result[underflow] = result[underflow] * np.exp(9)
+        return result
+    elif distribution == 'lognormal-major': #90% of abundance for N Major peaks
         nmajor = int(peptide_collection_size * 0.05)
         result = get_peptide_abundance('lognormal', peptide_collection_size)
         order = np.argsort(result)
