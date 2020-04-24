@@ -39,6 +39,9 @@ def get_profile_spectrum(mz_intensity_list, r, points=41):
         tuple of `numpy.ndarray` (m/z values, intensities)
     '''
     
+    if mz_intensity_list.shape[0] == 0: #early termination for empty spectrum
+       return np.array([params.low_mass, params.high_mass]), np.array([0, 0])
+    
     full_spectrum = np.array([])
     full_grid = np.array([])
     real_r = r * np.sqrt(200 / mz_intensity_list[0][0])
@@ -301,11 +304,14 @@ def get_full_spectrum(ion_data, distribution, agc_target, max_it):
     dyn_range_filter = intensities > max(intensities.max() * 1e-4, 10)
     mzdata = np.stack((ion_data['mz'].values, intensities), axis=-1)
     scan_ion_data = ion_data[dyn_range_filter]
-    peptides = set(scan_ion_data['sequence'])
-    max_int = scan_ion_data['ic_' + distribution].\
+    if scan_ion_data.shape[0] > 0: #non-empty
+        peptides = set(scan_ion_data['sequence'])
+        max_int = scan_ion_data['ic_' + distribution].\
                                 iloc[np.argmax(mzdata[dyn_range_filter, 1])]
-    min_int = scan_ion_data['ic_' + distribution].\
-                                iloc[np.argmin(mzdata[dyn_range_filter, 1])]                            
+        min_int = scan_ion_data['ic_' + distribution].\
+                                iloc[np.argmin(mzdata[dyn_range_filter, 1])]
+    else:
+        peptides, max_int, min_int = set(), 1, 1
     return mzdata[dyn_range_filter, :], scan_time*1000, agc, peptides, max_int, min_int
 
 def get_boxcar_spectra(ion_data, distribution, agc_target, max_it, nBoxes, nScans):
@@ -359,17 +365,22 @@ def get_boxcar_spectra(ion_data, distribution, agc_target, max_it, nBoxes, nScan
         dyn_range_filter = scan_counts > max(scan_counts.max() * 1e-4, 10)
         mzdata = np.stack((scan_mz, scan_counts), axis=-1)
         scan_ion_data = ion_data[ion_data['scan'] == scan][dyn_range_filter]
-        peptides = set(scan_ion_data['sequence'])
-        max_int = scan_ion_data['ic_' + distribution].\
-                                iloc[np.argmax(mzdata[dyn_range_filter, 1])]
-        min_int = scan_ion_data['ic_' + distribution].\
+        
+        if scan_ion_data.shape[0] > 0: #non-empty
+            peptides = set(scan_ion_data['sequence'])
+            max_int = scan_ion_data['ic_' + distribution].\
+                                    iloc[np.argmax(mzdata[dyn_range_filter, 1])]
+            min_int = scan_ion_data['ic_' + distribution].\
                                 iloc[np.argmin(mzdata[dyn_range_filter, 1])]
+        else:
+            peptides, max_int, min_int = set(), 1, 1
+            
         BCscans.append((mzdata[dyn_range_filter, :], scan_time*1000, agc,
                         peptides, max_int, min_int))
     
     return BCscans
 
-def get_MS_counts(scan_method, scan_time, topN, ms2time, time, resolution):
+def get_MS_counts(scan_method, scan_time, topN, ms2params, time, resolution, parallel=True):
     '''
     Calculate number of MS1 and MS2 scans using parameters below.
     Parameters:
@@ -378,18 +389,26 @@ def get_MS_counts(scan_method, scan_time, topN, ms2time, time, resolution):
             in case of full scan only one value is provided
             in case of boxcar scan, the iterable has to be, MS1 scan time, and scan_times for all boxcar scans
         topN, float, average TopN
-        ms2time, float, duration of single MS/MS scan in milliseconds
+        ms2params, (float, int), max injection time and resolution for MS/MS scans
         time, float, the length of the gradient
         resolution, int, used resolution (used to calculate transient time)
     Return:
-        tuple, (number of MS1 scans, number of MS2 scans)
+        tuple, (cycle time, number of MS1 scans, number of MS2 scans)
     '''
+    ms2time = max(ms2params[0], params.transients[ms2params[1]])
+    
     if scan_method == 'full':
-        cycletime = max(scan_time, params.transients[resolution]) + topN * ms2time
+        if parallel:
+            cycletime = max(scan_time, params.transients[resolution], topN * ms2time)
+        else:
+            cycletime = max(scan_time, params.transients[resolution]) + topN * ms2time
         
     elif scan_method == 'boxcar':
         boxcar_time = [max(st, params.transients[resolution]) for st in scan_time]
-        cycletime = sum(boxcar_time) + topN * ms2time
+        if parallel:
+            cycletime = sum(boxcar_time[:-1]) + max(boxcar_time[-1], topN * ms2time)
+        else:
+            cycletime = sum(boxcar_time) + topN * ms2time
         
     else:
         raise ValueError('scan_method has to be one of "full"|"boxcar"')
