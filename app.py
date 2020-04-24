@@ -40,7 +40,7 @@ app.layout = html.Div([
                         'transform': 'rotate(-10deg) skewY(4deg)'}),
              ], style={'display': 'flex'}),
     
-    #AGC info table
+    #AGC info table and Dynamic range graph
     html.Div([
             html.Div([
                     dash_table.DataTable(
@@ -60,19 +60,20 @@ app.layout = html.Div([
                             'minWidth': '150px',
                                },
                     )], style={'height': '200px',
-                                'padding-top':'50px'
+                                'padding-top':'50px',
                                }),
-            html.Center([
-                    html.H6('Dynamic range'),
-                    dcc.Graph(id='dynamic-range-bar')],
+            html.Div([
+                    html.H6('Dynamic range', title=params.dyn_range_descript),
+                    dcc.Graph(id='dynamic-range-bar'),
+                    html.P(id='observed-peptides'),
+                    ],
                     style={'height': '250px'})], 
             style={ 'display':'flex', 
-                   'font-size':'12px', 
                    'font':'CorierNew',
                    'flex-wrap': 'wrap',
-                   'padding-bottom': '4rem',
-                    'padding-left':'50px',
-                    'padding-right':'150px',
+                   'padding-bottom': '0rem',
+                    'padding-left':'3%',
+                    'padding-right':'10%',
                    'justify-content': 'space-between'}),
     
     #simulated mass spectrum        
@@ -81,20 +82,22 @@ app.layout = html.Div([
     #model parameters switches
     html.Div([
             html.Div([
-                    html.H5('Peptide distribution'),
+                    html.H5('Peptide distribution', 
+                            title=params.pep_distr_descript),
                     html.Div(dcc.RadioItems(
                             id='distribution',
                             options=[
-                                    {'label': 'Equimolar', 'value': 'equal'},
+                                    {'label': 'Equimolar', 'value': 'equal', },
                                     {'label': 'Regular', 'value': 'lognormal'},
                                     {'label': 'Regular with majors', 'value': 'lognormal-major'}
                                     ],
-                            value='lognormal', 
-                            ),style={'width': '80%','padding-left':'3%', 'padding-right':'10%'}),
+                            value='lognormal'
+                            ),style={'width': '80%','padding-left':'3%', 'padding-right':'10%', },
+                               ),
                     ], style={'width':'400px'}),
                     
             html.Div([
-                    html.H5('Resolution'),
+                    html.H5('Resolution', title=params.resolution_descript),
                     html.Div([dcc.Slider(    
                             id='resolution-slider',
                             min=0,
@@ -104,7 +107,7 @@ app.layout = html.Div([
                             step=1,
                             ),], style={'width': '80%','padding-left':'3%', 'padding-right':'10%', 'padding-bottom':'2em'}),
                     
-                    html.H5('AGC Target'),
+                    html.H5('AGC Target', title=params.AGC_discript),
                     html.Div([dcc.Slider(
                                 id='AGC-slider',
                                 min=0,
@@ -113,14 +116,14 @@ app.layout = html.Div([
                                 marks={i: '{:.0e}'.format(agc) for i, agc in enumerate(params.agc_list)},
                                 )], style={'width': '80%','padding-left':'3%', 'padding-right':'10%', 'padding-bottom':'2em'}),
                     
-                    html.H5('Max Injection Time (ms)'),
+                    html.H5('Max Injection Time (ms)', title=params.IT_descript),
                     dcc.Input(id='mit-box', type='number',size='25', value=100),
                     html.Button('set', id='it-button'),
 
                     ],style={'width':'400px'}),
             
              html.Div([
-                    html.H5('Acquisition Method'),
+                    html.H5('Acquisition Method', title=params.acquisition_discript),
                     html.Div(dcc.RadioItems(id='method-choice',
                             options=[
                                     {'label': 'BoxCar', 'value': 'bc'},
@@ -128,7 +131,7 @@ app.layout = html.Div([
                                     ],
                             value='ms1', 
                             ), ),
-                    html.H5('TopN'),
+                    html.H5('TopN', title=params.topN_discript),
                     html.Div([dcc.Slider(
                                 id='topN-slider',
                                 min=1,
@@ -260,7 +263,7 @@ def update_figure(selected_resolution, selected_agc, distribution, mit_clicked,
             max_int = max(max_int, bc_spectra[bc_index][4])
             min_int = min(min_int, bc_spectra[bc_index][5])
     sp_dyn_range = np.log10(max_int / min_int)
-    dyn_ranges_x = ['Real', 'Spectral']
+    dyn_ranges_x = ['Mixture', 'Spectral']
     dyn_ranges_y = [bg_dyn_range, sp_dyn_range]   
     
     
@@ -357,14 +360,16 @@ def update_figure(selected_resolution, selected_agc, distribution, mit_clicked,
                                 'l':50,
                                 'b': 40},
                         xaxis={ 'title': 'Orders of magnitude',
-                                'range':[1,10]},
+                                'range':[0,10]},
                         showlegend=False,
                         width= 600,
                         height=140,
                             
         )
     
-    }
+    },
+    "% observed peptides: {:.2f}".format(100 * len(peptides) /
+                                              params.peptide_collection_size)
     ]
 
 def update_ms_counts(topN, method, data, selected_resolution ):
@@ -393,7 +398,8 @@ app.callback(
      Output('main-graph', 'figure'), 
      Output('resolution-graph', 'figure'), 
      Output('accuracy-graph', 'figure'),
-     Output('dynamic-range-bar','figure')],  
+     Output('dynamic-range-bar','figure'),
+     Output('observed-peptides', 'children')],  
     [Input('resolution-slider', 'value'), 
      Input('AGC-slider', 'value'),
      Input('distribution', 'value'),
