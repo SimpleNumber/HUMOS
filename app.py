@@ -63,7 +63,7 @@ app.layout = html.Div([
                                 'padding-top':'50px',
                                }),
             html.Div([
-                    html.H6('Dynamic range', title=params.dyn_range_descript),
+                    html.H5('Dynamic range', title=params.dyn_range_descript),
                     dcc.Graph(id='dynamic-range-bar'),
                     html.P(id='observed-peptides'),
                     ],
@@ -94,6 +94,14 @@ app.layout = html.Div([
                             value='lognormal'
                             ),style={'width': '80%','padding-left':'3%', 'padding-right':'10%', },
                                ),
+                    html.H5('Acquisition Method', title=params.acquisition_discript),
+                    html.Div(dcc.RadioItems(id='method-choice',
+                            options=[
+                                    {'label': 'BoxCar', 'value': 'bc'},
+                                    {'label': 'Usual MS1', 'value': 'ms1'},
+                                    ],
+                            value='ms1', 
+                            ), )
                     ], style={'width':'400px'}),
                     
             html.Div([
@@ -123,14 +131,6 @@ app.layout = html.Div([
                     ],style={'width':'400px'}),
             
              html.Div([
-                    html.H5('Acquisition Method', title=params.acquisition_discript),
-                    html.Div(dcc.RadioItems(id='method-choice',
-                            options=[
-                                    {'label': 'BoxCar', 'value': 'bc'},
-                                    {'label': 'Usual MS1', 'value': 'ms1'},
-                                    ],
-                            value='ms1', 
-                            ), ),
                     html.H5('TopN', title=params.topN_discript),
                     html.Div([dcc.Slider(
                                 id='topN-slider',
@@ -139,14 +139,30 @@ app.layout = html.Div([
                                 value=15,
                                 marks={5*i: '{}'.format(5*i) for i in range(1,9)},
                                 tooltip={'placement': 'top'},
-                                )], style={'width': '80%','padding-left':'3%', 'padding-right':'10%', 'padding-bottom': '2em'}),
+                                )], style={'width': '80%','padding-left':'3%', 'padding-right':'10%', 'padding-bottom': '1em'}),
                             
                     html.Div([
                                 html.P(id='cycletime'),
                                 html.P(id='ms1-scan-n'),
                                 html.P(id='ms2-scan-n')
                             
-                            ], style={'width': '80%','padding-left':'3%', 'padding-right':'10%'})
+                            ], style={'width': '80%','padding-left':'3%', 'padding-right':'10%'}),
+                    html.Header('Resolution for MS2 spectra', 
+                                title=params.resolutionMS2_descript,
+                                style={'font-size':'18px'}),
+                    html.Div([dcc.Slider(    
+                            id='resolution-ms2-slider',
+                            min=0,
+                            max=len(params.resolutions_list)-3,
+                            value=2,
+                            marks={i: str(resolution) for i,resolution in enumerate(params.resolutions_list[:-2])},
+                            step=1,
+                            ),], style={'width': '80%','padding-left':'3%', 'padding-right':'10%', 'padding-bottom':'1em'}),
+                    html.Header('Max Injection Time for MS2 (ms)', 
+                                title=params.IT_MS2_descript,
+                                style={'font-size':'18px'}),
+                    dcc.Input(id='mit-ms2-box', type='number',size='25', value=30),
+                    html.Button('set', id='it-ms2-button'),
                     ], style={'width':'400px'}),       
                              
             ], style={ 'display':'flex', 'flex-wrap': 'wrap', 'padding-bottom': '4rem', 'justify-content': 'space-around'}),
@@ -372,8 +388,10 @@ def update_figure(selected_resolution, selected_agc, distribution, mit_clicked,
                                               params.peptide_collection_size)
     ]
 
-def update_ms_counts(topN, method, data, selected_resolution ):
+def update_ms_counts(topN, method, data, selected_resolution, ms2_resolution, mit_ms2 ):
     #update only counts of MS spectra, i.e. no changes to main spectrum applied
+    print('MS2 resolution ', ms2_resolution)
+    print('MS2 mit ', mit_ms2)
     boxCar = (method == 'bc')
     resolution = params.resolutions_list[selected_resolution]
     if data == None:
@@ -416,7 +434,9 @@ app.callback(
     [Input('topN-slider', 'value'), 
      Input('method-choice', 'value'),
      Input('table','data'),
-     Input('resolution-slider', 'value')])(update_ms_counts)
+     Input('resolution-slider', 'value'),
+     Input('resolution-ms2-slider', 'value')],
+    [State('mit-ms2-box', 'value')])(update_ms_counts)
 
 server = app.server
 
