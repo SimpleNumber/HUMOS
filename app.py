@@ -17,12 +17,17 @@ from dash.dependencies import Input, Output, State
 #fixed data for resolution graph and space-charge effect graph
 tmt_spectrum =  np.array([[127.12476, 1],[127.13108, 2]])
 agc_spectrum = np.array([[1277.13108, 1]])
-
+TIC = 1e8
 #generate DataFrame with theoretical ion currents for all models
 ion_data = mechanics.get_ion_data(params.peptide_collection_size)
-mechanics.normalize_ion_currents(ion_data, params.TIC, params.low_mass, params.high_mass)
+mechanics.normalize_ion_currents(ion_data, TIC, params.low_mass, params.high_mass)
 boxes = mechanics.get_boxes(params.low_mass, params.high_mass, params.nBoxes, params.nScans, params.box_overlap)
 mechanics.add_boxes(ion_data, boxes)
+
+
+
+def update_tic(ionFlux):
+    mechanics.normalize_ion_currents(ion_data, ionFlux, params.low_mass, params.high_mass)
 
 #interface
 external_stylesheets = ['https://codepen.io/chriddyp/pen/bWLwgP.css']
@@ -100,6 +105,18 @@ app.layout = html.Div([
                             value='lognormal'),
                             style={'width': '80%','padding-left':'1%', 'padding-right':'10%'}
                                ),
+                    html.H5('Ion Flux (charge/sec)', 
+                            title=params.ionFlux_discript),
+                    html.Div(dcc.RadioItems(
+                            id='ionFlux',
+                            options=[
+                                    {'label': '1e6', 'value': 1e6},
+                                    {'label': '1e8', 'value':1e8},
+                                    {'label': '1e10', 'value': 1e10}
+                                    ],
+                            value=1e8),
+                            style={'width': '80%','padding-left':'1%', 'padding-right':'10%'}
+                               ),
                     html.H5('Acquisition Method', title=params.acquisition_discript),
                     html.Div(dcc.RadioItems(
                             id='method-choice',
@@ -141,7 +158,7 @@ app.layout = html.Div([
                         dcc.Input(id='mit-box', type='number',size='20', value=100),
                         html.Button('set', id='it-button'),
                         ],
-                        style={'width': '80%','padding-left':'1%', 'padding-right':'10%', 'padding-bottom':'2em'}
+                        style={'padding-left':'5%', 'padding-right':'10%', 'padding-bottom':'2em'}
                         )
                     ],style={'width':'400px'}),
             
@@ -162,7 +179,7 @@ app.layout = html.Div([
                             dcc.Input(id='mit-ms2-box', type='number',size='20', value=30),
                             html.Button('set', id='it-ms2-button')
                             ],
-                            style={'width': '80%','padding-left':'1%', 'padding-right':'10%', 'padding-bottom':'1em'}
+                            style={'width': '80%','padding-left':'5%', 'padding-right':'10%', 'padding-bottom':'1em'}
                         ),
                     
                     html.H5('TopN', title=params.topN_discript),
@@ -247,11 +264,13 @@ def get_zoom(relayout_data, min_x, max_x, min_y, max_y):
 
 
 def update_figure(selected_resolution, selected_agc, distribution, mit_clicked, 
-                  method, relayout_data, max_it, topN):
+                  method, ionFlux, relayout_data, max_it, topN):
     #respond to changes in modeling parameters
     boxCar = (method == 'bc')
     resolution = params.resolutions_list[selected_resolution]
     agc = params.agc_list[selected_agc]
+    if TIC != ionFlux:
+        update_tic(ionFlux)
     centroid_spectrum, real_st, real_agc, peptides, max_int, min_int = \
         mechanics.get_full_spectrum(ion_data, distribution, agc, max_it)
     real_agcs = [real_agc]
@@ -360,14 +379,14 @@ def update_figure(selected_resolution, selected_agc, distribution, mit_clicked,
                               name='% observed peptides',
                               text=str(observed_peptides),
                               textposition='inside',
-                              marker_color=['green']
+                              marker_color=['#a7e2f9']
                              ),
                           go.Bar(x=[0],
                               y=[100 - observed_peptides],
                               width=1,
                               orientation='v',
                               name='% missing peptides',
-                              marker_color=['red']
+                              marker_color=['#0576b0']
                              )
                        ]
     
@@ -431,12 +450,12 @@ def update_figure(selected_resolution, selected_agc, distribution, mit_clicked,
                                 'r':10,
                                 'b': 10},
                         xaxis={'visible': False},
-                        yaxis={'title': '% observded petides',
+                        yaxis={'title': '% observed peptides',
                                'range': [0, 100]},
                         showlegend=False,
                         barmode='stack',
                         width= 100,
-                        height=140,
+                        height=130,
                             
         )
     
@@ -477,7 +496,8 @@ app.callback(
      Input('AGC-slider', 'value'),
      Input('distribution', 'value'),
      Input('it-button', 'n_clicks'),
-     Input('method-choice', 'value')],    
+     Input('method-choice', 'value'),
+     Input('ionFlux', 'value')],    
      [State('main-graph', 'relayoutData'),
       State('mit-box', 'value'),
       State('topN-slider', 'value')])(update_figure)

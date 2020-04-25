@@ -5,7 +5,7 @@ This file contains all parameters used for simulation
 '''
 
 peptide_collection_size = 100 #number of modeled peptides
-TIC = 1e9 #total ion current
+#TIC = 1e9 #total ion current
 low_mass = 350 #low mass cutoff
 high_mass = 1500 #high mass cutoff
 nScans = 2 #number of BoxCar scans
@@ -22,6 +22,7 @@ ion_models = ['equal', 'lognormal', 'lognormal-major'] #list of ion models
 
 #Tooltips for headers
 dyn_range_descript = 'Shows actual dynamic range of analysing mixture (Mixture) and dynamic range of acquired spectrum (Spectral).'
+ionFlux_discript = 'Ion current for acquiring spectra.'
 pep_distr_descript = 'Generates three different abundance distribution of the peptide mixture.\nEquimolar produce a mass spectrum using equal amount of each peptide.\nRegular set all peptide abundances to imitate those experimentally observed in a proteomics experiment.\nRegular with majors is identical to regular, with the addition, that the quantity of a few peptides is greatly enhanced, i.e. in plasma samples.'
 resolution_descript = 'Allows changing the mass spectral resolution'
 resolutionMS2_descript = 'Allows changing the mass spectral resolution of MS2 spectra.'
