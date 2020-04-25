@@ -105,7 +105,7 @@ app.layout = html.Div([
                             value='lognormal'),
                             style={'width': '80%','padding-left':'1%', 'padding-right':'10%'}
                                ),
-                    html.H5('Ion Flux (charge/sec)', 
+                    html.H5('Ion Current (charge/sec)', 
                             title=params.ionFlux_discript),
                     html.Div(dcc.RadioItems(
                             id='ionFlux',
@@ -192,7 +192,10 @@ app.layout = html.Div([
                                 tooltip={'placement': 'top'},
                                 )],
                         style={'width': '80%','padding-left':'1%', 'padding-right':'10%', 'padding-bottom': '1em'}),
-                    
+                    dcc.Checklist( id='paral-checklist',
+                            options=[{'label': 'Parallelization', 'value': 'on'},],
+                                    value=['on'],
+                            style={'padding-bottom': '1rem'}),
                     html.Div([
                                 html.P(id='cycletime'),
                                 html.P(id='ms1-scan-n'),
@@ -264,7 +267,7 @@ def get_zoom(relayout_data, min_x, max_x, min_y, max_y):
 
 
 def update_figure(selected_resolution, selected_agc, distribution, mit_clicked, 
-                  method, ionFlux, relayout_data, max_it, topN):
+                  method, ionFlux, relayout_data, max_it ):
     #respond to changes in modeling parameters
     boxCar = (method == 'bc')
     resolution = params.resolutions_list[selected_resolution]
@@ -462,11 +465,13 @@ def update_figure(selected_resolution, selected_agc, distribution, mit_clicked,
     }
     ]
 
-def update_ms_counts(topN, method, data, selected_resolution, ms2_resolution, mit_ms2 ):
+def update_ms_counts(topN, method, data, selected_resolution, ms2_resolution, parallel, mit_clicked,  mit_ms2 ):
     #update only counts of MS spectra, i.e. no changes to main spectrum applied
-    print('MS2 resolution ', ms2_resolution)
-    print('MS2 mit ', mit_ms2)
+#    print('MS2 resolution ', ms2_resolution)
+#    print('MS2 mit ', mit_ms2)
     boxCar = (method == 'bc')
+    parallel = True if len(parallel) > 0 else False
+    ms2_resolution = params.resolutions_list[ms2_resolution]
     resolution = params.resolutions_list[selected_resolution]
     if data == None:
        return 'Select topN', '', ''
@@ -475,10 +480,12 @@ def update_ms_counts(topN, method, data, selected_resolution, ms2_resolution, mi
         data = data.iloc[:, 1:].apply(pd.to_numeric)
         if boxCar:
             cycletime, ms1_scan_n, ms2_scan_n = mechanics.get_MS_counts('boxcar', data.iloc[0,:], 
-                                                         topN, params.ms2length, params.LC_time, resolution)
+                                                         topN, (mit_ms2, ms2_resolution), params.LC_time, 
+                                                         resolution, parallel=parallel)
         else:
             cycletime, ms1_scan_n, ms2_scan_n = mechanics.get_MS_counts('full', data.iloc[0,0], topN, 
-                                                             params.ms2length, params.LC_time, resolution)
+                                                             (mit_ms2, ms2_resolution), params.LC_time, 
+                                                             resolution, parallel=parallel)
             
     return  'MS Cycle length: {:.3f} sec'.format(cycletime * 1e-3),\
             'MS1 Scans in {} minutes: {}'.format(params.LC_time, ms1_scan_n),\
@@ -500,7 +507,7 @@ app.callback(
      Input('ionFlux', 'value')],    
      [State('main-graph', 'relayoutData'),
       State('mit-box', 'value'),
-      State('topN-slider', 'value')])(update_figure)
+      ])(update_figure)
 
 app.callback(
     [Output('cycletime', 'children'),
@@ -510,7 +517,9 @@ app.callback(
      Input('method-choice', 'value'),
      Input('table','data'),
      Input('resolution-slider', 'value'),
-     Input('resolution-ms2-slider', 'value')],
+     Input('resolution-ms2-slider', 'value'),
+     Input('paral-checklist', 'value'),
+     Input('it-ms2-button','n_clicks')],
     [State('mit-ms2-box', 'value')])(update_ms_counts)
 
 server = app.server

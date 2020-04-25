@@ -386,7 +386,7 @@ def get_boxcar_spectra(ion_data, distribution, agc_target, max_it, nBoxes, nScan
     
     return BCscans
 
-def get_MS_counts(scan_method, scan_time, topN, ms2params, time, resolution, parallel=True):
+def get_MS_counts(scan_method, scan_time, topN, ms2params, time, resolution, parallel=False):
     '''
     Calculate number of MS1 and MS2 scans using parameters below.
     Parameters:
