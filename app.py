@@ -11,8 +11,9 @@ import dash_table
 import plotly.graph_objs as go
 import numpy as np
 import pandas as pd
-import mechanics, params
+import mechanics, params, toolTips
 from dash.dependencies import Input, Output, State
+import dash_bootstrap_components as dbc
 
 #fixed data for resolution graph and space-charge effect graph
 tmt_spectrum =  np.array([[127.12476, 1],[127.13108, 2]])
@@ -24,8 +25,6 @@ mechanics.normalize_ion_currents(ion_data, TIC, params.low_mass, params.high_mas
 boxes = mechanics.get_boxes(params.low_mass, params.high_mass, params.nBoxes, params.nScans, params.box_overlap)
 mechanics.add_boxes(ion_data, boxes)
 
-
-
 def update_tic(ionFlux):
     mechanics.normalize_ion_currents(ion_data, ionFlux, params.low_mass, params.high_mass)
 
@@ -36,19 +35,17 @@ app = dash.Dash(__name__, external_stylesheets=external_stylesheets,
                             'content': 'noindex, nofollow'}])
 
 app.title = 'HUMOS'
-app.layout = html.Div([
-    #header part
-    html.Div([
-        html.H1('HUMOS: How to Understand My Orbitrap Spectrum?', style={'flex-grow': '1'}),
-        html.Img(src='/assets/humos_logo.png',
-                 style={'height': '80px', 'padding-left': '2rem', 'padding-right': '2rem',
-                        'transform': 'rotate(-10deg) skewY(4deg)'}),
-             ], style={'display': 'flex'}),
-    
-    #AGC info table and Dynamic range graph
-    html.Div([
+
+blok_style = {'width':'400px'}
+small_panel_style = {'width': '80%','padding-left':'1%', 'padding-right':'10%'}
+big_panal_style = { 'display':'flex', 'flex-wrap': 'wrap', 'padding-bottom': '4rem', 'justify-content': 'space-around'}
+figure_style = {'width':'500px', 'height':'425px', 'padding-bottom': '4rem'}
+
+def table_dynRange_html():
+ #AGC info table and Dynamic range graph
+     return html.Div([
             html.Div([
-                    html.H5('Information table', title=''),
+                    html.H5('Information table', id='table-header'),
                     dash_table.DataTable(
                     id='table',
                     style_cell_conditional=[{
@@ -68,33 +65,35 @@ app.layout = html.Div([
                     )], style={'height': '250px'}),
             
             html.Div([
-                    html.H5('Dynamic range', title=params.dyn_range_descript),
+                    html.H5('Dynamic range', id='dynamic-range-header'),
                     html.Div([
                             dcc.Graph(id='dynamic-range-bar'),
-                            dcc.Graph(id='observed-peptides')
+                            dcc.Graph(id='observed-peptides'),
+                            dbc.Tooltip( "Peptides observed in MS1 spectra", 
+                                        target="observed-peptides")
                             ],
                             style={'display':'flex', 'flex-wrap': 'wrap'}
-                        )
+                        ),
+                    
                     ],
-                    style={'height': '250px'})], 
+                    style={'height': '250px'}),
+            toolTips.text_tooltip(toolTips.table_descript, 'table-header'),
+            toolTips.text_tooltip(toolTips.table_descript, 'table'),
+            toolTips.text_tooltip(toolTips.dynRange_bar1_descript, 'dynamic-range-header'),
+            toolTips.text_tooltip(toolTips.dynRange_bar1_descript, 'dynamic-range-bar'),
+            toolTips.text_tooltip(toolTips.observed_peptides_descript, 'observed-peptides')], 
             style={'display':'flex', 
                    'font':'CorierNew',
                    'flex-wrap': 'wrap',
                    'padding-bottom': '0rem',
-                   'padding-left':'3%',
+                   'padding-left':'1%',
                    'padding-right':'10%',
-                   'justify-content': 'space-between'}),
-    
-    #simulated mass spectrum        
-    dcc.Graph(id='main-graph'),   
-    
-    #TODO Alignment of elements
-    #model parameters switches
-    html.Div([
-            #Block1 distribution and Acquisition method
-            html.Div([
-                    html.H5('Peptide distribution', 
-                            title=params.pep_distr_descript),
+                   'justify-content': 'space-between'})
+
+def block1_html():
+    #Block1 distribution and Acquisition method
+    return html.Div([
+                    html.H5('Peptide distribution', id='peptide-distr-header'),
                     html.Div(dcc.RadioItems(
                             id='distribution',
                             options=[
@@ -103,10 +102,9 @@ app.layout = html.Div([
                                     {'label': 'Regular with majors', 'value': 'lognormal-major'}
                                     ],
                             value='lognormal'),
-                            style={'width': '80%','padding-left':'1%', 'padding-right':'10%'}
+                            style=small_panel_style
                                ),
-                    html.H5('Ion Current (charge/sec)', 
-                            title=params.ionFlux_discript),
+                    html.H5('Ion Current (charge/sec)', id='ion-current-header'),
                     html.Div(dcc.RadioItems(
                             id='ionFlux',
                             options=[
@@ -115,9 +113,9 @@ app.layout = html.Div([
                                     {'label': '1e10', 'value': 1e10}
                                     ],
                             value=1e8),
-                            style={'width': '80%','padding-left':'1%', 'padding-right':'10%'}
+                            style=small_panel_style
                                ),
-                    html.H5('Acquisition Method', title=params.acquisition_discript),
+                    html.H5('Acquisition Method',id='acquisition-meth-header'),
                     html.Div(dcc.RadioItems(
                             id='method-choice',
                             options=[
@@ -125,13 +123,21 @@ app.layout = html.Div([
                                     {'label': 'Usual MS1', 'value': 'ms1'},
                                     ],
                             value='ms1'), 
-                            style={'width': '80%','padding-left':'1%', 'padding-right':'10%'}
-                            )
-                    ], style={'width':'400px'}),
-            
-            #Block2 MS1 parameters
-            html.Div([
-                    html.H5('MS1 Resolution', title=params.resolution_descript),
+                            style=small_panel_style
+                            ),
+                    toolTips.text_tooltip(toolTips.pep_distr_descript, 'peptide-distr-header'),
+                    toolTips.text_tooltip(toolTips.pep_distr_rb_descript, 'distribution'),
+                    toolTips.text_tooltip(toolTips.ionCurrent_discript, 'ion-current-header'),
+                    toolTips.text_tooltip(toolTips.ionCurrent_discript, 'ionFlux'),
+                    toolTips.text_tooltip(toolTips.acquisition_discript, 'acquisition-meth-header'),
+                    toolTips.text_tooltip(toolTips.acquisition_rb_discript, 'method-choice')
+                    ], 
+                    style=blok_style)
+
+def block2_html():
+    #Block2 MS1 parameters
+    return html.Div([
+                    html.H5('MS1 Resolution', id='MS1-resolution-header'),
                     html.Div([dcc.Slider(    
                             id='resolution-slider',
                             min=0,
@@ -140,9 +146,9 @@ app.layout = html.Div([
                             marks={i: str(resolution) for i,resolution in enumerate(params.resolutions_list)},
                             step=1)
                             ],
-                            style={'width': '80%','padding-left':'1%', 'padding-right':'10%', 'padding-bottom':'2em'}),
+                            style=small_panel_style),
                     
-                    html.H5('MS1 AGC Target', title=params.AGC_discript),
+                    html.H5('MS1 AGC Target', id='MS1-AGC-header'),
                     html.Div([dcc.Slider(
                                 id='AGC-slider',
                                 min=0,
@@ -151,20 +157,28 @@ app.layout = html.Div([
                                 marks={i: '{:.0e}'.format(agc) for i, agc in enumerate(params.agc_list)},
                                     )
                              ],
-                             style={'width': '80%','padding-left':'1%', 'padding-right':'10%', 'padding-bottom':'2em'}),
+                             style=small_panel_style),
                     
-                    html.H5('MS1 Max Injection Time (ms)', title=params.IT_descript),
+                    html.H5('MS1 Max Injection Time (ms)', id='MS1-IT-header'),
                     html.Div([
                         dcc.Input(id='mit-box', type='number',size='20', value=100),
                         html.Button('set', id='it-button'),
                         ],
-                        style={'padding-left':'5%', 'padding-right':'10%', 'padding-bottom':'2em'}
-                        )
-                    ],style={'width':'400px'}),
-            
-             #Block3 MS2 parameters
-             html.Div([
-                    html.H5('MS2 Resolution', title=params.resolutionMS2_descript),
+                        style=small_panel_style
+                        ),
+                    toolTips.text_tooltip(toolTips.resolution_descript, 'MS1-resolution-header'),
+                    toolTips.text_tooltip(toolTips.resolution_descript, 'resolution-slider'),
+                    toolTips.text_tooltip(toolTips.AGC_discript, 'MS1-AGC-header'),
+                    toolTips.text_tooltip(toolTips.AGC_discript, 'AGC-slider'),
+                    toolTips.text_tooltip(toolTips.IT_descript,'MS1-IT-header'),
+                    toolTips.text_tooltip(toolTips.IT_descript,'mit-box'), 
+                    toolTips.text_tooltip(toolTips.IT_button_description,'it-button')
+                    ],style=blok_style)
+
+def block3_html():
+    #Block3 MS2 parameters
+    return html.Div([
+                    html.H5('MS2 Resolution', id='MS2-resolution-header'),
                     html.Div([dcc.Slider(    
                             id='resolution-ms2-slider',
                             min=0,
@@ -172,17 +186,17 @@ app.layout = html.Div([
                             value=2,
                             marks={i: str(resolution) for i,resolution in enumerate(params.resolutions_list)},
                             step=1,
-                            ),], style={'width': '80%','padding-left':'1%', 'padding-right':'10%', 'padding-bottom':'1em'}),
+                            ),], style=small_panel_style),
                     
-                    html.H5('MS2 Max Injection Time (ms)', title=params.IT_MS2_descript),
+                    html.H5('MS2 Max Injection Time (ms)', id='IT-MS2-header'),
                     html.Div([
                             dcc.Input(id='mit-ms2-box', type='number',size='20', value=30),
                             html.Button('set', id='it-ms2-button')
                             ],
-                            style={'width': '80%','padding-left':'5%', 'padding-right':'10%', 'padding-bottom':'1em'}
+                            style=small_panel_style
                         ),
                     
-                    html.H5('TopN', title=params.topN_discript),
+                    html.H5('TopN', id='topN-header'),
                     html.Div([dcc.Slider(
                                 id='topN-slider',
                                 min=1,
@@ -191,25 +205,30 @@ app.layout = html.Div([
                                 marks={5*i: '{}'.format(5*i) for i in range(1,9)},
                                 tooltip={'placement': 'top'},
                                 )],
-                        style={'width': '80%','padding-left':'1%', 'padding-right':'10%', 'padding-bottom': '1em'}),
+                        style=small_panel_style),
                     dcc.Checklist( id='paral-checklist',
                             options=[{'label': 'Parallelization', 'value': 'on'},],
                                     value=['on'],
                             style={'padding-bottom': '1rem'}),
                     html.Div([
-                                html.P(id='cycletime'),
+                                html.P(id='cycletime', ),
                                 html.P(id='ms1-scan-n'),
                                 html.P(id='ms2-scan-n')
                             
-                            ], style={'width': '80%','padding-left':'1%', 'padding-right':'10%'})
+                            ], style=small_panel_style),
+                    toolTips.text_tooltip(toolTips.resolutionMS2_descript,'MS2-resolution-header'),
+                    toolTips.text_tooltip(toolTips.resolutionMS2_descript,'resolution-ms2-slider'),
+                    toolTips.text_tooltip(toolTips.IT_MS2_descript,'IT-MS2-header'),
+                    toolTips.text_tooltip(toolTips.IT_MS2_descript,'mit-ms2-box'),
+                    toolTips.text_tooltip(toolTips.IT_MS2_button_descript,'it-ms2-button'),
+                    toolTips.text_tooltip(toolTips.topN_discript,'topN-header'),
+                    toolTips.text_tooltip(toolTips.topN_discript,'topN-slider'),
+                    toolTips.text_tooltip(toolTips.parallel_descript,'paral-checklist')
+                    ], style=blok_style)
                     
-                    ], style={'width':'400px'}),       
-                             
-            ], style={ 'display':'flex', 'flex-wrap': 'wrap', 'padding-bottom': '4rem', 'justify-content': 'space-around'}),
-    
-    #smaller graphs
-    html.Div([
-            html.Div([
+def res_fig_html():
+     #smaller graphs
+    return html.Div([
                     html.Center([
                             html.H5('Mass Spectral Resolution'),
                             html.P('The graph shows two adjacent TMT 10-plex reporter ions',
@@ -217,8 +236,10 @@ app.layout = html.Div([
                             dcc.Graph(id='resolution-graph')
                             ]),
                     ],
-                    style={'width':'600px', 'height':'525px'}),
-            html.Div([
+                    style=figure_style)
+
+def AGC_fig_html():
+    return html.Div([
                     html.Center([
                             html.H5('AGC influence on mass accuracy'),
                             html.P('No calibration for space-charge effect applied',
@@ -226,10 +247,40 @@ app.layout = html.Div([
                             dcc.Graph(id='accuracy-graph')
                             ])
                     ], 
-                    style={'width':'600px', 'height':'525px'}),
+                    style=figure_style)
+                    
+app.layout = html.Div([
+    #header part
+    html.Div([
+        html.H1('HUMOS: How to Understand My Orbitrap Spectrum?', style={'flex-grow': '1'}),
+        html.Img(id='logo', src='/assets/humos_logo.png',
+                 style={'height': '80px', 
+                        'padding-left': '2rem', 
+                        'padding-right': '2rem',
+                        'transform': 'rotate(-10deg) skewY(4deg)'}),
+            toolTips.logo_tooltip()
+             ], style={'display': 'flex'}),
+    table_dynRange_html(),
+    #simulated mass spectrum        
+    dcc.Graph(id='main-graph'),   
+    
+    #TODO Alignment of elements
+    #model parameters switches
+    html.Div([
+            #Block1 distribution and Acquisition
+            block1_html(),
+            #Block2 MS1 parameters
+            block2_html(),            
+             #Block3 MS2 parameters
+            block3_html(),       
+            ], style=big_panal_style),
+    
+    #smaller figures
+    html.Div([ 
+            res_fig_html(),
+            AGC_fig_html()
             
-            
-        ],style={ 'display':'flex', 'flex-wrap': 'wrap', 'justify-content': 'space-around'}),
+        ],style=big_panal_style),
 
     #footer part            
     html.Div([
@@ -457,7 +508,7 @@ def update_figure(selected_resolution, selected_agc, distribution, mit_clicked,
                                'range': [0, 100]},
                         showlegend=False,
                         barmode='stack',
-                        width= 100,
+                        width=100,
                         height=130,
                             
         )
