@@ -41,6 +41,7 @@ You will need to have the following python packages installed:
     pyteomics
     dash
     dash_table
+    dash_bootstrap_components
     plotly
 ```
 
