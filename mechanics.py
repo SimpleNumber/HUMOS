@@ -392,14 +392,14 @@ def get_boxcar_spectra(ion_data, distribution, agc_target, max_it, nBoxes, nScan
     
     return BCscans
 
-def get_MS_counts(scan_method, scan_time, topN, ms2params, time, resolution, parallel=False):
+def get_MS_counts(scan_method, acc_time, topN, ms2params, time, resolution, parallel=False):
     '''
     Calculate number of MS1 and MS2 scans using parameters below.
     Parameters:
         scan_method, str, one of 'full'|'boxcar'
-        scan_time, float (full scan) or iterable of floats (boxcar), real scan times required for the scan
+        acc_time, float (full scan) or iterable of floats (boxcar), ion accumulation times required for the scan
             in case of full scan only one value is provided
-            in case of boxcar scan, the iterable has to be, MS1 scan time, and scan_times for all boxcar scans
+            in case of boxcar scan, the iterable has to be, MS1 accumulation time, and acc_times for all boxcar scans
         topN, float, average TopN
         ms2params, (float, int), max injection time and resolution for MS/MS scans
         time, float, the length of the gradient
@@ -407,32 +407,58 @@ def get_MS_counts(scan_method, scan_time, topN, ms2params, time, resolution, par
     Return:
         tuple, (cycle time, number of MS1 scans, number of MS2 scans)
     '''
-    it_mode = ms2params[1] == 0
-    print(it_mode)
+    it_mode = ms2params[1] == 'IT'
     
     ms2time = max(ms2params[0], params.transients[ms2params[1]])
-    print(ms2time)
     
     if scan_method == 'full':
         if parallel and it_mode:
-            print("Parallel_IT")
-            cycletime = max(scan_time, params.transients[resolution], topN * ms2time)
+            #parallel with secon MS analyzer
+            # MS1 injection in parallel with last MS2 acquisition
+            # MS1 acquisiton in parallel with N cycles of MS2 injection and acquisition
+            # last acqusition is in parallel with next MS1 injection
+            cycletime = max(acc_time, params.transients[ms2params[1]]) +\
+                        max(params.transients[resolution], topN * ms2time - params.transients[ms2params[1]])
         elif parallel:
-            print("Parallel")
-            cycletime = max(scan_time, params.transients[resolution], ms2params[0]) + (topN - 1) * ms2time
+            #paralleliztion of ion accumulation
+            # MS1 injection in parallel with last MS2 acqusition
+            # MS1 acquisiton in parallel with first MS2 injection
+            # N-1 cycles of parallel MS2 injection and acquisiton
+            cycletime = max(acc_time, params.transients[ms2params[1]]) +\
+                        max(params.transients[resolution], ms2params[0]) +\
+                        (topN - 1) * ms2time
         else:
-            print("Sequential")
-            cycletime = max(scan_time, params.transients[resolution]) + topN * ms2time
+            #sequential mode: MS1 inject; MS1 record; N * (MS2 inject; MS2 record)
+            cycletime = acc_time + params.transients[resolution] + \
+                        topN * (ms2params[0] + params.transients[ms2params[1]])
+            
         
     elif scan_method == 'boxcar':
-        boxcar_time = [max(st, params.transients[resolution]) for st in scan_time]
+        boxcar_time = [max(at, params.transients[resolution]) for at in acc_time]
         if parallel and it_mode:
-            cycletime = sum(boxcar_time[:-1]) + max(boxcar_time[-1], topN * ms2time)
+            #parallel with secon MS analyzer
+            # MS1 injection in parallel with last MS2 acquisition
+            # MS1 aqusitions in parallel with MS1 injection (for boxcar scans)
+            # last MS1 acquisiton in parallel with N cycles of MS2 injection and acquisition
+            # last acqusition is in parallel with next MS1 injection
+            cycletime = max(acc_time[0], params.transients[ms2params[1]]) +\
+                        sum(boxcar_time[1:]) +\
+                        max(params.transients[resolution], topN * ms2time - params.transients[ms2params[1]])
         elif parallel:
-            cycletime = sum(boxcar_time[:-1]) + max(boxcar_time[-1], ms2params[0]) + (topN - 1) * ms2time
+            #paralleliztion of ion accumulation
+            # MS1 injection in parallel with last MS2 acqusition
+            # MS1 aqusitions in parallel with MS1 injection (for boxcar scans)
+            # last MS1 acquisiton in parallel with first MS2 injection
+            # N-1 cycles of parallel MS2 injection and acquisiton
+            cycletime = max(acc_time[0], params.transients[ms2params[1]]) +\
+                        sum(boxcar_time[1:]) +\
+                        max(params.transients[resolution], ms2params[0]) +\
+                        (topN - 1) * ms2time
         else:
-            cycletime = sum(boxcar_time) + topN * ms2time
-        
+            #sequential mode: MS1 inject; MS1 record; N * (MS2 inject; MS2 record)
+            cycletime = sum(acc_time + params.transients[resolution]) + \
+                        topN * (ms2params[0] + params.transients[ms2params[1]])
+            
     else:
         raise ValueError('scan_method has to be one of "full"|"boxcar"')
     

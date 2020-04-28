@@ -143,7 +143,7 @@ def block2_html():
                             id='resolution-slider',
                             min=1,
                             max=len(params.resolutions_list) - 1,
-                            value=3,
+                            value=4,
                             marks={i: str(resolution) for i, resolution in enumerate(params.resolutions_list)},
                             step=1)
                             ],
@@ -354,8 +354,6 @@ def update_figure(selected_resolution, selected_agc, distribution, mit_clicked,
     labels_bc = []
     bg_dyn_range = np.log10(ion_data['ic_' + distribution].max() /
                             ion_data['ic_' + distribution].min())
-
-
 
     if boxCar:
         bc_spectra = mechanics.get_boxcar_spectra(ion_data, distribution,
