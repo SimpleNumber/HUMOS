@@ -217,6 +217,12 @@ def normalize_ion_currents(ion_data, tic, low, high):
     '''
     in_mass = np.logical_and(ion_data['mz'] >= low, ion_data['mz'] <= high)
     ion_data.drop(ion_data.index[~in_mass], axis='index', inplace=True)
+    scale_ion_currents(ion_data, tic)
+
+def scale_ion_currents(ion_data, tic):
+    '''
+    Scale ion intensities to get desired TIC
+    '''
     for model in params.ion_models:
         ion_data['ic_{}'.format(model)] *= tic / ion_data['ic_{}'.format(model)].sum()
 
@@ -401,18 +407,29 @@ def get_MS_counts(scan_method, scan_time, topN, ms2params, time, resolution, par
     Return:
         tuple, (cycle time, number of MS1 scans, number of MS2 scans)
     '''
+    it_mode = ms2params[1] == 0
+    print(it_mode)
+    
     ms2time = max(ms2params[0], params.transients[ms2params[1]])
+    print(ms2time)
     
     if scan_method == 'full':
-        if parallel:
+        if parallel and it_mode:
+            print("Parallel_IT")
             cycletime = max(scan_time, params.transients[resolution], topN * ms2time)
+        elif parallel:
+            print("Parallel")
+            cycletime = max(scan_time, params.transients[resolution], ms2params[0]) + (topN - 1) * ms2time
         else:
+            print("Sequential")
             cycletime = max(scan_time, params.transients[resolution]) + topN * ms2time
         
     elif scan_method == 'boxcar':
         boxcar_time = [max(st, params.transients[resolution]) for st in scan_time]
-        if parallel:
+        if parallel and it_mode:
             cycletime = sum(boxcar_time[:-1]) + max(boxcar_time[-1], topN * ms2time)
+        elif parallel:
+            cycletime = sum(boxcar_time[:-1]) + max(boxcar_time[-1], ms2params[0]) + (topN - 1) * ms2time
         else:
             cycletime = sum(boxcar_time) + topN * ms2time
         
