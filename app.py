@@ -46,25 +46,24 @@ figure_style = {'width':'500px', 'height':'425px', 'padding-bottom': '4rem'}
 def table_dynRange_html():
  #AGC info table and Dynamic range graph
      return html.Div([
-            html.Div([
-                    html.H5('Information table', id='table-header'),
-                    dash_table.DataTable(
-                    id='table',
-                    style_cell_conditional=[{
-                                             'if': {'column_id': ''},
-                                             'fontWeight': 'bold'
-                                            }],
-                    style_header={
-                            'backgroundColor': 'white',
-                            'fontWeight': 'bold',
-                            'borderBottom': '1px solid black'
-                                 },
+                    html.Div([
+                            html.H5('Information table', id='table-header'),
+                            dash_table.DataTable(id='table',
+                                                 style_cell_conditional=[{
+                                                                         'if': {'column_id': ''},
+                                                                         'fontWeight': 'bold'
+                                                                         }],
+                                                 style_header={  'backgroundColor': 'white',
+                                                                'fontWeight': 'bold',
+                                                                'borderBottom': '1px solid black'
+                                                                     },
 
-                    style_cell={
-                            'boxShadow': '0 0',
-                            'minWidth': '120px',
-                               },
-                    )], style={'height': '250px'}),
+                                                 style_cell={
+                                                                'boxShadow': '0 0',
+                                                                'minWidth': '120px',
+                                                                        },
+                                                        )], 
+                                                 style={'height': '250px'}),
 
             html.Div([
                     html.H5('Dynamic range', id='dynamic-range-header'),
@@ -80,10 +79,7 @@ def table_dynRange_html():
                     ],
                     style={'height': '250px'}),
             toolTips.text_tooltip(toolTips.table_descript, 'table-header'),
-            toolTips.text_tooltip(toolTips.table_descript, 'table'),
-            toolTips.text_tooltip(toolTips.dynRange_bar1_descript, 'dynamic-range-header'),
-            toolTips.text_tooltip(toolTips.dynRange_bar1_descript, 'dynamic-range-bar'),
-            toolTips.text_tooltip(toolTips.observed_peptides_descript, 'observed-peptides')],
+            toolTips.text_tooltip(toolTips.dynRange_descript, 'dynamic-range-header')],
             style={'display':'flex',
                    'flex-wrap': 'wrap',
                    'padding-bottom': '0rem',
@@ -127,11 +123,11 @@ def block1_html():
                             style=small_panel_style
                             ),
                     toolTips.text_tooltip(toolTips.pep_distr_descript, 'peptide-distr-header'),
-                    toolTips.text_tooltip(toolTips.pep_distr_rb_descript, 'distribution'),
+
                     toolTips.text_tooltip(toolTips.ionCurrent_discript, 'ion-current-header'),
-                    toolTips.text_tooltip(toolTips.ionCurrent_discript, 'ionFlux'),
+
                     toolTips.text_tooltip(toolTips.acquisition_discript, 'acquisition-meth-header'),
-                    toolTips.text_tooltip(toolTips.acquisition_rb_discript, 'method-choice')
+
                     ],
                     style=block_style)
 
@@ -168,12 +164,8 @@ def block2_html():
                         style=small_panel_style
                         ),
                     toolTips.text_tooltip(toolTips.resolution_descript, 'MS1-resolution-header'),
-                    toolTips.text_tooltip(toolTips.resolution_descript, 'resolution-slider'),
                     toolTips.text_tooltip(toolTips.AGC_discript, 'MS1-AGC-header'),
-                    toolTips.text_tooltip(toolTips.AGC_discript, 'AGC-slider'),
                     toolTips.text_tooltip(toolTips.IT_descript,'MS1-IT-header'),
-                    toolTips.text_tooltip(toolTips.IT_descript,'mit-box'),
-                    toolTips.text_tooltip(toolTips.IT_button_description,'it-button')
                     ],
                 style=block_style)
 
@@ -208,10 +200,10 @@ def block3_html():
                                 tooltip={'placement': 'top'},
                                 )],
                         style=small_panel_style),
-                    dcc.Checklist( id='paral-checklist',
+                     html.Div(dcc.Checklist( id='paral-checklist',
                             options=[{'label': 'Parallelization', 'value': 'on'},],
                                     value=['on'],
-                            style={'padding-bottom': '1rem'}),
+                            style={'padding-bottom': '1rem'}), id='paral-checklist-target'),
                     html.Div([
                                 html.P(id='cycletime', ),
                                 html.P(id='ms1-scan-n'),
@@ -219,13 +211,9 @@ def block3_html():
 
                             ], style=small_panel_style),
                     toolTips.text_tooltip(toolTips.resolutionMS2_descript,'MS2-resolution-header'),
-                    toolTips.text_tooltip(toolTips.resolutionMS2_descript,'resolution-ms2-slider'),
                     toolTips.text_tooltip(toolTips.IT_MS2_descript,'IT-MS2-header'),
-                    toolTips.text_tooltip(toolTips.IT_MS2_descript,'mit-ms2-box'),
-                    toolTips.text_tooltip(toolTips.IT_MS2_button_descript,'it-ms2-button'),
                     toolTips.text_tooltip(toolTips.topN_discript,'topN-header'),
-                    toolTips.text_tooltip(toolTips.topN_discript,'topN-slider'),
-                    toolTips.text_tooltip(toolTips.parallel_descript,'paral-checklist')
+                    toolTips.text_tooltip(toolTips.parallel_descript,'paral-checklist-target')
                     ], style=block_style)
 
 def res_fig_html():
