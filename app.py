@@ -46,25 +46,27 @@ figure_style = {'width':'500px', 'height':'425px', 'padding-bottom': '4rem'}
 def table_dynRange_html():
  #AGC info table and Dynamic range graph
      return html.Div([
-                    html.Div([
-                            html.H5('Information table', id='table-header'),
-                            dash_table.DataTable(id='table',
-                                                 style_cell_conditional=[{
-                                                                         'if': {'column_id': ''},
-                                                                         'fontWeight': 'bold'
-                                                                         }],
-                                                 style_header={  'backgroundColor': 'white',
-                                                                'fontWeight': 'bold',
-                                                                'borderBottom': '1px solid black'
-                                                                     },
+            html.Div([
+                    html.H5('Information table', id='table-header'),
+                    #html.Div(id='table'),
+                    dash_table.DataTable(
+                    id='table',
+                    style_cell_conditional=[{
+                                              'if': {'column_id': ''},
+                                              'fontWeight': 'bold'
+                                            }],
+                    style_header={
+                            'backgroundColor': 'white',
+                            'fontWeight': 'bold',
+                            'borderBottom': '1px solid black'
+                                  },
 
-                                                 style_cell={
-                                                                'boxShadow': '0 0',
-                                                                'minWidth': '120px',
-                                                                        },
-                                                        )], 
-                                                 style={'height': '250px'}),
-
+                    style_cell={
+                            'boxShadow': '0 0',
+                            'minWidth': '120px',
+                                },
+                    )
+                    ], style={'height': '250px'}),
             html.Div([
                     html.H5('Dynamic range', id='dynamic-range-header'),
                     html.Div([
@@ -81,6 +83,7 @@ def table_dynRange_html():
             toolTips.text_tooltip(toolTips.table_descript, 'table-header'),
             toolTips.text_tooltip(toolTips.dynRange_descript, 'dynamic-range-header')],
             style={'display':'flex',
+                   'font':'CorierNew',
                    'flex-wrap': 'wrap',
                    'padding-bottom': '0rem',
                    'padding-left':'1%',
@@ -91,7 +94,6 @@ def block1_html():
     #Block1 distribution and Acquisition method
     return html.Div([
                     html.H5('Peptide distribution', id='peptide-distr-header'),
-#                    html.Span( "?aweetwatwaga"),
                     html.Div(dcc.RadioItems(
                             id='distribution',
                             options=[
@@ -211,7 +213,7 @@ def block3_html():
 
                             ], style=small_panel_style),
                     toolTips.text_tooltip(toolTips.resolutionMS2_descript,'MS2-resolution-header'),
-                    toolTips.text_tooltip(toolTips.IT_MS2_descript,'IT-MS2-header'),
+                    toolTips.text_tooltip(toolTips.IT_descript,'IT-MS2-header'),
                     toolTips.text_tooltip(toolTips.topN_discript,'topN-header'),
                     toolTips.text_tooltip(toolTips.parallel_descript,'paral-checklist-target')
                     ], style=block_style)
@@ -319,9 +321,15 @@ def update_figure(selected_resolution, selected_agc, distribution, mit_clicked,
     if TIC != ionFlux:
         mechanics.scale_ion_currents(ion_data, ionFlux)
         TIC = ionFlux
+    
+    dyn_range = {}
+    dyn_range['Peptide'] = [ion_data['ic_' + distribution].max(),
+                            ion_data['ic_' + distribution].min()]
 
     centroid_spectrum, real_st, real_agc, peptides, max_int, min_int = \
         mechanics.get_full_spectrum(ion_data, distribution, agc, max_it)
+    
+    dyn_range['MS1'] = [max_int, min_int]
 
     real_agcs = [real_agc]
     real_sts = [real_st]
@@ -339,15 +347,14 @@ def update_figure(selected_resolution, selected_agc, distribution, mit_clicked,
 
     main_traces = [go.Scatter(x=main_spectrum[0], y=main_spectrum[1],
                                   name='MS1 spectrum')]
+    
     labels_bc = []
-    bg_dyn_range = np.log10(ion_data['ic_' + distribution].max() /
-                            ion_data['ic_' + distribution].min())
-
+    
     if boxCar:
         bc_spectra = mechanics.get_boxcar_spectra(ion_data, distribution,
                                                        agc, max_it, params.nBoxes, params.nScans)
         labels_bc = ['BoxCar scan {}'.format(i) for i in range(1, len(bc_spectra) +1 )]
-#        dyn_ranges_x += labels_bc
+
         for bc_index, bc_label in zip(range(len(bc_spectra)), labels_bc):
             bc_spectrum = mechanics.get_profile_spectrum(bc_spectra[bc_index][0], resolution)
             main_traces.append(go.Scatter(x=bc_spectrum[0],y=bc_spectrum[1],
@@ -356,24 +363,18 @@ def update_figure(selected_resolution, selected_agc, distribution, mit_clicked,
             real_sts.append(bc_spectra[bc_index][1])
             peptides.update(bc_spectra[bc_index][3])
 
-#            dyn_ranges_y.append(np.log10(bc_spectra[bc_index][4] /
-#                                                             bc_spectra[bc_index][5]))
-            print("{} dynamic_range: {:.2f}".format(bc_label,
-                                                    np.log10(bc_spectra[bc_index][4] /
-                                                             bc_spectra[bc_index][5])))
+            dyn_range[bc_label] = [bc_spectra[bc_index][4],
+                                   bc_spectra[bc_index][5]]
+            
             max_int = max(max_int, bc_spectra[bc_index][4])
             min_int = min(min_int, bc_spectra[bc_index][5])
-    sp_dyn_range = np.log10(max_int / min_int)
-    dyn_ranges_x = ['Mixture', 'Spectral']
-    dyn_ranges_y = [bg_dyn_range, sp_dyn_range]
-
+    
+    dyn_range['Spectrum'] = [max_int, min_int]
 
     observed_peptides = np.round(100 * len(peptides) / len(ion_data["sequence"].unique()),1)
 
-    # print("Dynamic range\nBackground: {:.2f}\nSpectral: {:.2f}".format(bg_dyn_range,
-    #                                                            sp_dyn_range))
-
     table = mechanics.make_table(real_sts, real_agcs, ['MS1'] + labels_bc, resolution)
+    
     resolution_spectrum = mechanics.get_profile_spectrum(tmt_spectrum, resolution, points=51)
     resolution_traces = [go.Scatter(x=resolution_spectrum[0],
                                     y=resolution_spectrum[1],
@@ -410,15 +411,14 @@ def update_figure(selected_resolution, selected_agc, distribution, mit_clicked,
                              text ='experimental spectrum',
                              line= {'color':'#ff7f0e'},
                              name=''),]
-
-    dynRange_traces = [go.Bar(y=dyn_ranges_x,
-                              x=dyn_ranges_y,
-                              width=0.5,
-                              text=['{:.2f}'.format(dr) for dr in dyn_ranges_y],
-                              textposition='auto',
-                              orientation='h',
-                              name='Orders of magnitude'
-                             ),]
+    
+    dynRange_traces = [go.Scatter(x=drange,
+                              y=[i, i],
+                              line={'width': 7},
+                              mode='lines+text',
+                              text=['{:.2f}'.format(np.log10(drange[0] / drange[1])), label],
+                              textposition=['middle right', 'middle left']
+                             ) for i, (label, drange) in enumerate(dyn_range.items())]
 
     obsPeptides_traces = [go.Bar(x=[0],
                               y=[observed_peptides],
@@ -439,10 +439,11 @@ def update_figure(selected_resolution, selected_agc, distribution, mit_clicked,
                        ]
 
     return [
+    #dbc.Table.from_dataframe(table, bordered=True, hover=True), 
     [{"name": i, "id": i } for i in table.columns],
           table.to_dict('records'),
 
-            {
+    {
         'data': main_traces,
         'layout': go.Layout(
                 showlegend=True,
@@ -479,15 +480,19 @@ def update_figure(selected_resolution, selected_agc, distribution, mit_clicked,
         'data': dynRange_traces,
         'layout': go.Layout(
                         margin={'t':0,
-                                'l':50,
+                                'l':10,
                                 'b': 40},
-                        xaxis={ 'title': 'Orders of magnitude',
-                                'range':[0, 10]},
+                        xaxis={'title': 'Abundance',
+                               'type': 'log',
+                               'exponentformat': 'power',
+                               'range': [np.log10(dyn_range['Peptide'][1]) - 2,
+                                         np.log10(dyn_range['Peptide'][0]) + 1]},
+                        yaxis={'visible': False,
+                               'range': [-1, len(dyn_range)]},
                         showlegend=False,
-                        width= 500,
+                        width= 400,
                         height=140,
                         hovermode=False
-
         )
 
     },
@@ -504,9 +509,8 @@ def update_figure(selected_resolution, selected_agc, distribution, mit_clicked,
                         showlegend=False,
                         barmode='stack',
                         width=100,
-                        height=130,
+                        height=140,
                         hovermode=False
-
         )
 
     }
@@ -514,8 +518,6 @@ def update_figure(selected_resolution, selected_agc, distribution, mit_clicked,
 
 def update_ms_counts(topN, method, data, selected_resolution, ms2_resolution, parallel, mit_clicked,  mit_ms2 ):
     #update only counts of MS spectra, i.e. no changes to main spectrum applied
-#    print('MS2 resolution ', ms2_resolution)
-#    print('MS2 mit ', mit_ms2)
     boxCar = (method == 'bc')
     parallel = True if len(parallel) > 0 else False
     ms2_resolution = params.resolutions_list[ms2_resolution]
@@ -523,6 +525,7 @@ def update_ms_counts(topN, method, data, selected_resolution, ms2_resolution, pa
     if data == None:
        return 'Select topN', '', ''
     else:
+        # print(data.children)
         data = pd.DataFrame(data)
         data = data.iloc[:, 1:].apply(pd.to_numeric)
         if boxCar:
@@ -541,6 +544,7 @@ def update_ms_counts(topN, method, data, selected_resolution, ms2_resolution, pa
 app.callback(
     [Output('table', 'columns'),
      Output('table', 'data'),
+     #Output('table', 'children'),
      Output('main-graph', 'figure'),
      Output('resolution-graph', 'figure'),
      Output('accuracy-graph', 'figure'),
