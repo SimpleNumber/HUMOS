@@ -11,16 +11,22 @@ import dash_core_components as dcc
 import dash_html_components as html
 
 #Tooltips for headers
-tooltip_style = {'background-color':'#eeffff',
-                 'width': '400px',
-                 'padding': '1%'}
+tooltip_style = {'background-color':'white',
+                 'box-shadow':  '2px 2px 5px 3px #b3b3b3',
+                 'width': '350px',
+                 'marginRight': '10px',
+                  'marginleft': '10px',
+                 'padding-left': '5px',
+                  'padding-right': '5px',
+                }
 
 def logo_tooltip():
-    return dbc.Tooltip( html.Img(src='/assets/trap.gif'), delay={'show':2000}, target="logo")
+    return dbc.Tooltip( html.Img(src='/assets/trap.gif'), delay={'show':2000}, target="logo",
+                        placement='left-start')
 
 def text_tooltip(text, target):
     return dbc.Tooltip( dcc.Markdown(text, style=tooltip_style),
-                       target=target, delay={'show':500})
+                       target=target, delay={'show':1000},  placement='left-start')
 
 #AGC info table and Dynamic range graph
 table_descript = '''Table with actual acquisition parameters.'''

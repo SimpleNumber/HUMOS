@@ -85,7 +85,6 @@ def table_dynRange_html():
             toolTips.text_tooltip(toolTips.dynRange_bar1_descript, 'dynamic-range-bar'),
             toolTips.text_tooltip(toolTips.observed_peptides_descript, 'observed-peptides')],
             style={'display':'flex',
-                   'font':'CorierNew',
                    'flex-wrap': 'wrap',
                    'padding-bottom': '0rem',
                    'padding-left':'1%',
@@ -96,6 +95,7 @@ def block1_html():
     #Block1 distribution and Acquisition method
     return html.Div([
                     html.H5('Peptide distribution', id='peptide-distr-header'),
+#                    html.Span( "?aweetwatwaga"),
                     html.Div(dcc.RadioItems(
                             id='distribution',
                             options=[
