@@ -72,7 +72,9 @@ accumulate ions and potentially reach the corresponding AGC target value.'''
 
 
 #Block3 MS2 parameters
-resolutionMS2_descript = 'Allows changing the mass spectral resolution of MS2 spectra.'
+resolutionMS2_descript = '''Allows changing the mass spectral resolution of MS2 spectra.
+
+**IT** - MS2 scan acquired in Ion Trap.'''
 
 topN_discript = '''Controls the number of fragmentation events (MS2 scans) that 
 is scheduled for each parent ion scan.'''
