@@ -26,14 +26,14 @@ def logo_tooltip():
 
 def text_tooltip(text, target):
     return dbc.Tooltip(dcc.Markdown(text, style=tooltip_style),
-                       target=target, delay={'show':1000},  placement='bottom-start')
+                       target=target, delay={'show':1000},  placement='top-start')
 
 #AGC info table and Dynamic range graph
 table_descript = '''Table with actual acquisition parameters.'''
 dynRange_descript = '''
 **Peptide** - dynamic range of peptide mixture
 
-**MS1**, **BoxCar scans** - dynamic range of regular individual spectra
+**MS1**, **BoxCar scans** - dynamic range of individual spectra
 
 **Spectrum** - combined dynamic range of all spectra
 

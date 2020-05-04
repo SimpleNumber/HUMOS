@@ -329,7 +329,8 @@ def update_figure(selected_resolution, selected_agc, distribution, mit_clicked,
     centroid_spectrum, real_st, real_agc, peptides, max_int, min_int = \
         mechanics.get_full_spectrum(ion_data, distribution, agc, max_it)
     
-    dyn_range['MS1'] = [max_int, min_int]
+    if max_int > 0 and min_int > 0:
+        dyn_range['MS1'] = [max_int, min_int]
 
     real_agcs = [real_agc]
     real_sts = [real_st]
@@ -366,8 +367,11 @@ def update_figure(selected_resolution, selected_agc, distribution, mit_clicked,
             dyn_range[bc_label] = [bc_spectra[bc_index][4],
                                    bc_spectra[bc_index][5]]
             
-            max_int = max(max_int, bc_spectra[bc_index][4])
-            min_int = min(min_int, bc_spectra[bc_index][5])
+            if bc_spectra[bc_index][4] > 0:
+                max_int = max(max_int, bc_spectra[bc_index][4])
+            
+            if bc_spectra[bc_index][5] > 0:
+                min_int = min(min_int, bc_spectra[bc_index][5])
     
     dyn_range['Spectrum'] = [max_int, min_int]
 

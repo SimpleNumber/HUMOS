@@ -318,12 +318,11 @@ def get_full_spectrum(ion_data, distribution, agc_target, max_it):
     scan_ion_data = ion_data[dyn_range_filter]
     if scan_ion_data.shape[0] > 0: #non-empty
         peptides = set(scan_ion_data['sequence'])
-        max_int = scan_ion_data['ic_' + distribution].\
-                                iloc[np.argmax(mzdata[dyn_range_filter, 1])]
-        min_int = scan_ion_data['ic_' + distribution].\
-                                iloc[np.argmin(mzdata[dyn_range_filter, 1])]
+        max_int = scan_ion_data['ic_' + distribution].max()
+        min_int = scan_ion_data['ic_' + distribution].min()
     else:
-        peptides, max_int, min_int = set(), 1, 1
+        peptides, max_int, min_int = set(), -1, -1
+        
     return mzdata[dyn_range_filter, :], scan_time*1000, agc, peptides, max_int, min_int
 
 def get_boxcar_spectra(ion_data, distribution, agc_target, max_it, nBoxes, nScans):
@@ -380,12 +379,10 @@ def get_boxcar_spectra(ion_data, distribution, agc_target, max_it, nBoxes, nScan
         
         if scan_ion_data.shape[0] > 0: #non-empty
             peptides = set(scan_ion_data['sequence'])
-            max_int = scan_ion_data['ic_' + distribution].\
-                                    iloc[np.argmax(mzdata[dyn_range_filter, 1])]
-            min_int = scan_ion_data['ic_' + distribution].\
-                                iloc[np.argmin(mzdata[dyn_range_filter, 1])]
+            max_int = scan_ion_data['ic_' + distribution].max()
+            min_int = scan_ion_data['ic_' + distribution].min()
         else:
-            peptides, max_int, min_int = set(), 1, 1
+            peptides, max_int, min_int = set(), -1, -1
             
         BCscans.append((mzdata[dyn_range_filter, :], scan_time*1000, agc,
                         peptides, max_int, min_int))
@@ -413,7 +410,7 @@ def get_MS_counts(scan_method, acc_time, topN, ms2params, time, resolution, para
     
     if scan_method == 'full':
         if parallel and it_mode:
-            #parallel with secon MS analyzer
+            #parallel with second MS analyzer
             # MS1 injection in parallel with last MS2 acquisition
             # MS1 acquisiton in parallel with N cycles of MS2 injection and acquisition
             # last acqusition is in parallel with next MS1 injection
@@ -436,7 +433,7 @@ def get_MS_counts(scan_method, acc_time, topN, ms2params, time, resolution, para
     elif scan_method == 'boxcar':
         boxcar_time = [max(at, params.transients[resolution]) for at in acc_time]
         if parallel and it_mode:
-            #parallel with secon MS analyzer
+            #parallel with second MS analyzer
             # MS1 injection in parallel with last MS2 acquisition
             # MS1 aqusitions in parallel with MS1 injection (for boxcar scans)
             # last MS1 acquisiton in parallel with N cycles of MS2 injection and acquisition
