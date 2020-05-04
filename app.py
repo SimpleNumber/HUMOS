@@ -10,12 +10,19 @@ import dash_core_components as dcc
 import dash_html_components as html
 import dash_bootstrap_components as dbc
 import plotly.graph_objs as go
+import plotly.express as px
 import numpy as np
 import pandas as pd
 import mechanics, params, toolTips
 from dash.dependencies import Input, Output, State
 
-
+colors =  px.colors.qualitative.D3 + ['#abe2fb']  
+dynRange_colormap = {'Spectrum': colors[-4],
+                     'MS1': colors[0],
+                     'BoxCar scan 1': colors[1],
+                     'BoxCar scan 2': colors[2],
+                     'Peptide': colors[-1]}
+#d_colors = px.colors.qualitative.Plotly
 #fixed data for resolution graph and space-charge effect graph
 tmt_spectrum =  np.array([[127.12476, 1],[127.13108, 2]])
 agc_spectrum = np.array([[1277.13108, 1]])
@@ -403,20 +410,20 @@ def update_figure(selected_resolution, selected_agc, distribution, mit_clicked,
                              text='{}'.format(agc_spectrum[0,0]),
                              mode='lines',
                              name='',
-                             line= {'color':'#1f77b4'},
+                             line= {'color':colors[0]},
                              ),
 
                   go.Scatter(x=agc_spectrum_experimental[0],
                              y=agc_spectrum_experimental[1],
                              text ='experimental spectrum',
-                             line= {'color':'#ff7f0e'},
+                             line= {'color':colors[1]},
                              name=''),]
     
     dynRange_traces = [go.Scatter(x=drange,
                               y=[i, i],
-                              line={'width': 7},
+                              line={'width': 7, 'color':dynRange_colormap[label]},
                               mode='lines+text',
-                              text=['{:.2f}'.format(np.log10(drange[0] / drange[1])), label],
+                              text=['{:.2f}'.format(np.log10(drange[0] / drange[1])), label],        
                               textposition=['middle right', 'middle left']
                              ) for i, (label, drange) in enumerate(dyn_range.items())]
 
@@ -427,14 +434,14 @@ def update_figure(selected_resolution, selected_agc, distribution, mit_clicked,
                               name='% observed peptides',
                               text=str(observed_peptides),
                               textposition='inside',
-                              marker_color=['#a7e2f9']
+                              marker_color=[colors[-1]]
                              ),
                           go.Bar(x=[0],
                               y=[100 - observed_peptides],
                               width=1,
                               orientation='v',
                               name='% missing peptides',
-                              marker_color=['#0576b0']
+                              marker_color=[colors[0]]
                              )
                        ]
 
