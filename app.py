@@ -5,24 +5,24 @@ This is web-app frontend
 '''
 
 import dash
-import dash_table
 import dash_core_components as dcc
 import dash_html_components as html
 import dash_bootstrap_components as dbc
 import plotly.graph_objs as go
-import plotly.express as px
 import numpy as np
 import pandas as pd
 import mechanics, params, toolTips
+from plotly.express.colors import qualitative
 from dash.dependencies import Input, Output, State
 
-colors =  px.colors.qualitative.D3 + ['#abe2fb']  
+#color scheme
+colors =  qualitative.D3 + ['#abe2fb']  
 dynRange_colormap = {'Spectrum': colors[-4],
                      'MS1': colors[0],
                      'BoxCar scan 1': colors[1],
                      'BoxCar scan 2': colors[2],
                      'Peptide': colors[-1]}
-#d_colors = px.colors.qualitative.Plotly
+
 #fixed data for resolution graph and space-charge effect graph
 tmt_spectrum =  np.array([[127.12476, 1],[127.13108, 2]])
 agc_spectrum = np.array([[1277.13108, 1]])
@@ -37,9 +37,7 @@ mechanics.add_boxes(ion_data, boxes)
 TIC = params.TIC[2]
 
 #interface
-#TODO license informrmation for CSS scheme?
-external_stylesheets = ['https://codepen.io/chriddyp/pen/bWLwgP.css']
-app = dash.Dash(__name__, external_stylesheets=external_stylesheets,
+app = dash.Dash(__name__,
                 meta_tags=[{'name': 'robots',
                             'content': 'noindex, nofollow'}])
 
@@ -55,30 +53,13 @@ def table_dynRange_html():
      return html.Div([
             html.Div([
                     html.H5('Information table', id='table-header'),
-                    #html.Div(id='table'),
-                    dash_table.DataTable(
-                    id='table',
-                    style_cell_conditional=[{
-                                              'if': {'column_id': ''},
-                                              'fontWeight': 'bold'
-                                            }],
-                    style_header={
-                            'backgroundColor': 'white',
-                            'fontWeight': 'bold',
-                            'borderBottom': '1px solid black'
-                                  },
-
-                    style_cell={
-                            'boxShadow': '0 0',
-                            'minWidth': '120px',
-                                },
-                    )
-                    ], style={'height': '250px'}),
+                    html.Div(id='table')
+                    ], style={'height': '240px'}),
             html.Div([
                     html.H5('Dynamic range', id='dynamic-range-header'),
                     html.Div([
-                            dcc.Graph(id='dynamic-range-bar'),
-                            dcc.Graph(id='observed-peptides'),
+                            dcc.Graph(id='dynamic-range-bar', config={'displayModeBar': False}),
+                            dcc.Graph(id='observed-peptides', config={'displayModeBar': False}),
                             dbc.Tooltip( "Peptides observed in MS1 spectra",
                                         target="observed-peptides")
                             ],
@@ -86,7 +67,7 @@ def table_dynRange_html():
                         ),
 
                     ],
-                    style={'height': '250px'}),
+                    style={'height': '240px'}),
             toolTips.text_tooltip(toolTips.table_descript, 'table-header'),
             toolTips.text_tooltip(toolTips.dynRange_descript, 'dynamic-range-header')],
             style={'display':'flex',
@@ -450,10 +431,7 @@ def update_figure(selected_resolution, selected_agc, distribution, mit_clicked,
                        ]
 
     return [
-    #dbc.Table.from_dataframe(table, bordered=True, hover=True), 
-    [{"name": i, "id": i } for i in table.columns],
-          table.to_dict('records'),
-
+    dbc.Table.from_dataframe(table),
     {
         'data': main_traces,
         'layout': go.Layout(
@@ -502,7 +480,7 @@ def update_figure(selected_resolution, selected_agc, distribution, mit_clicked,
                                'range': [-1, len(dyn_range)]},
                         showlegend=False,
                         width= 400,
-                        height=140,
+                        height=180,
                         hovermode=False
         )
 
@@ -520,10 +498,9 @@ def update_figure(selected_resolution, selected_agc, distribution, mit_clicked,
                         showlegend=False,
                         barmode='stack',
                         width=100,
-                        height=140,
+                        height=180,
                         hovermode=False
         )
-
     }
     ]
 
@@ -536,8 +513,7 @@ def update_ms_counts(topN, method, data, selected_resolution, ms2_resolution, pa
     if data == None:
        return 'Select topN', '', ''
     else:
-        # print(data.children)
-        data = pd.DataFrame(data)
+        data = mechanics.tabletodf(data)
         data = data.iloc[:, 1:].apply(pd.to_numeric)
         if boxCar:
             cycletime, ms1_scan_n, ms2_scan_n = mechanics.get_MS_counts('boxcar', data.iloc[0,:],
@@ -553,9 +529,7 @@ def update_ms_counts(topN, method, data, selected_resolution, ms2_resolution, pa
             'MS2 Scans in {} minutes: {}'.format(params.LC_time, ms2_scan_n)
 
 app.callback(
-    [Output('table', 'columns'),
-     Output('table', 'data'),
-     #Output('table', 'children'),
+    [Output('table', 'children'),
      Output('main-graph', 'figure'),
      Output('resolution-graph', 'figure'),
      Output('accuracy-graph', 'figure'),
@@ -577,7 +551,7 @@ app.callback(
      Output('ms2-scan-n', 'children')],
     [Input('topN-slider', 'value'),
      Input('method-choice', 'value'),
-     Input('table','data'),
+     Input('table','children'),
      Input('resolution-slider', 'value'),
      Input('resolution-ms2-slider', 'value'),
      Input('paral-checklist', 'value'),

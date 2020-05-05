@@ -474,3 +474,31 @@ def make_table( real_ats, real_agcs, labels, resolution):
     df.columns = labels
     df.insert(0, ' ', ['Ion accumulation time, ms', 'Accumulated ions', 'Scan time, ms'])
     return df
+
+def getContent(row):
+    content = []
+    for child in row['props']['children']:
+        if child['type'] == 'Td' or child['type'] == 'Th':
+            content.append(child['props']['children'])
+    
+    return content
+
+def getRows(data):
+    rows = []
+    for child in data['props']['children']:
+        if child['type'] == 'Tr':
+            rows.append(getContent(child))
+    
+    return rows
+
+def tabletodf(data):
+    if data['type'] == 'Table':
+        for child in data['props']['children']:
+            if child['type'] == 'Thead':
+                headers = getContent(child['props']['children'])
+            elif child['type'] == 'Tbody':
+                data = getRows(child)
+                
+        return pd.DataFrame(data, columns=headers)
+    else:
+        raise Exception("Not a Table")
