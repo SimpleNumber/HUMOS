@@ -20,7 +20,7 @@ colors =  qualitative.D3 + ['#abe2fb']
 dynRange_colormap = {'Spectrum': colors[-4],
                      'MS1': colors[0],
                      'BoxCar scan 1': colors[1],
-                     'BoxCar scan 2': colors[2],
+                     'BoxCar scan 2': colors[2],#this will break if end user  will change number of boxcar scans
                      'Peptide': colors[-1]}
 
 #fixed data for resolution graph and space-charge effect graph
@@ -504,7 +504,8 @@ def update_figure(selected_resolution, selected_agc, distribution, mit_clicked,
     }
     ]
 
-def update_ms_counts(topN, method, data, selected_resolution, ms2_resolution, parallel, mit_clicked,  mit_ms2 ):
+def update_ms_counts(topN, method, data, selected_resolution, ms2_resolution, 
+                     parallel, mit_clicked,  mit_ms2 ):
     #update only counts of MS spectra, i.e. no changes to main spectrum applied
     boxCar = (method == 'bc')
     parallel = True if len(parallel) > 0 else False
@@ -517,12 +518,12 @@ def update_ms_counts(topN, method, data, selected_resolution, ms2_resolution, pa
         data = data.iloc[:, 1:].apply(pd.to_numeric)
         if boxCar:
             cycletime, ms1_scan_n, ms2_scan_n = mechanics.get_MS_counts('boxcar', data.iloc[0,:],
-                                                         topN, (mit_ms2, ms2_resolution), params.LC_time,
-                                                         resolution, parallel=parallel)
+                                                         resolution, topN, ms2_resolution, mit_ms2,
+                                                         params.LC_time, parallel=parallel)
         else:
-            cycletime, ms1_scan_n, ms2_scan_n = mechanics.get_MS_counts('full', data.iloc[0,0], topN,
-                                                             (mit_ms2, ms2_resolution), params.LC_time,
-                                                             resolution, parallel=parallel)
+            cycletime, ms1_scan_n, ms2_scan_n = mechanics.get_MS_counts('full', data.iloc[0,0], 
+                                                         resolution, topN, ms2_resolution, mit_ms2,
+                                                         params.LC_time, parallel=parallel)
 
     return  'MS Cycle length: {:.3f} sec'.format(cycletime * 1e-3),\
             'MS1 Scans in {} minutes: {}'.format(params.LC_time, ms1_scan_n),\

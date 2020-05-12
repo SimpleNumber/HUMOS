@@ -9,6 +9,152 @@ import numpy as np
 import params
 from pyteomics import mass
 from IsoSpecPy import IsoSpecPy
+
+class Cycler:
+    '''
+    Helper class allowing cycle time calculation
+    '''
+    def __init__(self, parallel):
+        '''
+        Constructor. Intializes three device queues:
+            IS for ion source,
+            OT for orbitrap,
+            IT for ion trap
+        
+        Parameters
+        ----------
+        parallel : bool
+            Use parallelization.
+
+        Returns
+        -------
+        None.
+
+        '''
+        self.IS = [0] #ion source queue
+        self.OT = [0] #OT queue
+        self.IT = [0] #IT queue
+        self.parallel = parallel #parallelization
+
+    def whenFree(self, queue):
+        '''
+        Find timepoint when specific queue is free
+
+        Parameters
+        ----------
+        queue : string
+            Name of the queue, should be one of OT/IT/IS.
+
+        Returns
+        -------
+        numerical
+            time when the queue will be available.
+
+        '''
+        try:
+            return self.__getattribute__(queue)[-1]
+        except:
+            raise ValueError("Unknown queue name: {}".format(queue))
+    
+    def whenAllFree(self):
+        '''
+        Find timepoint when all queues are free
+
+        Returns
+        -------
+        numeric
+            time when all queues are free.
+
+        '''
+        return max(self.IS[-1], self.IT[-1], self.OT[-1])
+    
+    def pushToQueue(self, queue, start, duration):
+        '''
+        Add element to queue
+
+        Parameters
+        ----------
+        queue : string
+            name of the queue, should be one of IT/OT/IS.
+        start : numeric
+            start time of an element.
+        duration : numeric
+            duration of an element.
+
+        Returns
+        -------
+        None.
+
+        '''
+        try:
+            workingQueue = self.__getattribute__(queue)
+        except:
+            raise ValueError("Unknown queue name: {}".format(queue))
+        
+        if len(workingQueue) == 1: # first element
+            workingQueue.pop()
+        
+        workingQueue.extend([start, start + duration])
+        
+    def pushTask(self, task):
+        '''
+        Add acquisition task to cycle
+
+        Parameters
+        ----------
+        task : tuple
+            task should consist of three elements:
+            ion collection time (numeric),
+            name of device queue (string), should be IT/OT,
+            dwell time (numeric).
+
+        Returns
+        -------
+        None.
+
+        '''            
+        isTime, device, devTime = task
+        
+        if not device in ['OT', 'IT']:
+            raise ValueError('Device {} is not allowed'.format(device))
+        
+        if self.parallel:
+            starttime = max(self.whenFree('IS'), self.whenFree(device) - isTime)
+        else:
+            starttime = self.whenAllFree()
+            
+        self.pushToQueue('IS', starttime, isTime)
+        self.pushToQueue(device, starttime + isTime, devTime)
+        
+    def getCycle(self):
+        '''
+        Get cycle time and queues
+        
+        Queues are represented as lists with even number of elements, each pair
+        indicates when device is busy from - to, if the queue contains only one
+        element it  should be discarded.
+        
+        Depending on parallelization cycle time can be shorter, than longest
+        device queue
+
+        Returns
+        -------
+        cycletime : numeric
+            length of cycle time.
+        dict
+            contains content of all three device queues,
+            queue name is used as a key.
+
+        '''
+        if self.parallel: #parallalelize first ion collection with last dwell time
+            firstInjection = self.IS[1]
+            devFree = max(self.whenFree('OT'), self.whenFree('IT'))
+            cycletime = max(self.whenFree('IS'), devFree - firstInjection)
+        else:
+            cycletime = self.whenAllFree()
+            
+        return cycletime, {'IS': self.IS, 'IT': self.IT, 'OT': self.OT}
+
       
 def get_ions(pep_mass, charge=2):
     '''
@@ -389,7 +535,8 @@ def get_boxcar_spectra(ion_data, distribution, agc_target, max_it, nBoxes, nScan
     
     return BCscans
 
-def get_MS_counts(scan_method, acc_time, topN, ms2params, time, resolution, parallel=False):
+def get_MS_counts(scan_method, acc_time, resolution, topN, ms2resolution,
+                  ms2IT, time, parallel=False):
     '''
     Calculate number of MS1 and MS2 scans using parameters below.
     Parameters:
@@ -397,67 +544,32 @@ def get_MS_counts(scan_method, acc_time, topN, ms2params, time, resolution, para
         acc_time, float (full scan) or iterable of floats (boxcar), ion accumulation times required for the scan
             in case of full scan only one value is provided
             in case of boxcar scan, the iterable has to be, MS1 accumulation time, and acc_times for all boxcar scans
-        topN, float, average TopN
-        ms2params, (float, int), max injection time and resolution for MS/MS scans
-        time, float, the length of the gradient
         resolution, int, used resolution (used to calculate transient time)
+        topN, float, average TopN
+        ms2resolution, int or string, resolution for MS/MS scans
+        ms2IT, float, injection time for MS/MS scans
+        time, float, the length of the gradient
+        parallel, bool, parallelization mode
     Return:
         tuple, (cycle time, number of MS1 scans, number of MS2 scans)
     '''
-    it_mode = ms2params[1] == 'IT'
+    ms2device = 'IT' if ms2resolution == 'IT' else 'OT' #select ms2 device
     
-    ms2time = max(ms2params[0], params.transients[ms2params[1]])
+    cycler = Cycler(parallel)
     
     if scan_method == 'full':
-        if parallel and it_mode:
-            #parallel with second MS analyzer
-            # MS1 injection in parallel with last MS2 acquisition
-            # MS1 acquisiton in parallel with N cycles of MS2 injection and acquisition
-            # last acqusition is in parallel with next MS1 injection
-            cycletime = max(acc_time, params.transients[ms2params[1]]) +\
-                        max(params.transients[resolution], topN * ms2time - params.transients[ms2params[1]])
-        elif parallel:
-            #paralleliztion of ion accumulation
-            # MS1 injection in parallel with last MS2 acqusition
-            # MS1 acquisiton in parallel with first MS2 injection
-            # N-1 cycles of parallel MS2 injection and acquisiton
-            cycletime = max(acc_time, params.transients[ms2params[1]]) +\
-                        max(params.transients[resolution], ms2params[0]) +\
-                        (topN - 1) * ms2time
-        else:
-            #sequential mode: MS1 inject; MS1 record; N * (MS2 inject; MS2 record)
-            cycletime = acc_time + params.transients[resolution] + \
-                        topN * (ms2params[0] + params.transients[ms2params[1]])
-            
-        
+        cycler.pushTask((acc_time, 'OT', params.transients[resolution]))
+   
     elif scan_method == 'boxcar':
-        boxcar_time = [max(at, params.transients[resolution]) for at in acc_time]
-        if parallel and it_mode:
-            #parallel with second MS analyzer
-            # MS1 injection in parallel with last MS2 acquisition
-            # MS1 aqusitions in parallel with MS1 injection (for boxcar scans)
-            # last MS1 acquisiton in parallel with N cycles of MS2 injection and acquisition
-            # last acqusition is in parallel with next MS1 injection
-            cycletime = max(acc_time[0], params.transients[ms2params[1]]) +\
-                        sum(boxcar_time[1:]) +\
-                        max(params.transients[resolution], topN * ms2time - params.transients[ms2params[1]])
-        elif parallel:
-            #paralleliztion of ion accumulation
-            # MS1 injection in parallel with last MS2 acqusition
-            # MS1 aqusitions in parallel with MS1 injection (for boxcar scans)
-            # last MS1 acquisiton in parallel with first MS2 injection
-            # N-1 cycles of parallel MS2 injection and acquisiton
-            cycletime = max(acc_time[0], params.transients[ms2params[1]]) +\
-                        sum(boxcar_time[1:]) +\
-                        max(params.transients[resolution], ms2params[0]) +\
-                        (topN - 1) * ms2time
-        else:
-            #sequential mode: MS1 inject; MS1 record; N * (MS2 inject; MS2 record)
-            cycletime = sum(acc_time + params.transients[resolution]) + \
-                        topN * (ms2params[0] + params.transients[ms2params[1]])
-            
+        for at in acc_time:
+            cycler.pushTask((at, 'OT', params.transients[resolution]))
     else:
         raise ValueError('scan_method has to be one of "full"|"boxcar"')
+    
+    for _ in range(topN):
+        cycler.pushTask((ms2IT, ms2device, params.transients[ms2resolution]))
+        
+    cycletime, queues = cycler.getCycle()
     
     nMS1 = int(60000 * time / cycletime)
     nMS2 = int(topN * nMS1)
@@ -465,6 +577,26 @@ def get_MS_counts(scan_method, acc_time, topN, ms2params, time, resolution, para
     return cycletime, nMS1, nMS2
 
 def make_table( real_ats, real_agcs, labels, resolution):
+    '''
+    Create a table with acquisition parameters 
+
+    Parameters
+    ----------
+    real_ats : list
+        ion accumulation times per scan.
+    real_agcs : list
+        number of collected ions per scan.
+    labels : TYPE
+        labels for scans.
+    resolution : TYPE
+        used resolution.
+
+    Returns
+    -------
+    df : pandas.DataFrame
+        acquisition parameters table.
+
+    '''
     real_sts = [max(acc_time, params.transients[resolution]) for acc_time in real_ats]
     df = pd.DataFrame([real_ats, real_agcs, real_sts], index = ["AT", "AGC", "ST"])
     df.loc['ST', :] = df.loc['ST', :].map('{:.2f}'.format)
@@ -475,6 +607,7 @@ def make_table( real_ats, real_agcs, labels, resolution):
     df.insert(0, ' ', ['Ion accumulation time, ms', 'Accumulated ions', 'Scan time, ms'])
     return df
 
+#helper functions to parse Dash Table element
 def getContent(row):
     content = []
     for child in row['props']['children']:
@@ -492,6 +625,25 @@ def getRows(data):
     return rows
 
 def tabletodf(data):
+    '''
+    Parse the table from HTML componnets format to pandas.DataFrame
+
+    Parameters
+    ----------
+    data : dict
+        table structure as returned by Dash, has to be Table type.
+
+    Raises
+    ------
+    Exception
+        if the type of element is not Table.
+
+    Returns
+    -------
+    pandas.DataFrame
+        representation of Dash Table.
+
+    '''
     if data['type'] == 'Table':
         for child in data['props']['children']:
             if child['type'] == 'Thead':
@@ -502,3 +654,7 @@ def tabletodf(data):
         return pd.DataFrame(data, columns=headers)
     else:
         raise Exception("Not a Table")
+
+
+
+        
