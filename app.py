@@ -29,12 +29,9 @@ agc_spectrum = np.array([[1277.13108, 1]])
 
 #generate DataFrame with theoretical ion currents for all models
 ion_data = mechanics.get_ion_data(params.peptide_collection_size)
-mechanics.normalize_ion_currents(ion_data, params.TIC[2], params.low_mass, params.high_mass)
+mechanics.normalize_ion_currents(ion_data, params.low_mass, params.high_mass)
 boxes = mechanics.get_boxes(params.low_mass, params.high_mass, params.nBoxes, params.nScans, params.box_overlap)
 mechanics.add_boxes(ion_data, boxes)
-
-#default TIC
-TIC = params.TIC[2]
 
 #interface
 app = dash.Dash(__name__,
@@ -304,11 +301,7 @@ def update_figure(selected_resolution, selected_agc, distribution, mit_clicked,
     agc = params.agc_list[selected_agc]
     ionFlux = params.TIC[ionFlux]
 
-    global TIC
-
-    if TIC != ionFlux:
-        mechanics.scale_ion_currents(ion_data, ionFlux)
-        TIC = ionFlux
+    mechanics.scale_ion_currents(ion_data, ionFlux)
     
     dyn_range = {}
     dyn_range['Peptide'] = [ion_data['ic_' + distribution].max(),

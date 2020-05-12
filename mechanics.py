@@ -357,13 +357,12 @@ def get_ion_data(nPeptides):
     
     return ion_data
 
-def normalize_ion_currents(ion_data, tic, low, high):
+def normalize_ion_currents(ion_data, low, high):
     '''
-    Restrict m/z to (low, high) mass range and scale ion intensities to get desired TIC
+    Restrict m/z to (low, high) mass range
     '''
     in_mass = np.logical_and(ion_data['mz'] >= low, ion_data['mz'] <= high)
     ion_data.drop(ion_data.index[~in_mass], axis='index', inplace=True)
-    scale_ion_currents(ion_data, tic)
 
 def scale_ion_currents(ion_data, tic):
     '''
