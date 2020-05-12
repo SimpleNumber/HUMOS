@@ -360,21 +360,6 @@ def update_figure(selected_resolution, selected_agc, distribution, mit_clicked,
 
     table = mechanics.make_table(real_sts, real_agcs, ['MS1'] + labels_bc, resolution)
     
-    resolution_spectrum = mechanics.get_profile_spectrum(tmt_spectrum, resolution, points=51)
-    resolution_traces = [go.Scatter(x=resolution_spectrum[0],
-                                    y=resolution_spectrum[1],
-                                    name=' '.join(['R =', str(resolution)])),
-                         go.Scatter(x=[tmt_spectrum[0,0], tmt_spectrum[0,0]],
-                                    y=[0, tmt_spectrum[0,1]],
-                                    text='TMT 127N',
-                                    name='',
-                                    mode='lines'
-                                    ),
-                         go.Scatter(x=[tmt_spectrum[1,0], tmt_spectrum[1,0]],
-                                    y=[0, tmt_spectrum[1,1]],
-                                    text='TMT 127C',
-                                    name='',
-                                    mode='lines')]
     agc_spectrum_theoretical = mechanics.get_profile_spectrum(agc_spectrum, resolution, points=51)
     agc_mass_experimental = np.array([[mechanics.charge_space_effect(x[0], agc), x[1]]
                                          for x in agc_spectrum])
@@ -424,77 +409,65 @@ def update_figure(selected_resolution, selected_agc, distribution, mit_clicked,
                        ]
 
     return [
-    dbc.Table.from_dataframe(table),
-    {
-        'data': main_traces,
-        'layout': go.Layout(
-                showlegend=True,
-                margin={'t':30},
-            xaxis={'title': 'm/z', 'range':x_range},
-            yaxis={'title': 'Intensity', 'range': y_range}
-        )
-
-    },
-    {
-        'data': resolution_traces,
-        'layout': go.Layout(
+        dbc.Table.from_dataframe(table),
+        {
+            'data': main_traces,
+            'layout': go.Layout(
+                            showlegend=True,
+                            margin={'t':30},
+                            xaxis={'title': 'm/z', 'range':x_range},
+                            yaxis={'title': 'Intensity', 'range': y_range}
+            )
+    
+        },
+        {
+            'data': agc_traces,
+            'layout': go.Layout(
                             margin={'t':10},
                             showlegend=False,
-                            xaxis={'title': 'm/z'},
-                            yaxis={'title': 'Intensity'},
-
-        )
-
-    },
-     {
-        'data': agc_traces,
-        'layout': go.Layout(
-                        margin={'t':10},
-                            showlegend=False,
-                            xaxis={ 'title': 'm/z',
+                            xaxis={'title': 'm/z',
                                    'range':[agc_spectrum[0,0]-0.15,agc_spectrum[0,0]+0.25,]},
-
                             yaxis={'title': 'Intensity'},
-        )
-
-    },
-    {
-        'data': dynRange_traces,
-        'layout': go.Layout(
-                        margin={'t':0,
-                                'l':10,
-                                'b': 40},
-                        xaxis={'title': 'Abundance',
-                               'type': 'log',
-                               'exponentformat': 'power',
-                               'range': [np.log10(dyn_range['Peptide'][1]) - 2,
-                                         np.log10(dyn_range['Peptide'][0]) + 1]},
-                        yaxis={'visible': False,
-                               'range': [-1, len(dyn_range)]},
-                        showlegend=False,
-                        width= 400,
-                        height=180,
-                        hovermode=False
-        )
-
-    },
-    {
-        'data': obsPeptides_traces,
-        'layout': go.Layout(
-                        margin={'t':10,
-                                'l':40,
-                                'r':10,
-                                'b': 10},
-                        xaxis={'visible': False},
-                        yaxis={'title': '% visible peptides',
-                               'range': [0, 100]},
-                        showlegend=False,
-                        barmode='stack',
-                        width=100,
-                        height=180,
-                        hovermode=False
-        )
-    }
+            )
+    
+        },
+        {
+            'data': dynRange_traces,
+            'layout': go.Layout(
+                            margin={'t':0,
+                                    'l':10,
+                                    'b': 40},
+                            xaxis={'title': 'Abundance',
+                                   'type': 'log',
+                                   'exponentformat': 'power',
+                                   'range': [np.log10(dyn_range['Peptide'][1]) - 2,
+                                             np.log10(dyn_range['Peptide'][0]) + 1]},
+                            yaxis={'visible': False,
+                                   'range': [-1, len(dyn_range)]},
+                            showlegend=False,
+                            width= 400,
+                            height=180,
+                            hovermode=False
+            )
+    
+        },
+        {
+            'data': obsPeptides_traces,
+            'layout': go.Layout(
+                            margin={'t':10,
+                                    'l':40,
+                                    'r':10,
+                                    'b': 10},
+                            xaxis={'visible': False},
+                            yaxis={'title': '% visible peptides',
+                                   'range': [0, 100]},
+                            showlegend=False,
+                            barmode='stack',
+                            width=100,
+                            height=180,
+                            hovermode=False
+            )
+        }
     ]
 
 def update_ms_counts(topN, method, data, selected_resolution, ms2_resolution, 
@@ -522,10 +495,41 @@ def update_ms_counts(topN, method, data, selected_resolution, ms2_resolution,
             'MS1 Scans in {} minutes: {}'.format(params.LC_time, ms1_scan_n),\
             'MS2 Scans in {} minutes: {}'.format(params.LC_time, ms2_scan_n)
 
+def update_resolution_graph(selected_resolution):
+    resolution = 1000 if selected_resolution == 0 else params.resolutions_list[selected_resolution]
+    resolution_spectrum = mechanics.get_profile_spectrum(tmt_spectrum, resolution, points=51)
+    resolution_traces = [go.Scatter(x=resolution_spectrum[0],
+                                    y=resolution_spectrum[1],
+                                    name=' '.join(['R =', str(resolution)])),
+                         go.Scatter(x=[tmt_spectrum[0,0], tmt_spectrum[0,0]],
+                                    y=[0, tmt_spectrum[0,1]],
+                                    text='TMT 127N',
+                                    name='',
+                                    mode='lines'
+                                    ),
+                         go.Scatter(x=[tmt_spectrum[1,0], tmt_spectrum[1,0]],
+                                    y=[0, tmt_spectrum[1,1]],
+                                    text='TMT 127C',
+                                    name='',
+                                    mode='lines')]
+
+    return [
+        {
+            'data': resolution_traces,
+            'layout': go.Layout(
+                            margin={'t':10},
+                            showlegend=False,
+                            xaxis={'title': 'm/z'},
+                            yaxis={'title': 'Intensity'},
+    
+            )
+    
+        }
+        ]
+
 app.callback(
     [Output('table', 'children'),
      Output('main-graph', 'figure'),
-     Output('resolution-graph', 'figure'),
      Output('accuracy-graph', 'figure'),
      Output('dynamic-range-bar','figure'),
      Output('observed-peptides', 'figure')],
@@ -536,8 +540,7 @@ app.callback(
      Input('method-choice', 'value'),
      Input('ionFlux', 'value')],
      [State('main-graph', 'relayoutData'),
-      State('mit-box', 'value'),
-      ])(update_figure)
+      State('mit-box', 'value')])(update_figure)
 
 app.callback(
     [Output('cycletime', 'children'),
@@ -551,6 +554,10 @@ app.callback(
      Input('paral-checklist', 'value'),
      Input('it-ms2-button','n_clicks')],
     [State('mit-ms2-box', 'value')])(update_ms_counts)
+
+app.callback(
+    [Output('resolution-graph', 'figure')],
+    [Input('resolution-ms2-slider', 'value')])(update_resolution_graph)
 
 server = app.server
 
