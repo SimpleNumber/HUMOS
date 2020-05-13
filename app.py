@@ -41,44 +41,50 @@ app = dash.Dash(__name__,
 app.title = 'HUMOS'
 
 block_style = {'width':'400px'}
-small_panel_style = {'width': '80%','padding-left':'1%', 'padding-right':'10%'}
+small_panel_style = {'width': '80%','padding-left':'1%', 'padding-right':'10%', 'margin-top':'1rem', 'margin-bottom':'1rem'}
 big_panel_style = { 'display':'flex', 'flex-wrap': 'wrap', 'padding-bottom': '4rem', 'justify-content': 'space-around'}
 figure_style = {'width':'500px', 'height':'425px', 'padding-bottom': '4rem'}
+info_style = {'height': '15px', 'padding-bottom':'5px', 'padding-left':'3px', 'display':'inline'}
+i_src = '/assets/info.png'
 
 def table_dynRange_html():
  #AGC info table and Dynamic range graph
      return html.Div([
-            html.Div([
-                    html.H5('Information table', id='table-header'),
-                    html.Div(id='table')
-                    ], style={'height': '240px'}),
-            html.Div([
-                    html.H5('Dynamic range', id='dynamic-range-header'),
-                    html.Div([
-                            dcc.Graph(id='dynamic-range-bar', config={'displayModeBar': False}),
-                            dcc.Graph(id='observed-peptides', config={'displayModeBar': False}),
-                            dbc.Tooltip( "Peptides observed in MS1 spectra",
-                                        target="observed-peptides")
-                            ],
-                            style={'display':'flex', 'flex-wrap': 'wrap'}
-                        ),
-
-                    ],
+                html.Div([
+                        html.H6('Information table', id='table-header'),
+                        html.Img(id='i-table', src=i_src, style=info_style),
+                        html.Div(id='table')
+                        ], style={'height': '240px'}),
+                html.Div([
+                        html.H6('Dynamic range', id='dynamic-range-header'),
+                        html.Img(id='i-dynamic-range', src=i_src, style=info_style),
+                        html.Div([
+                                dcc.Graph(id='dynamic-range-bar', config={'displayModeBar': False}),
+                                dcc.Graph(id='observed-peptides', config={'displayModeBar': False}),
+                                dbc.Tooltip( "Peptides observed in MS1 spectra",
+                                            target="observed-peptides")
+                                ],
+                                style={'display':'flex', 'flex-wrap': 'wrap'}
+                            ),
+    
+                        ],
                     style={'height': '240px'}),
-            toolTips.text_tooltip(toolTips.table_descript, 'table-header'),
-            toolTips.text_tooltip(toolTips.dynRange_descript, 'dynamic-range-header')],
-            style={'display':'flex',
-                   'font':'CorierNew',
-                   'flex-wrap': 'wrap',
-                   'padding-bottom': '0rem',
-                   'padding-left':'1%',
-                   'padding-right':'10%',
-                   'justify-content': 'space-between'})
+                toolTips.text_tooltip(toolTips.table_descript, 'table-header'),
+                toolTips.text_tooltip(toolTips.table_descript, 'i-table'),
+                toolTips.text_tooltip(toolTips.dynRange_descript, 'dynamic-range-header'),
+                toolTips.text_tooltip(toolTips.dynRange_descript, 'i-dynamic-range')],
+                style={'display':'flex',
+                       'flex-wrap': 'wrap',
+                       'padding-bottom': '0rem',
+                       'padding-left':'1%',
+                       'padding-right':'10%',
+                       'justify-content': 'space-between'})
 
 def block1_html():
     #Block1 distribution and Acquisition method
     return html.Div([
-                    html.H5('Peptide distribution', id='peptide-distr-header'),
+                    html.H6('Peptide distribution', id='peptide-distr-header'),
+                    html.Img(id='i-peptide-distr', src=i_src, style=info_style),
                     html.Div(dcc.RadioItems(
                             id='distribution',
                             options=[
@@ -89,7 +95,8 @@ def block1_html():
                             value='lognormal'),
                             style=small_panel_style
                                ),
-                    html.H5('Ion Current (charge/sec)', id='ion-current-header'),
+                    html.H6('Ion Current (charge/sec)', id='ion-current-header'),
+                    html.Img(id='i-ion-current', src=i_src, style=info_style),
                     html.Div(dcc.Slider(
                                 id='ionFlux',
                                 min=0,
@@ -99,7 +106,8 @@ def block1_html():
                                 step=1),
                             style=small_panel_style
                             ),
-                    html.H5('Acquisition Method', id='acquisition-meth-header'),
+                    html.H6('Acquisition Method', id='acquisition-meth-header'),
+                    html.Img(id='i-acquisition-meth', src=i_src, style=info_style),
                     html.Div(dcc.RadioItems(
                             id='method-choice',
                             options=[
@@ -110,18 +118,19 @@ def block1_html():
                             style=small_panel_style
                             ),
                     toolTips.text_tooltip(toolTips.pep_distr_descript, 'peptide-distr-header'),
-
+                    toolTips.text_tooltip(toolTips.pep_distr_descript, 'i-peptide-distr'),
                     toolTips.text_tooltip(toolTips.ionCurrent_discript, 'ion-current-header'),
-
+                    toolTips.text_tooltip(toolTips.ionCurrent_discript, 'i-ion-current'),
                     toolTips.text_tooltip(toolTips.acquisition_discript, 'acquisition-meth-header'),
-
+                    toolTips.text_tooltip(toolTips.acquisition_discript, 'i-acquisition-meth'),
                     ],
                     style=block_style)
 
 def block2_html():
     #Block2 MS1 parameters
     return html.Div([
-                    html.H5('MS1 Resolution', id='MS1-resolution-header'),
+                    html.H6('MS1 Resolution', id='MS1-resolution-header'),
+                    html.Img(id='i-ms1-res', src=i_src, style=info_style),
                     html.Div([dcc.Slider(
                             id='resolution-slider',
                             min=1,
@@ -132,7 +141,8 @@ def block2_html():
                             ],
                             style=small_panel_style),
 
-                    html.H5('MS1 AGC Target', id='MS1-AGC-header'),
+                    html.H6('MS1 AGC Target', id='MS1-AGC-header'),
+                    html.Img(id='i-ms1-agc', src=i_src, style=info_style),
                     html.Div([dcc.Slider(
                                 id='AGC-slider',
                                 min=0,
@@ -143,7 +153,8 @@ def block2_html():
                              ],
                              style=small_panel_style),
 
-                    html.H5('MS1 Max Injection Time (ms)', id='MS1-IT-header'),
+                    html.H6('MS1 Max Injection Time (ms)', id='MS1-IT-header'),
+                    html.Img(id='i-ms1-mit', src=i_src, style=info_style),
                     html.Div([
                         dcc.Input(id='mit-box', type='number',size='20', value=100),
                         html.Button('set', id='it-button'),
@@ -151,15 +162,19 @@ def block2_html():
                         style=small_panel_style
                         ),
                     toolTips.text_tooltip(toolTips.resolution_descript, 'MS1-resolution-header'),
+                    toolTips.text_tooltip(toolTips.resolution_descript, 'i-ms1-res'),
                     toolTips.text_tooltip(toolTips.AGC_discript, 'MS1-AGC-header'),
+                    toolTips.text_tooltip(toolTips.AGC_discript, 'i-ms1-agc'),
                     toolTips.text_tooltip(toolTips.IT_descript,'MS1-IT-header'),
+                    toolTips.text_tooltip(toolTips.IT_descript,'i-ms1-mit'),
                     ],
                 style=block_style)
 
 def block3_html():
     #Block3 MS2 parameters
     return html.Div([
-                    html.H5('MS2 Resolution', id='MS2-resolution-header'),
+                    html.H6('MS2 Resolution', id='MS2-resolution-header'),
+                    html.Img(id='i-ms2-resolution', src=i_src, style=info_style),
                     html.Div([dcc.Slider(
                             id='resolution-ms2-slider',
                             min=0,
@@ -169,7 +184,8 @@ def block3_html():
                             step=1,
                             ),], style=small_panel_style),
 
-                    html.H5('MS2 Max Injection Time (ms)', id='IT-MS2-header'),
+                    html.H6('MS2 Max Injection Time (ms)', id='IT-MS2-header'),
+                    html.Img(id='i-ms2-mit', src=i_src, style=info_style),
                     html.Div([
                             dcc.Input(id='mit-ms2-box', type='number',size='20', value=30),
                             html.Button('set', id='it-ms2-button')
@@ -177,20 +193,23 @@ def block3_html():
                             style=small_panel_style
                         ),
 
-                    html.H5('TopN', id='topN-header'),
+                    html.H6('TopN', id='topN-header'),
+                    html.Img(id='i-topN', src=i_src, style=info_style),
                     html.Div([dcc.Slider(
                                 id='topN-slider',
                                 min=1,
                                 max=40,
                                 value=15,
                                 marks={5*i: '{}'.format(5*i) for i in range(1,9)},
-                                tooltip={'placement': 'top'},
                                 )],
                         style=small_panel_style),
-                     html.Div(dcc.Checklist( id='paral-checklist',
-                            options=[{'label': 'Parallelization', 'value': 'on'},],
-                                    value=['on'],
-                            style={'padding-bottom': '1rem'}), id='paral-checklist-target'),
+                    dcc.Checklist( id='paral-checklist',
+                                             options=[{'label': 'Parallelization', 'value': 'on'},],
+                                             value=['on'],
+                                             labelStyle={'display': 'inline-block'},
+                                             style={'padding-bottom': '1rem', 'display':'inline' }),
+                    html.Img(id='i-paral', src=i_src, style=info_style,),
+                              #, id='paral-checklist-target'),
                     html.Div([
                                 html.P(id='cycletime', ),
                                 html.P(id='ms1-scan-n'),
@@ -198,16 +217,20 @@ def block3_html():
 
                             ], style=small_panel_style),
                     toolTips.text_tooltip(toolTips.resolutionMS2_descript,'MS2-resolution-header'),
+                    toolTips.text_tooltip(toolTips.resolutionMS2_descript,'i-ms2-resolution'),
                     toolTips.text_tooltip(toolTips.IT_descript,'IT-MS2-header'),
+                    toolTips.text_tooltip(toolTips.IT_descript,'i-ms2-mit'),
                     toolTips.text_tooltip(toolTips.topN_discript,'topN-header'),
-                    toolTips.text_tooltip(toolTips.parallel_descript,'paral-checklist-target')
+                    toolTips.text_tooltip(toolTips.topN_discript,'i-topN'),
+                    toolTips.text_tooltip(toolTips.parallel_descript,'i-paral'),
+#                    toolTips.text_tooltip(toolTips.parallel_descript,'paral-checklist-target')
                     ], style=block_style)
 
 def res_fig_html():
      #smaller graphs
     return html.Div([
                     html.Center([
-                            html.H5('Mass Spectral Resolution'),
+                            html.H6('Mass Spectral Resolution'),
                             html.P('The graph shows two adjacent TMT 10-plex reporter ions',
                                    style={'font-style': 'italic'}),
                             dcc.Graph(id='resolution-graph')
@@ -218,7 +241,7 @@ def res_fig_html():
 def AGC_fig_html():
     return html.Div([
                     html.Center([
-                            html.H5('AGC influence on mass accuracy'),
+                            html.H6('AGC influence on mass accuracy'),
                             html.P('No calibration for space-charge effect applied',
                                    style={'font-style': 'italic'}),
                             dcc.Graph(id='accuracy-graph')
