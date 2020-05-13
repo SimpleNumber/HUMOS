@@ -220,7 +220,7 @@ def get_profile_spectrum(mz_intensity_list, r, points=41):
                 
     return full_grid, full_spectrum
 
-def charge_space_effect(mass, agc):
+def charge_space_effect(mass, agc): # redundant function
     '''
     Fitted space-charge effect formula
     '''

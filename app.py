@@ -238,17 +238,6 @@ def res_fig_html():
                     ],
                     style=figure_style)
 
-def AGC_fig_html():
-    return html.Div([
-                    html.Center([
-                            html.H6('AGC influence on mass accuracy'),
-                            html.P('No calibration for space-charge effect applied',
-                                   style={'font-style': 'italic'}),
-                            dcc.Graph(id='accuracy-graph')
-                            ])
-                    ],
-                    style=figure_style)
-
 app.layout = html.Div([
     #header part
     html.Div([
@@ -277,7 +266,6 @@ app.layout = html.Div([
     #smaller figures
     html.Div([
             res_fig_html(),
-            AGC_fig_html()
 
         ],style=big_panel_style),
 
@@ -383,28 +371,6 @@ def update_figure(selected_resolution, selected_agc, distribution, mit_clicked,
 
     table = mechanics.make_table(real_sts, real_agcs, ['MS1'] + labels_bc, resolution)
     
-    agc_spectrum_theoretical = mechanics.get_profile_spectrum(agc_spectrum, resolution, points=51)
-    agc_mass_experimental = np.array([[mechanics.charge_space_effect(x[0], agc), x[1]]
-                                         for x in agc_spectrum])
-    agc_spectrum_experimental = mechanics.get_profile_spectrum(agc_mass_experimental, resolution, points=51)
-    agc_traces = [go.Scatter(x=agc_spectrum_theoretical[0],
-                             y=agc_spectrum_theoretical[1],
-                             text ='theoretical spectrum',
-                             name=''),
-                  go.Scatter(x=[agc_spectrum[0,0], agc_spectrum[0,0]],
-                             y=[0, agc_spectrum[0,1]],
-                             text='{}'.format(agc_spectrum[0,0]),
-                             mode='lines',
-                             name='',
-                             line= {'color':colors[0]},
-                             ),
-
-                  go.Scatter(x=agc_spectrum_experimental[0],
-                             y=agc_spectrum_experimental[1],
-                             text ='experimental spectrum',
-                             line= {'color':colors[1]},
-                             name=''),]
-    
     dynRange_traces = [go.Scatter(x=drange,
                               y=[i, i],
                               line={'width': 7, 'color':dynRange_colormap[label]},
@@ -443,17 +409,7 @@ def update_figure(selected_resolution, selected_agc, distribution, mit_clicked,
             )
     
         },
-        {
-            'data': agc_traces,
-            'layout': go.Layout(
-                            margin={'t':10},
-                            showlegend=False,
-                            xaxis={'title': 'm/z',
-                                   'range':[agc_spectrum[0,0]-0.15,agc_spectrum[0,0]+0.25,]},
-                            yaxis={'title': 'Intensity'},
-            )
-    
-        },
+
         {
             'data': dynRange_traces,
             'layout': go.Layout(
@@ -553,7 +509,6 @@ def update_resolution_graph(selected_resolution):
 app.callback(
     [Output('table', 'children'),
      Output('main-graph', 'figure'),
-     Output('accuracy-graph', 'figure'),
      Output('dynamic-range-bar','figure'),
      Output('observed-peptides', 'figure')],
     [Input('resolution-slider', 'value'),
