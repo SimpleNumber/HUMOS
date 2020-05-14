@@ -573,7 +573,7 @@ def get_MS_counts(scan_method, acc_time, resolution, topN, ms2resolution,
     nMS1 = int(60000 * time / cycletime)
     nMS2 = int(topN * nMS1)
     
-    return cycletime, nMS1, nMS2
+    return cycletime, nMS1, nMS2, queues
 
 def make_table( real_ats, real_agcs, labels, resolution):
     '''
