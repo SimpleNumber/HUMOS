@@ -40,7 +40,6 @@ You will need to have the following python packages installed:
     IsoSpecPy
     pyteomics
     dash
-    dash_table
     dash_bootstrap_components
     plotly
 ```
