@@ -49,7 +49,8 @@ app.title = 'HUMOS'
 block_style = {'width':'400px'}
 small_panel_style = {'width': '80%','padding-left':'1%', 'padding-right':'10%', 'margin-top':'1rem', 'margin-bottom':'1rem'}
 big_panel_style = { 'display':'flex', 'flex-wrap': 'wrap', 'padding-bottom': '4rem', 'justify-content': 'space-around'}
-figure_style = {'width':'500px', 'height':'425px', 'padding-bottom': '4rem'}
+res_figure_style = {'width':'500px', 'height':'425px', 'padding-bottom': '4rem'}
+cycle_figure_style = {'width':'650px', 'height':'425px', 'padding-bottom': '4rem'}
 info_style = {'height': '15px', 'padding-bottom':'5px', 'padding-left':'3px', 'display':'inline'}
 i_src = '/assets/info.png'
 
@@ -242,7 +243,7 @@ def res_fig_html():
                             dcc.Graph(id='resolution-graph')
                             ]),
                     ],
-                    style=figure_style)
+                    style=res_figure_style)
 
 def cycle_time_fig():
     
@@ -254,53 +255,75 @@ def cycle_time_fig():
                             dcc.Graph(id='cycle-time-graph')
                             ]),
                     ],
-                    style=figure_style)
+                    style=cycle_figure_style)
                     
 def get_cycle_time_traces(queues, cycletime,color_label_scheme):
     start_point = 90 
     n = 20
     ion_accumulation = []
+    ion_accumulation.append(go.Scatterpolar(r=[0.5] * 50 + [0.7] * 50 + [0.9] * 50,
+                                        theta=list(np.linspace(90,450,50))*3,#'Acquisition in Ion Trap',
+                                        mode="lines",
+                                        line={'width': 1, 'color':'#cccccc'},
+                                        showlegend=False,
+                                        ))
     IS_colors, IS_labels, OT_colors, OT_labels, IT_colors, IT_labels  = color_label_scheme
-
+    show_leg = True
     for s, e, label, color in zip(queues['IS'][0::2], queues['IS'][1::2], IS_labels, IS_colors):     
         start = s / cycletime * 360
         end = e / cycletime * 360
+        if label == 'Ion accum. time for MS2 (2)':
+            show_leg = False
         ion_accumulation.append(go.Scatterpolar(r=[0.9] * n,
                                     theta=np.linspace(start_point - start, start_point - end, n),
                                     mode = 'lines',
                                     line={'width': 20, 'color':color},
-                                    name = label,
-                                    text=[label]*n,
+                                    name = label.split('(')[0],
                                     hoveron='fills',
                                     hoverinfo='text',
+                                    showlegend=show_leg,
                                     ))
 
-
+    show_leg = True
     for s, e, label, color in zip(queues['OT'][0::2], queues['OT'][1::2], OT_labels, OT_colors):     
         start = s / cycletime * 360
         end = e / cycletime * 360
+        if label == 'Acquisition MS2 (2)':
+            show_leg = False
         ion_accumulation.append(go.Scatterpolar(r=[0.7] * n,
                                     theta=np.linspace(start_point - start, start_point - end, n),
                                     mode='lines',#    name='Acquisition in Orbitrap',
                                     line={'width': 20, 'color':color},
-                                    name = label,
-                                    text=[label]*n,
+                                    name = label.split('(')[0],
                                     hoveron='fills',
                                     hoverinfo='text',
-                                    ))
+                                    showlegend=show_leg,
+                                 ))
+    show_leg = True  
     if len(queues['IT']) > 1:
         for s, e, label, color in zip(queues['IT'][0::2], queues['IT'][1::2], IT_labels, IT_colors):     
             start = s / cycletime * 360
             end = e / cycletime * 360
+            if label == 'Acquisition MS2 (2) in ion trap':
+                show_leg = False
             ion_accumulation.append(go.Scatterpolar(r=[0.5] * n,
                                         theta=np.linspace(start_point - start, start_point - end, n),
                                         mode= 'lines',
-                                        name=label, #'Acquisition in Ion Trap',
+                                        name=label.split('(')[0], #'Acquisition in Ion Trap',
                                         line={'width': 20, 'color':color},
-                                        text=[label]*n,
                                         hoveron='fills',
                                         hoverinfo='text',
+                                        showlegend=show_leg,
                                         ))
+    ion_accumulation.append(go.Scatterpolar(r=[0.1, 0.1, 0.53, 0.73, 0.93],
+                                        theta=[90, -90] + [90]*3,#'Acquisition in Ion Trap',
+                                        mode="text",
+                                        text=['Cycle time','{} sec'.format(cycletime/1000),
+                                              'Ion Trap','Orbitrap', 'Ion Accumulation'],
+                                        showlegend=False,
+                                        textfont={"size": [18]*2+[11]*3},
+                                        textposition='top center'
+                                        ))                  
     return ion_accumulation#, r_ticktext, r_vals, theta_ticktext, theta_vals
 app.layout = html.Div([
     #header part
@@ -525,18 +548,17 @@ def update_ms_counts(topN, method, data, selected_resolution, ms2_resolution,
     else:
         data = mechanics.tabletodf(data)
         data = data.iloc[:, 1:].apply(pd.to_numeric)
-        IS_labels = ['Ion accumulation time for MS1 spectrum']
+        IS_labels = ['Ion accum. time for MS1']
         IS_colors = [colormap['AcTime MS1']]
         OT_colors = [colormap['MS1']]
-        OT_labels = ['Acquisition MS1 spectrum']
+        OT_labels = ['Acquisition MS1']
         IT_colors = []
         IT_labels = []
-        print(ms2_resolution)
         if boxCar:
             cycletime, ms1_scan_n, ms2_scan_n, queues = mechanics.get_MS_counts('boxcar', data.iloc[0,:],
                                                          resolution, topN, ms2_resolution, mit_ms2,
                                                          params.LC_time, parallel=parallel)
-            IS_labels += ['Ion accumulation time for BoxCar scan {}'.format(i) for i in range(1, number_of_bc + 1)]
+            IS_labels += ['Ion accum. time for BoxCar scan {}'.format(i) for i in range(1, number_of_bc + 1)]
             OT_labels += ['Acquisition BoxCar scan {}'.format(i) for i in range(1, number_of_bc + 1)]
             IS_colors += [colormap['AcTime BC1'], colormap['AcTime BC2']]
             OT_colors += [colormap['BoxCar scan 1'], colormap['BoxCar scan 2']]
@@ -544,21 +566,16 @@ def update_ms_counts(topN, method, data, selected_resolution, ms2_resolution,
             cycletime, ms1_scan_n, ms2_scan_n, queues = mechanics.get_MS_counts('full', data.iloc[0,0], 
                                                          resolution, topN, ms2_resolution, mit_ms2,
                                                          params.LC_time, parallel=parallel)
-        IS_labels += ['Ion accumulation time for MS2 spectrum {}'.format(i) for i in range(1,topN + 1)]
+        IS_labels += ['Ion accum. time for MS2 ({})'.format(i) for i in range(1,topN + 1)]
         IS_colors += [colormap['AcTime MS2']]*topN
         if ms2_resolution == 'IT':
             IT_colors = [colormap['MS2']]*topN
-            IT_labels = ['Acquisition MS2 spectrum {} in ion trap'.format(i) for i in range(1,topN + 1)]
+            IT_labels = ['Acquisition MS2 ({}) in ion trap'.format(i) for i in range(1,topN + 1)]
         else:
             OT_colors += [colormap['MS2']]*topN
-            OT_labels += ['Acquisition MS2 spectrum {} in Orbitrap'.format(i) for i in range(1,topN + 1)]
+            OT_labels += ['Acquisition MS2 ({})'.format(i) for i in range(1,topN + 1)]
     color_label_scheme = [IS_colors, IS_labels,OT_colors, OT_labels, IT_colors, IT_labels]
-#    print(cycletime)
-#    print(queues)
-#    for k,v in queues.items():
-#        print(k, len(v))
-
-    rs = [0.7,0.8,0.9]  
+    rs = [0.5,0.7,0.9]  
     cycle_traces = get_cycle_time_traces(queues, cycletime, color_label_scheme)
  
 
@@ -571,14 +588,17 @@ def update_ms_counts(topN, method, data, selected_resolution, ms2_resolution,
             'data': cycle_traces,
             'layout': go.Layout(
                             polar = {'radialaxis': {'angle':90, 
-                                                    'range':[0, 1], 
-                                                    'showticklabels':False, # 'tickvals':rs, 'textvals':rs,    
+                                                    'range':[0, 1], 'showticklabels':False, # 'tickvals':rs, 'textvals':rs,    
                                                     'tickvals':rs,#'tick':['IT', 'OT', 'Ion Accumulation'],
-                                                    'visible':True, 
-                                                    'color':'#cccccc'},
+                                                    'visible':False, 
+                                                    'color':'#cccccc',
+                                                    'showline':True},
                                     'angularaxis': {'showticklabels':
                                         False, 'ticks':'','visible':False }},
-                            showlegend = False
+                               showlegend=True,
+#                               legend= {'x': 2,
+#                                        'y': 1}
+                            
             )
     
         }]
