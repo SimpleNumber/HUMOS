@@ -217,12 +217,12 @@ def block3_html():
                                              style={'padding-bottom': '1rem', 'display':'inline' }),
                     html.Img(id='i-paral', src=i_src, style=info_style,),
                               #, id='paral-checklist-target'),
-                    html.Div([
-                                html.P(id='cycletime', ),
-                                html.P(id='ms1-scan-n'),
-                                html.P(id='ms2-scan-n')
-
-                            ], style=small_panel_style),
+#                    html.Div([
+#                                html.P(id='cycletime', ),
+#                                html.P(id='ms1-scan-n'),
+#                                html.P(id='ms2-scan-n')
+#
+#                            ], style=small_panel_style),
                     toolTips.text_tooltip(toolTips.resolutionMS2_descript,'MS2-resolution-header'),
                     toolTips.text_tooltip(toolTips.resolutionMS2_descript,'i-ms2-resolution'),
                     toolTips.text_tooltip(toolTips.IT_descript,'IT-MS2-header'),
@@ -259,7 +259,7 @@ def cycle_time_fig():
                     
 def get_cycle_time_traces(queues, cycletime,color_label_scheme):
     start_point = 90 
-    n = 20
+    n = 30
     ion_accumulation = []
     ion_accumulation.append(go.Scatterpolar(r=[0.5] * 50 + [0.7] * 50 + [0.9] * 50,
                                         theta=list(np.linspace(90,450,50))*3,#'Acquisition in Ion Trap',
@@ -317,14 +317,14 @@ def get_cycle_time_traces(queues, cycletime,color_label_scheme):
                                         hoverinfo='text',
                                         showlegend=show_leg,
                                         ))
-    ion_accumulation.append(go.Scatterpolar(r=[0.1, 0.1, 0.54, 0.74, 0.94],
-                                        theta=[90, -90] + [90]*3,#'Acquisition in Ion Trap',
+    ion_accumulation.append(go.Scatterpolar(r=[0.0,  0.55, 0.75, 0.95],
+                                        theta=[90] + [90]*5,#'Acquisition in Ion Trap',
                                         mode="text",
-                                        text=['Cycle time','{} sec'.format(cycletime/1000),
+                                        text=['{} sec'.format(cycletime/1000),
                                               'Ion Trap','Orbitrap', 'Ion Accumulation'],
                                         showlegend=False,
-                                        textfont={"size": [18]*2+[11]*3},
-                                        textposition='top center',
+                                        textfont={"size": [18]*1+[11]*3},
+                                        textposition='middle center',
                                         hoverinfo='text'
                                         ))                  
     return ion_accumulation#, r_ticktext, r_vals, theta_ticktext, theta_vals
@@ -580,27 +580,45 @@ def update_ms_counts(topN, method, data, selected_resolution, ms2_resolution,
     color_label_scheme = [IS_colors, IS_labels,OT_colors, OT_labels, IT_colors, IT_labels]
     rs = [0.5,0.7,0.9]  
     cycle_traces = get_cycle_time_traces(queues, cycletime, color_label_scheme)
- 
-
+    cycle_traces.append(go.Scatterpolar(r=[1.1, 1.2, 0.74, 0.94],
+                                        theta=[-15, -30] ,#'Acquisition in Ion Trap',
+                                        mode='text',
+                                        text=[ 'MS1 Scans in {} minutes: {}'.format(params.LC_time, ms1_scan_n),
+                                              'MS2 Scans in {} minutes: {}'.format(params.LC_time, ms2_scan_n),],
+                                        showlegend=False,
+                                        textfont={"size": [15]*2},
+                                        textposition='bottom right',
+                                        hoverinfo='text'
+                                        ))
     
-    return [ 'MS Cycle length: {:.3f} sec'.format(cycletime * 1e-3),\
-            'MS1 Scans in {} minutes: {}'.format(params.LC_time, ms1_scan_n),\
-            'MS2 Scans in {} minutes: {}'.format(params.LC_time, ms2_scan_n), \
+    return [ 
+#            'MS Cycle length: {:.3f} sec'.format(cycletime * 1e-3),\
+#            'MS1 Scans in {} minutes: {}'.format(params.LC_time, ms1_scan_n),\
+#            'MS2 Scans in {} minutes: {}'.format(params.LC_time, ms2_scan_n), \
             
         {
             'data': cycle_traces,
             'layout': go.Layout(
                             polar = {'radialaxis': {'angle':90, 
-                                                    'range':[0, 1], 'showticklabels':False, # 'tickvals':rs, 'textvals':rs,    
+                                                    'range':[0, 1.2], 'showticklabels':False, # 'tickvals':rs, 'textvals':rs,    
                                                     'tickvals':rs,#'tick':['IT', 'OT', 'Ion Accumulation'],
                                                     'visible':False, 
                                                     'color':'#cccccc',
-                                                    'showline':True},
+                                                      'showline':True},
+                                
                                     'angularaxis': {'showticklabels':
                                         False, 'ticks':'','visible':False }},
-                               showlegend=True,
-#                               legend= {'x': 2,
-#                                        'y': 1}
+                           showlegend=True,
+                           legend= {'x': 0.95,
+                                    'y': 0.85},
+                           margin=dict(
+                                    l=0,
+                                    r=300,
+                                    b=0,
+                                    t=0,
+                                    pad=4
+                                ),
+                                    
                             
             )
     
@@ -654,9 +672,10 @@ app.callback(
       State('mit-box', 'value')])(update_figure)
 
 app.callback(
-    [Output('cycletime', 'children'),
-     Output('ms1-scan-n', 'children'),
-     Output('ms2-scan-n', 'children'),
+    [
+#     Output('cycletime', 'children'),
+#     Output('ms1-scan-n', 'children'),
+#     Output('ms2-scan-n', 'children'),
      Output('cycle-time-graph', 'figure')],
     [Input('topN-slider', 'value'),
      Input('method-choice', 'value'),
