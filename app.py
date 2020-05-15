@@ -20,11 +20,13 @@ colors =  qualitative.D3 + ['#abe2fb', '#87aade', '#ffb380', '#87de87','#ffdd55'
 colormap = {'Spectrum': colors[7],
             'MS1': colors[0],
             'BoxCar scan 1': colors[1],
-            'BoxCar scan 2': colors[2],#this will break if end user  will change number of boxcar scans
+            'BoxCar scan 2': colors[2],
+            # WARNING!! this will break if end user  will change number of boxcar scans!!
             'Peptide': colors[10],
             'AcTime MS1': colors[11],
             'AcTime BC1': colors[12],
             'AcTime BC2': colors[13],
+            # WARNING!! this will break if end user  will change number of boxcar scans!!
             'AcTime MS2': colors[15],
             'MS2': colors[7],
                      }
@@ -40,12 +42,6 @@ boxes = mechanics.get_boxes(params.low_mass, params.high_mass, params.nBoxes, pa
 mechanics.add_boxes(ion_data, boxes)
 
 #interface
-app = dash.Dash(__name__,
-                meta_tags=[{'name': 'robots',
-                            'content': 'noindex, nofollow'}])
-
-app.title = 'HUMOS'
-
 block_style = {'width':'400px'}
 small_panel_style = {'width': '80%','padding-left':'1%', 'padding-right':'10%', 'margin-top':'1rem', 'margin-bottom':'1rem'}
 big_panel_style = { 'display':'flex', 'flex-wrap': 'wrap', 'padding-bottom': '4rem', 'justify-content': 'space-around'}
@@ -328,6 +324,14 @@ def get_cycle_time_traces(queues, cycletime,color_label_scheme):
                                         hoverinfo='text'
                                         ))                  
     return ion_accumulation#, r_ticktext, r_vals, theta_ticktext, theta_vals
+
+#Main window
+app = dash.Dash(__name__,
+                meta_tags=[{'name': 'robots',
+                            'content': 'noindex, nofollow'}])
+
+app.title = 'HUMOS'
+
 app.layout = html.Div([
     #header part
     html.Div([
@@ -542,8 +546,12 @@ def update_ms_counts(topN, method, data, selected_resolution, ms2_resolution,
                      parallel, mit_clicked,  mit_ms2 ):
     #update only counts of MS spectra, i.e. no changes to main spectrum applied
     boxCar = (method == 'bc')
-    number_of_bc = 2
-    parallel = True if len(parallel) > 0 else False
+    
+    # WARNING!!
+    number_of_bc = 2 
+    # WARNING!! Number of BC scan is USER parameter!!
+    
+    parallel = True if len(parallel) > 0 else False #??
     ms2_resolution = params.resolutions_list[ms2_resolution]
     resolution = params.resolutions_list[selected_resolution]
     if data == None:

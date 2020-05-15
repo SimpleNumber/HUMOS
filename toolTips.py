@@ -1,9 +1,7 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 """
-Created on Sun Apr 26 16:39:46 2020
-
-@author: julia
+Tooltip data
 """
 
 import dash_bootstrap_components as dbc
@@ -30,6 +28,7 @@ def text_tooltip(text, target):
 
 #AGC info table and Dynamic range graph
 table_descript = '''Table with actual acquisition parameters.'''
+
 dynRange_descript = '''
 **Peptide** - dynamic range of peptide mixture
 

@@ -653,7 +653,4 @@ def tabletodf(data):
         return pd.DataFrame(data, columns=headers)
     else:
         raise Exception("Not a Table")
-
-
-
-        
+    
