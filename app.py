@@ -266,7 +266,9 @@ def get_cycle_time_traces(queues, cycletime,color_label_scheme):
                                         mode="lines",
                                         line={'width': 1, 'color':'#cccccc'},
                                         showlegend=False,
+                                        hoverinfo='skip',
                                         ))
+    
     IS_colors, IS_labels, OT_colors, OT_labels, IT_colors, IT_labels  = color_label_scheme
     show_leg = True
     for s, e, label, color in zip(queues['IS'][0::2], queues['IS'][1::2], IS_labels, IS_colors):     
@@ -277,10 +279,10 @@ def get_cycle_time_traces(queues, cycletime,color_label_scheme):
         ion_accumulation.append(go.Scatterpolar(r=[0.9] * n,
                                     theta=np.linspace(start_point - start, start_point - end, n),
                                     mode = 'lines',
-                                    line={'width': 20, 'color':color},
-                                    name = label.split('(')[0],
+                                    line={'width': 15, 'color':color},
+                                    name = label.split('(')[0],#                                    ,
+                                    hoverinfo='text',#  
                                     hoveron='fills',
-                                    hoverinfo='text',
                                     showlegend=show_leg,
                                     ))
 
@@ -293,7 +295,7 @@ def get_cycle_time_traces(queues, cycletime,color_label_scheme):
         ion_accumulation.append(go.Scatterpolar(r=[0.7] * n,
                                     theta=np.linspace(start_point - start, start_point - end, n),
                                     mode='lines',#    name='Acquisition in Orbitrap',
-                                    line={'width': 20, 'color':color},
+                                    line={'width': 15, 'color':color},
                                     name = label.split('(')[0],
                                     hoveron='fills',
                                     hoverinfo='text',
@@ -310,19 +312,20 @@ def get_cycle_time_traces(queues, cycletime,color_label_scheme):
                                         theta=np.linspace(start_point - start, start_point - end, n),
                                         mode= 'lines',
                                         name=label.split('(')[0], #'Acquisition in Ion Trap',
-                                        line={'width': 20, 'color':color},
+                                        line={'width': 15, 'color':color},
                                         hoveron='fills',
                                         hoverinfo='text',
                                         showlegend=show_leg,
                                         ))
-    ion_accumulation.append(go.Scatterpolar(r=[0.1, 0.1, 0.53, 0.73, 0.93],
+    ion_accumulation.append(go.Scatterpolar(r=[0.1, 0.1, 0.54, 0.74, 0.94],
                                         theta=[90, -90] + [90]*3,#'Acquisition in Ion Trap',
                                         mode="text",
                                         text=['Cycle time','{} sec'.format(cycletime/1000),
                                               'Ion Trap','Orbitrap', 'Ion Accumulation'],
                                         showlegend=False,
                                         textfont={"size": [18]*2+[11]*3},
-                                        textposition='top center'
+                                        textposition='top center',
+                                        hoverinfo='text'
                                         ))                  
     return ion_accumulation#, r_ticktext, r_vals, theta_ticktext, theta_vals
 app.layout = html.Div([
