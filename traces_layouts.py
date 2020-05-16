@@ -7,18 +7,25 @@ Created on Sat May 16 13:06:14 2020
 """
 import numpy as np
 import pandas as pd
-import mechanics, params, toolTips 
+import params
 import plotly.graph_objs as go
+import colorsys
 
 def get_theta_ranges(theta_range):
     theta = np.arange(theta_range[0], theta_range[1], -0.2)
     return np.append(theta, theta_range[1])
 
-def lightening_color(rgb_color, coef=0.5):
+def lightening_color(rgb_color, coef=0.4):
     r, g, b = [int(i) for i in rgb_color[4:-1].split(',')]
-    return 'rgb({},{},{})'.format(min(int(r + r * coef), 255),
-                                  min(int(g + g * coef), 255),
-                                  min(int(b + b * coef), 255))
+    hsv_color = list(colorsys.rgb_to_hsv(r,g,b))
+    hsv_color[1] *= 0.5
+    if hsv_color[1] == 0:
+        hsv_color[2] = min(255,hsv_color[2] * 1.7) 
+    else:
+        hsv_color[2] = min(255,hsv_color[2] * 1.2)
+    r, g, b = [int(i) for i in colorsys.hsv_to_rgb(*hsv_color)]
+    
+    return 'rgb({},{},{})'.format(r, g, b)
     
 
 def get_cycle_layout():
