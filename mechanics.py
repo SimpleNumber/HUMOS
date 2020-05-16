@@ -596,14 +596,16 @@ def make_table( real_ats, real_agcs, labels, resolution):
         acquisition parameters table.
 
     '''
+#    print(real_ats, real_agcs, labels,resolution)
     real_sts = [max(acc_time, params.transients[resolution]) for acc_time in real_ats]
     df = pd.DataFrame([real_ats, real_agcs, real_sts], index = ["AT", "AGC", "ST"])
     df.loc['ST', :] = df.loc['ST', :].map('{:.2f}'.format)
     df.loc['AT', :] = df.loc['AT', :].map('{:.2f}'.format)
     df.loc['AGC', :] = df.loc['AGC', :].map('{:.1e}'.format)
-    
+#    print(df)
     df.columns = labels
     df.insert(0, ' ', ['Ion accumulation time, ms', 'Accumulated ions', 'Scan time, ms'])
+#    print(df)
     return df
 
 #helper functions to parse Dash Table element

@@ -12,7 +12,9 @@ import plotly.graph_objs as go
 import numpy as np
 import pandas as pd
 import mechanics, params, toolTips
+import traces_layouts as tl
 from plotly.express.colors import qualitative
+from plotly.colors import convert_colors_to_same_type
 from dash.dependencies import Input, Output, State
 
 #color scheme
@@ -117,7 +119,7 @@ def block1_html():
                                     {'label': 'BoxCar', 'value': 'bc'},
                                     {'label': 'Usual MS1', 'value': 'ms1'},
                                     ],
-                            value='ms1'),
+                            value='bc'),
                             style=small_panel_style
                             ),
                     toolTips.text_tooltip(toolTips.pep_distr_descript, 'peptide-distr-header'),
@@ -212,13 +214,7 @@ def block3_html():
                                              labelStyle={'display': 'inline-block'},
                                              style={'padding-bottom': '1rem', 'display':'inline' }),
                     html.Img(id='i-paral', src=i_src, style=info_style,),
-                              #, id='paral-checklist-target'),
-#                    html.Div([
-#                                html.P(id='cycletime', ),
-#                                html.P(id='ms1-scan-n'),
-#                                html.P(id='ms2-scan-n')
-#
-#                            ], style=small_panel_style),
+
                     toolTips.text_tooltip(toolTips.resolutionMS2_descript,'MS2-resolution-header'),
                     toolTips.text_tooltip(toolTips.resolutionMS2_descript,'i-ms2-resolution'),
                     toolTips.text_tooltip(toolTips.IT_descript,'IT-MS2-header'),
@@ -241,8 +237,8 @@ def res_fig_html():
                     ],
                     style=res_figure_style)
 
-def cycle_time_fig():
-    
+def cycle_time_html():
+
     return html.Div([
                     html.Center([
                             html.H6('Cycle Time'),
@@ -252,78 +248,12 @@ def cycle_time_fig():
                             ]),
                     ],
                     style=cycle_figure_style)
-                    
-def get_cycle_time_traces(queues, cycletime,color_label_scheme):
-    start_point = 90 
-    n = 30
-    ion_accumulation = []
-    ion_accumulation.append(go.Scatterpolar(r=[0.5] * 50 + [0.7] * 50 + [0.9] * 50,
-                                        theta=list(np.linspace(90,450,50))*3,#'Acquisition in Ion Trap',
-                                        mode="lines",
-                                        line={'width': 1, 'color':'#cccccc'},
-                                        showlegend=False,
-                                        hoverinfo='skip',
-                                        ))
-    
-    IS_colors, IS_labels, OT_colors, OT_labels, IT_colors, IT_labels  = color_label_scheme
-    show_leg = True
-    for s, e, label, color in zip(queues['IS'][0::2], queues['IS'][1::2], IS_labels, IS_colors):     
-        start = s / cycletime * 360
-        end = e / cycletime * 360
-        if label == 'Ion accum. time for MS2 (2)':
-            show_leg = False
-        ion_accumulation.append(go.Scatterpolar(r=[0.9] * n,
-                                    theta=np.linspace(start_point - start, start_point - end, n),
-                                    mode = 'lines',
-                                    line={'width': 15, 'color':color},
-                                    name = label.split('(')[0],#                                    ,
-                                    hoverinfo='text',#  
-                                    hoveron='fills',
-                                    showlegend=show_leg,
-                                    ))
 
-    show_leg = True
-    for s, e, label, color in zip(queues['OT'][0::2], queues['OT'][1::2], OT_labels, OT_colors):     
-        start = s / cycletime * 360
-        end = e / cycletime * 360
-        if label == 'Acquisition MS2 (2)':
-            show_leg = False
-        ion_accumulation.append(go.Scatterpolar(r=[0.7] * n,
-                                    theta=np.linspace(start_point - start, start_point - end, n),
-                                    mode='lines',#    name='Acquisition in Orbitrap',
-                                    line={'width': 15, 'color':color},
-                                    name = label.split('(')[0],
-                                    hoveron='fills',
-                                    hoverinfo='text',
-                                    showlegend=show_leg,
-                                 ))
-    show_leg = True  
-    if len(queues['IT']) > 1:
-        for s, e, label, color in zip(queues['IT'][0::2], queues['IT'][1::2], IT_labels, IT_colors):     
-            start = s / cycletime * 360
-            end = e / cycletime * 360
-            if label == 'Acquisition MS2 (2) in ion trap':
-                show_leg = False
-            ion_accumulation.append(go.Scatterpolar(r=[0.5] * n,
-                                        theta=np.linspace(start_point - start, start_point - end, n),
-                                        mode= 'lines',
-                                        name=label.split('(')[0], #'Acquisition in Ion Trap',
-                                        line={'width': 15, 'color':color},
-                                        hoveron='fills',
-                                        hoverinfo='text',
-                                        showlegend=show_leg,
-                                        ))
-    ion_accumulation.append(go.Scatterpolar(r=[0.0,  0.55, 0.75, 0.95],
-                                        theta=[90] + [90]*5,#'Acquisition in Ion Trap',
-                                        mode="text",
-                                        text=['{} sec'.format(cycletime/1000),
-                                              'Ion Trap','Orbitrap', 'Ion Accumulation'],
-                                        showlegend=False,
-                                        textfont={"size": [18]*1+[11]*3},
-                                        textposition='middle center',
-                                        hoverinfo='text'
-                                        ))                  
-    return ion_accumulation#, r_ticktext, r_vals, theta_ticktext, theta_vals
+
+
+
+
+
 
 #Main window
 app = dash.Dash(__name__,
@@ -360,7 +290,7 @@ app.layout = html.Div([
     #smaller figures
     html.Div([
             res_fig_html(),
-            cycle_time_fig()
+            cycle_time_html()
         ],style=big_panel_style),
 
     #footer part
@@ -440,9 +370,10 @@ def update_figure(selected_resolution, selected_agc, distribution, mit_clicked,
     if boxCar:
         bc_spectra = mechanics.get_boxcar_spectra(ion_data, distribution,
                                                        agc, max_it, params.nBoxes, params.nScans)
+#        print('bc from mechanics ', len(bc_spectra), bc_spectra)
         labels_bc = ['BoxCar scan {}'.format(i) for i in range(1, len(bc_spectra) +1 )]
-
-        for bc_index, bc_label in zip(range(len(bc_spectra)), labels_bc):
+#        print(labels_bc)
+        for bc_index, bc_label in enumerate(labels_bc):
             bc_spectrum = mechanics.get_profile_spectrum(bc_spectra[bc_index][0], resolution)
             main_traces.append(go.Scatter(x=bc_spectrum[0],y=bc_spectrum[1],
                                           name=bc_label))
@@ -458,13 +389,13 @@ def update_figure(selected_resolution, selected_agc, distribution, mit_clicked,
             
             if bc_spectra[bc_index][5] > 0:
                 min_int = min(min_int, bc_spectra[bc_index][5])
-    
+#        print(real_agcs)
     dyn_range['Spectrum'] = [max_int, min_int]
 
     observed_peptides = np.round(100 * len(peptides) / len(ion_data["sequence"].unique()),1)
 
     table = mechanics.make_table(real_sts, real_agcs, ['MS1'] + labels_bc, resolution)
-    
+#    print(table)
     dynRange_traces = [go.Scatter(x=drange,
                               y=[i, i],
                               line={'width': 7, 'color':colormap[label]},
@@ -542,14 +473,11 @@ def update_figure(selected_resolution, selected_agc, distribution, mit_clicked,
         }
     ]
 
+    
 def update_ms_counts(topN, method, data, selected_resolution, ms2_resolution, 
                      parallel, mit_clicked,  mit_ms2 ):
     #update only counts of MS spectra, i.e. no changes to main spectrum applied
     boxCar = (method == 'bc')
-    
-    # WARNING!!
-    number_of_bc = 2 
-    # WARNING!! Number of BC scan is USER parameter!!
     
     parallel = True if len(parallel) > 0 else False #??
     ms2_resolution = params.resolutions_list[ms2_resolution]
@@ -557,81 +485,80 @@ def update_ms_counts(topN, method, data, selected_resolution, ms2_resolution,
     if data == None:
        return 'Select topN', '', ''
     else:
+#        print(data)
         data = mechanics.tabletodf(data)
+#        print(data)
         data = data.iloc[:, 1:].apply(pd.to_numeric)
-        IS_labels = ['Ion accum. time for MS1']
-        IS_colors = [colormap['AcTime MS1']]
-        OT_colors = [colormap['MS1']]
-        OT_labels = ['Acquisition MS1']
-        IT_colors = []
-        IT_labels = []
+#        print(data.columns)
+        
+#        print(acq_df)
+#        print(data)
         if boxCar:
             cycletime, ms1_scan_n, ms2_scan_n, queues = mechanics.get_MS_counts('boxcar', data.iloc[0,:],
                                                          resolution, topN, ms2_resolution, mit_ms2,
                                                          params.LC_time, parallel=parallel)
-            IS_labels += ['Ion accum. time for BoxCar scan {}'.format(i) for i in range(1, number_of_bc + 1)]
-            OT_labels += ['Acquisition BoxCar scan {}'.format(i) for i in range(1, number_of_bc + 1)]
-            IS_colors += [colormap['AcTime BC1'], colormap['AcTime BC2']]
-            OT_colors += [colormap['BoxCar scan 1'], colormap['BoxCar scan 2']]
+
         else:
             cycletime, ms1_scan_n, ms2_scan_n, queues = mechanics.get_MS_counts('full', data.iloc[0,0], 
                                                          resolution, topN, ms2_resolution, mit_ms2,
                                                          params.LC_time, parallel=parallel)
-        IS_labels += ['Ion accum. time for MS2 ({})'.format(i) for i in range(1,topN + 1)]
-        IS_colors += [colormap['AcTime MS2']]*topN
-        if ms2_resolution == 'IT':
-            IT_colors = [colormap['MS2']]*topN
-            IT_labels = ['Acquisition MS2 ({}) in ion trap'.format(i) for i in range(1,topN + 1)]
-        else:
-            OT_colors += [colormap['MS2']]*topN
-            OT_labels += ['Acquisition MS2 ({})'.format(i) for i in range(1,topN + 1)]
-    color_label_scheme = [IS_colors, IS_labels,OT_colors, OT_labels, IT_colors, IT_labels]
-    rs = [0.5,0.7,0.9]  
-    cycle_traces = get_cycle_time_traces(queues, cycletime, color_label_scheme)
-    cycle_traces.append(go.Scatterpolar(r=[1.1, 1.2, 0.74, 0.94],
-                                        theta=[-15, -30] ,#'Acquisition in Ion Trap',
-                                        mode='text',
-                                        text=[ 'MS1 Scans in {} minutes: {}'.format(params.LC_time, ms1_scan_n),
-                                              'MS2 Scans in {} minutes: {}'.format(params.LC_time, ms2_scan_n),],
-                                        showlegend=False,
-                                        textfont={"size": [15]*2},
-                                        textposition='bottom right',
-                                        hoverinfo='text'
-                                        ))
+    iat =['Accumulation ' + i for i in list(data.columns) + ['MS2 ' + str(j) for j in range(1,topN+1) ]]
+    ot = ['Acquisition '+ i for i in list(data.columns)]
+    ot_names = ['Acquisition '+ i for i in list(data.columns)]
+    main_colors = convert_colors_to_same_type(qualitative.D3[:3] + qualitative.Dark2[:-3]*(len(data.columns) - 3))[0]
+    theta_start = 90 - pd.Series(queues['IS'][::2]) / cycletime * 360
+    theta_end = 90 - pd.Series(queues['IS'][1::2]) / cycletime * 360
+#    print(theta_start)
+#    print(90 - pd.Series(queues['OT'][::2]) / cycletime * 360)
+#    print(len(theta_end))
+    theta_start = theta_start.append(90 - pd.Series(queues['OT'][::2]) / cycletime * 360, ignore_index=True)
+    theta_end = theta_end.append(90 - pd.Series(queues['OT'][1::2]) / cycletime * 360, ignore_index=True)
+#    print(len(theta_start))
+#    print(len(theta_end))
+    it = []
+    it_names= []
+    if len(queues['IT']) > 1:
+        it = ['Acquisition MS2 ' + str(i) for i in range(1, topN + 1)]
+        it_names = ['Acquisition MS2 '] * topN
+        main_colors += [qualitative.Dark2[5]] * topN
+        theta_start = theta_start.append(90 - pd.Series(queues['IT'][::2]) / cycletime * 360, ignore_index=True)
+        theta_end = theta_end.append(90 - pd.Series(queues['IT'][1::2]) / cycletime * 360, ignore_index=True)
+    else:
+        ot += ['Acquisition MS2 ' + str(i) for i in range(1, topN + 1)]
+        ot_names += ['Acquisition MS2 '] * topN
+        main_colors += [qualitative.Dark2[-1]] * topN
+    aqc_names = [ 'Accumulation ' + i for i in list(data.columns) + ['MS2 '] * topN]
     
-    return [ 
-#            'MS Cycle length: {:.3f} sec'.format(cycletime * 1e-3),\
-#            'MS1 Scans in {} minutes: {}'.format(params.LC_time, ms1_scan_n),\
-#            'MS2 Scans in {} minutes: {}'.format(params.LC_time, ms2_scan_n), \
-            
-        {
+    aqc_show_legend = [True]*len(data.columns)+ [False] * topN
+
+    cycle_df = pd.DataFrame({'text':iat + ot + it, 
+                           'mode':'lines',
+                           'name':aqc_names + ot_names + it_names,
+                           'hoverinfo':'text',#  
+                           'hoveron':'fills',
+                           'showlegend':aqc_show_legend*2,
+                           'r':[0.9] * len(iat) + [0.7] * len(ot) + [0.5] * len(it),
+                           'line_color': [tl.lightening_color(i) for i in main_colors] + main_colors,
+                           'line_width': 15,
+                           'start':theta_start ,
+                           'end':theta_end ,
+                           })
+
+
+    cycle_df['theta'] = cycle_df.loc[:,['start', 'end']].apply(tl.get_theta_ranges, axis=1)
+
+#    print(cycle_df.columns)
+    cycle_df['traces'] = cycle_df.apply(tl.get_cycle_tr, axis=1)
+    cycle_traces = [tl.get_cycle_grid_tr()]
+    cycle_traces += list(cycle_df['traces'])
+    cycle_traces.append(tl.get_cycle_annotations_tr(cycletime))
+    cycle_traces.append(tl.get_cycle_text_tr(ms1_scan_n, ms2_scan_n))#    print(cycle_df['traces'])
+#    print(cycle_traces)
+    return  [ {
             'data': cycle_traces,
-            'layout': go.Layout(
-                            polar = {'radialaxis': {'angle':90, 
-                                                    'range':[0, 1.2], 'showticklabels':False, # 'tickvals':rs, 'textvals':rs,    
-                                                    'tickvals':rs,#'tick':['IT', 'OT', 'Ion Accumulation'],
-                                                    'visible':False, 
-                                                    'color':'#cccccc',
-                                                      'showline':True},
-                                
-                                    'angularaxis': {'showticklabels':
-                                        False, 'ticks':'','visible':False }},
-                           showlegend=True,
-                           legend= {'x': 0.95,
-                                    'y': 0.85},
-                           margin=dict(
-                                    l=0,
-                                    r=300,
-                                    b=0,
-                                    t=0,
-                                    pad=4
-                                ),
-                                    
-                            
-            )
-    
+            'layout': tl.get_cycle_layout()
         }]
-        
+                      
 
 def update_resolution_graph(selected_resolution):
     resolution = 1000 if selected_resolution == 0 else params.resolutions_list[selected_resolution]
@@ -681,9 +608,6 @@ app.callback(
 
 app.callback(
     [
-#     Output('cycletime', 'children'),
-#     Output('ms1-scan-n', 'children'),
-#     Output('ms2-scan-n', 'children'),
      Output('cycle-time-graph', 'figure')],
     [Input('topN-slider', 'value'),
      Input('method-choice', 'value'),
