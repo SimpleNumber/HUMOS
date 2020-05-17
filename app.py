@@ -506,8 +506,10 @@ def update_ms_counts(topN, method, data, selected_resolution, ms2_resolution,
     ot = ['Acquisition '+ i for i in list(data.columns)]
     ot_names = ['Acquisition '+ i for i in list(data.columns)]
     main_colors = convert_colors_to_same_type(qualitative.D3[:3] + qualitative.Dark2[:-3]*(len(data.columns) - 3))[0]
+    main_colors = main_colors[:len(data.columns)]
     theta_start = 90 - pd.Series(queues['IS'][::2]) / cycletime * 360
     theta_end = 90 - pd.Series(queues['IS'][1::2]) / cycletime * 360
+#    print(main_colors)
 #    print(theta_start)
 #    print(90 - pd.Series(queues['OT'][::2]) / cycletime * 360)
 #    print(len(theta_end))
@@ -530,7 +532,12 @@ def update_ms_counts(topN, method, data, selected_resolution, ms2_resolution,
     aqc_names = [ 'Accumulation ' + i for i in list(data.columns) + ['MS2 '] * topN]
     
     aqc_show_legend = [True]*len(data.columns)+ [False] * topN
-
+#    print(len(iat + ot + it))
+#    print(len(aqc_names + ot_names + it_names))
+#    print(len(aqc_show_legend))
+#    print(len([tl.lightening_color(i) for i in main_colors] + main_colors))
+#    print(len(theta_start))
+#    print(len(theta_start))
     cycle_df = pd.DataFrame({'text':iat + ot + it, 
                            'mode':'lines',
                            'name':aqc_names + ot_names + it_names,
