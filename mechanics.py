@@ -9,6 +9,9 @@ import numpy as np
 import params
 from pyteomics import mass
 from IsoSpecPy import IsoSpecPy
+import colorsys
+from plotly.colors import convert_colors_to_same_type
+from plotly.express.colors import qualitative
 
 class Cycler:
     '''
@@ -532,7 +535,7 @@ def get_boxcar_spectra(ion_data, distribution, agc_target, max_it, nBoxes, nScan
         BCscans.append((mzdata[dyn_range_filter, :], scan_time*1000, agc,
                         peptides, max_int, min_int))
     
-    return BCscans
+    return np.array(BCscans)
 
 def get_MS_counts(scan_method, acc_time, resolution, topN, ms2resolution,
                   ms2IT, time, parallel=False):
@@ -656,3 +659,27 @@ def tabletodf(data):
     else:
         raise Exception("Not a Table")
     
+def lightening_color(rgb_color, coef=0.4):
+    r, g, b = [int(i) for i in rgb_color[4:-1].split(',')]
+    hsv_color = list(colorsys.rgb_to_hsv(r,g,b))
+    hsv_color[1] *= 0.5
+    if hsv_color[1] == 0:
+        hsv_color[2] = min(255,hsv_color[2] * 1.7) 
+    else:
+        hsv_color[2] = min(255,hsv_color[2] * 1.2)
+    r, g, b = [int(i) for i in colorsys.hsv_to_rgb(*hsv_color)]
+    
+    return 'rgb({},{},{})'.format(r, g, b)
+
+def get_colors(n_scans):
+    if n_scans > 1:
+        n = n_scans - 2
+        c = qualitative.Antique
+        additional =  c * ( n // len(c)) + c [:n % len(c)]
+        colors = ['rgb(171,226,251)']
+        colors += convert_colors_to_same_type([qualitative.Dark2[-1]] + qualitative.D3[:3])[0]
+        colors += additional
+    else:
+        colors = ['rgb(171,226,251)']
+        colors += convert_colors_to_same_type([qualitative.Dark2[-1]] + qualitative.D3[:2])[0]
+    return colors
