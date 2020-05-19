@@ -37,8 +37,10 @@ dynRange_descript = '''
 **Spectrum** - combined dynamic range of all spectra
 
 Number to the left corresponds to covered orders of magnitude
+'''
 
-**Visible peptides** percent of peptides in the mixture detected with current settings
+obsPeptides_descript = '''**Visible peptides** percent of peptides in the mixture
+detected with current settings
 '''
 
 #Block1 distribution and Acquisition method

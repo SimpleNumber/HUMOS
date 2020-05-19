@@ -518,7 +518,7 @@ def get_MS_counts(scan_method, acc_time, resolution, topN, ms2resolution,
         time, float, the length of the gradient
         parallel, bool, parallelization mode
     Return:
-        tuple, (cycle time, number of MS1 scans, number of MS2 scans)
+        tuple, (cycle time, number of MS1 scans, number of MS2 scans, scan cycle queues)
     '''
     ms2device = 'IT' if ms2resolution == 'IT' else 'OT' #select ms2 device
     
@@ -543,7 +543,7 @@ def get_MS_counts(scan_method, acc_time, resolution, topN, ms2resolution,
     
     return cycletime, nMS1, nMS2, queues
 
-def make_table( real_ats, real_agcs, labels, resolution):
+def make_table(real_ats, real_agcs, labels, resolution):
     '''
     Create a table with acquisition parameters 
 
@@ -553,9 +553,9 @@ def make_table( real_ats, real_agcs, labels, resolution):
         ion accumulation times per scan.
     real_agcs : list
         number of collected ions per scan.
-    labels : TYPE
+    labels : list
         labels for scans.
-    resolution : TYPE
+    resolution : int
         used resolution.
 
     Returns
@@ -621,6 +621,7 @@ def tabletodf(data):
     else:
         raise Exception("Not a Table")
     
+<<<<<<< HEAD
 def lightening_color(rgb_color):
     '''
     Lighten the color tone
@@ -629,13 +630,13 @@ def lightening_color(rgb_color):
     ----------
     rgb_color : str
         string representation of color in the following format
-        'rgb(r,g,b)', where r, g, b are integers from 0 to 255.
+        'rgb(r, g, b)', where r, g, b are integers from 0 to 255.
 
     Returns
     -------
     str
         string representation of lightened color in the same format
-        'rgb(r,g,b)', where r, g, b are integers from 0 to 255.
+        'rgb(r, g, b)', where r, g, b are integers from 0 to 255.
 
     '''
     r, g, b = [int(i) / 255 for i in rgb_color[4:-1].split(',')]
@@ -649,7 +650,20 @@ def lightening_color(rgb_color):
         
     r, g, b = [int(i * 255) for i in colorsys.hsv_to_rgb(*hsv_color)]
     
+    return 'rgb({}, {}, {})'.format(r, g, b)
+=======
+def lightening_color(rgb_color, coef=0.4):
+    r, g, b = [int(i) for i in rgb_color[4:-1].split(',')]
+    hsv_color = list(colorsys.rgb_to_hsv(r,g,b))
+    hsv_color[1] *= 0.5
+    if hsv_color[1] == 0:
+        hsv_color[2] = min(255,hsv_color[2] * 1.7) 
+    else:
+        hsv_color[2] = min(255,hsv_color[2] * 1.2)
+    r, g, b = [int(i) for i in colorsys.hsv_to_rgb(*hsv_color)]
+    
     return 'rgb({},{},{})'.format(r, g, b)
+>>>>>>> parent of 74e63f7... change colors
 
 def get_colors(n_scans):
     '''
@@ -666,13 +680,11 @@ def get_colors(n_scans):
         color codes in tuple type.
 
     '''
-    colors = ['rgb(171, 226, 251)']
-    colors += convert_colors_to_same_type([qualitative.Dark2[-1]] + qualitative.D3[:3])[0]
+    colors = ['rgb(171, 226, 251)', qualitative.Dark2[-1], qualitative.D3[0]]
     
-    if n_scans > 2: #need some additional colors for extra BoxCar plots
-        n = n_scans - 2 
-        c = qualitative.Antique
-        additional =  c * ( n // len(c)) + c [:n % len(c)]
-        colors += additional
+    #colors forBoxCar plots  
+    c = qualitative.D3[1:3] + qualitative.Antique
+    additional =  c * (n_scans // len(c)) + c [:n_scans % len(c)] #cycling palette
+    colors += additional
 
-    return colors
+    return convert_colors_to_same_type(colors)[0]

@@ -86,38 +86,38 @@ def get_theta_ranges(theta_range):
     
 def get_cycle_grid_tr():
     grid_trace = go.Scatterpolar(r=[0.5] * 50 + [0.7] * 50 + [0.9] * 50,
-                    theta=list(np.linspace(90, 450, 50)) * 3,
-                    mode="lines",
-                    line={'width': 1, 'color':'#cccccc'},
-                    showlegend=False,
-                    hoverinfo='skip',)
+                                 theta=list(np.linspace(90, 450, 50)) * 3,
+                                 mode='lines',
+                                 line={'width': 1, 'color':'#cccccc'},
+                                 showlegend=False,
+                                 hoverinfo='skip',)
     return grid_trace
 
 def get_cycle_annotations_tr(cycletime):
     annotation_trace = go.Scatterpolar(r=[0.0, 0.57, 0.77, 0.97],
                                        theta=[90] * 4,
-                                       mode="text",
+                                       mode='text',
                                        text=['{:.3f} sec'.format(cycletime/1000),
                                              'Ion Trap', 'Orbitrap', 'Ion Accumulation'],
                                        showlegend=False,
-                                       textfont={"size": [18] + [11] * 3},
+                                       textfont={'size': [18] + [11] * 3},
                                        textposition='middle center',
-                                       hoverinfo='text')
+                                       hoverinfo='skip')
     return annotation_trace
 
 def get_cycle_text_tr(ms1_scan_text, ms2_scan_text):
-    # r1 = 1.1
-    # theta1 = -15
-    # theta2 = -25
-    # r2 = r1 * math.cos(abs(theta1) * np.pi / 180) / math.cos(abs(theta2) * np.pi / 180)
-    text_trace = go.Scatterpolar(r=[1.05, 1.2],
-                                 theta=[-90, -90],
+    r1 = 1.1
+    theta1 = -15
+    theta2 = -25
+    r2 = r1 * math.cos(abs(theta1) * np.pi / 180) / math.cos(abs(theta2) * np.pi / 180)
+    text_trace = go.Scatterpolar(r=[r1, r2],
+                                 theta=[theta1, theta2],
                                  mode='text',
                                  text= [ms1_scan_text, ms2_scan_text],
                                  showlegend=False,
-                                 textfont={"size": [15] * 2},
+                                 textfont={'size': [14] * 2},
                                  textposition='bottom center',
-                                 hoverinfo='none')
+                                 hoverinfo='skip')
     return text_trace
 
 
@@ -137,9 +137,9 @@ def get_cycle_tr(row):
 
 
 def get_cycle_layout():
-    return go.Layout(polar = {'radialaxis': {'visible':False},
-                              'angularaxis': {'visible':False}
-                             },
+    return go.Layout(polar={'radialaxis': {'visible':False},
+                            'angularaxis': {'visible':False}
+                           },
                      showlegend=True,
                      legend={'x': 0.95,
                              'y': 0.85},
