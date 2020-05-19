@@ -7,9 +7,9 @@ This file contains supportive/backend functions
 import pandas as pd
 import numpy as np
 import params
+import colorsys
 from pyteomics import mass
 from IsoSpecPy import IsoSpecPy
-import colorsys
 from plotly.colors import convert_colors_to_same_type
 from plotly.express.colors import qualitative
 
@@ -137,7 +137,7 @@ class Cycler:
         indicates when device is busy from - to, if the queue contains only one
         element it  should be discarded.
         
-        Depending on parallelization cycle time can be shorter, than longest
+        Depending on parallelization, cycle time can be shorter, than longest
         device queue
 
         Returns
@@ -159,7 +159,7 @@ class Cycler:
         return cycletime, {'IS': self.IS, 'IT': self.IT, 'OT': self.OT}
 
       
-def get_ions(pep_mass, charge=2):
+def get_ions(pep_mass, charge):
     '''
     Convert neutral mass to m/z value
     '''
@@ -222,12 +222,6 @@ def get_profile_spectrum(mz_intensity_list, r, points=41):
                 full_spectrum = np.append(full_spectrum, get_profile_peak(mz_int[0], mz_int[1],new_grid, sigma))
                 
     return full_grid, full_spectrum
-
-def charge_space_effect(mass, agc): # redundant function
-    '''
-    Fitted space-charge effect formula
-    '''
-    return (1 + 8.523e-9 * np.sqrt(agc)) * mass
 
 def get_peptides(peptide_collection_size):
     '''
@@ -315,35 +309,6 @@ def expand_isotopes(peptide, charge_states=[2,3]):
         
     return result
 
-#TODO consider if add_noise is necessary
-def add_noise(ion_data, amount):
-    '''
-    Add noise peaks
-    Parameters:
-        ion_data: DataFrame
-        amount: float, ratio of noise peaks, i.e. 1 - means same number of 
-            noise peaks as length of ion data
-    Return:
-        `pandas.DataFrame` with the same columns, as ion_data, and desired length
-    '''
-    ic_cols = ["ic_{}".format(model) for model in params.ion_models]
-    mz_min, mz_max = ion_data['mz'].apply(['min', 'max'])
-    noise_data = pd.DataFrame(columns = ion_data.columns)
-    noise_data['mz'] = np.random.uniform(mz_min, mz_max, amount * ion_data.shape[0])
-    for model in ic_cols:
-        min_value = ion_data[model].mean()
-        noise_data[model] = np.abs(np.random.normal(min_value / 10, min_value / 50, 
-                                       amount * ion_data.shape[0]))
-    
-    noise_data['z'] = 0
-    noise_data['sequence'] = ""
-    
-    ion_data = pd.concat([ion_data, noise_data], ignore_index=True)
-    
-    ion_data.sort_values("mz", inplace=True)
-    
-    return ion_data
-    
 def get_ion_data(nPeptides):
     '''
     Generate pandas.DataFrame with all ion data
@@ -599,16 +564,13 @@ def make_table( real_ats, real_agcs, labels, resolution):
         acquisition parameters table.
 
     '''
-#    print(real_ats, real_agcs, labels,resolution)
     real_sts = [max(acc_time, params.transients[resolution]) for acc_time in real_ats]
     df = pd.DataFrame([real_ats, real_agcs, real_sts], index = ["AT", "AGC", "ST"])
     df.loc['ST', :] = df.loc['ST', :].map('{:.2f}'.format)
     df.loc['AT', :] = df.loc['AT', :].map('{:.2f}'.format)
     df.loc['AGC', :] = df.loc['AGC', :].map('{:.1e}'.format)
-#    print(df)
     df.columns = labels
     df.insert(0, ' ', ['Ion accumulation time, ms', 'Accumulated ions', 'Scan time, ms'])
-#    print(df)
     return df
 
 #helper functions to parse Dash Table element
@@ -630,12 +592,12 @@ def getRows(data):
 
 def tabletodf(data):
     '''
-    Parse the table from HTML componnets format to pandas.DataFrame
+    Parse the table from HTML components format to pandas.DataFrame
 
     Parameters
     ----------
     data : dict
-        table structure as returned by Dash, has to be Table type.
+        table structure as returned by Dash, has to be `Table` type.
 
     Raises
     ------
@@ -645,7 +607,7 @@ def tabletodf(data):
     Returns
     -------
     pandas.DataFrame
-        representation of Dash Table.
+        representation of Dash table.
 
     '''
     if data['type'] == 'Table':
@@ -659,27 +621,58 @@ def tabletodf(data):
     else:
         raise Exception("Not a Table")
     
-def lightening_color(rgb_color, coef=0.4):
-    r, g, b = [int(i) for i in rgb_color[4:-1].split(',')]
+def lightening_color(rgb_color):
+    '''
+    Lighten the color tone
+
+    Parameters
+    ----------
+    rgb_color : str
+        string representation of color in the following format
+        'rgb(r,g,b)', where r, g, b are integers from 0 to 255.
+
+    Returns
+    -------
+    str
+        string representation of lightened color in the same format
+        'rgb(r,g,b)', where r, g, b are integers from 0 to 255.
+
+    '''
+    r, g, b = [int(i) / 255 for i in rgb_color[4:-1].split(',')]
     hsv_color = list(colorsys.rgb_to_hsv(r,g,b))
-    hsv_color[1] *= 0.5
-    if hsv_color[1] == 0:
-        hsv_color[2] = min(255,hsv_color[2] * 1.7) 
+    hsv_color[1] *= 0.5 #desaturate 50%
+    
+    if hsv_color[1] == 0: # gray tones (magic stuff)
+        hsv_color[2] = min(1.0, hsv_color[2] * 1.7) 
     else:
-        hsv_color[2] = min(255,hsv_color[2] * 1.2)
-    r, g, b = [int(i) for i in colorsys.hsv_to_rgb(*hsv_color)]
+        hsv_color[2] = min(1.0, hsv_color[2] * 1.2)
+        
+    r, g, b = [int(i * 255) for i in colorsys.hsv_to_rgb(*hsv_color)]
     
     return 'rgb({},{},{})'.format(r, g, b)
 
 def get_colors(n_scans):
-    if n_scans > 1:
-        n = n_scans - 2
+    '''
+    Create color palette used in the tool
+
+    Parameters
+    ----------
+    n_scans : int
+        number of BoxCar Scans.
+
+    Returns
+    -------
+    colors : list
+        color codes in tuple type.
+
+    '''
+    colors = ['rgb(171, 226, 251)']
+    colors += convert_colors_to_same_type([qualitative.Dark2[-1]] + qualitative.D3[:3])[0]
+    
+    if n_scans > 2: #need some additional colors for extra BoxCar plots
+        n = n_scans - 2 
         c = qualitative.Antique
         additional =  c * ( n // len(c)) + c [:n % len(c)]
-        colors = ['rgb(171,226,251)']
-        colors += convert_colors_to_same_type([qualitative.Dark2[-1]] + qualitative.D3[:3])[0]
         colors += additional
-    else:
-        colors = ['rgb(171,226,251)']
-        colors += convert_colors_to_same_type([qualitative.Dark2[-1]] + qualitative.D3[:2])[0]
+
     return colors

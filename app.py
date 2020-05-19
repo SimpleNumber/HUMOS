@@ -14,12 +14,10 @@ import pandas as pd
 import mechanics, params, toolTips
 import traces_layouts as tl
 from plotly.express.colors import qualitative
-
 from dash.dependencies import Input, Output, State
 
 #color scheme
-colors = mechanics.get_colors(params.nScans)#['rgb(171,226,251)'] + convert_colors_to_same_type([qualitative.Dark2[-1]] + qualitative.D3[:3] +  qualitative.Dark2[:-3]*(params.nScans - 2))[0]
-#print(colors)
+colors = mechanics.get_colors(params.nScans)
 #fixed data for resolution graph and space-charge effect graph
 tmt_spectrum =  np.array([[127.12476, 1],[127.13108, 2]])
 agc_spectrum = np.array([[1277.13108, 1]])
@@ -93,7 +91,7 @@ def block1_html():
                                 id='ionFlux',
                                 min=0,
                                 max=len(params.TIC) - 1,
-                                value=1,
+                                value=2,
                                 marks={i: '{:1.0e}'.format(v) for i, v in enumerate(params.TIC)},
                                 step=1),
                             style=small_panel_style
@@ -195,7 +193,7 @@ def block3_html():
                                 marks={5*i: '{}'.format(5*i) for i in range(1,9)},
                                 )],
                         style=small_panel_style),
-                    dcc.Checklist( id='paral-checklist',
+                    dcc.Checklist(id='paral-checklist',
                                              options=[{'label': 'Parallelization', 'value': 'on'},],
                                              value=['on'],
                                              labelStyle={'display': 'inline-block'},
@@ -319,7 +317,6 @@ def update_figure(selected_resolution, selected_agc, distribution, mit_clicked,
 
     mechanics.scale_ion_currents(ion_data, ionFlux)
     
-    
 #    dyn_range={}
 #    dyn_range['Peptide'] = [ion_data['ic_' + distribution].max(),
 #                            ion_data['ic_' + distribution].min()]
@@ -356,9 +353,9 @@ def update_figure(selected_resolution, selected_agc, distribution, mit_clicked,
                                                        agc, max_it, params.nBoxes, params.nScans)
         labels_bc = ['BoxCar scan {}'.format(i) for i in range(1, params.nScans + 1)]
         dr_df = dr_df.append(pd.DataFrame({'text': labels_bc,
-                                                        'x':list(bc_spectra[:,4:6]),
-                                                        'color':colors[3:]}),
-                                                        ignore_index=True)
+                                           'x':list(bc_spectra[:, 4:6]),
+                                           'color':colors[3:]}),
+                                         ignore_index=True)
 #        print(dr_df)
         for bc_index, bc_label in enumerate(labels_bc):
             bc_spectrum = mechanics.get_profile_spectrum(bc_spectra[bc_index][0], resolution)
@@ -389,21 +386,22 @@ def update_figure(selected_resolution, selected_agc, distribution, mit_clicked,
     dr_df.index = dr_df['text']
 
 #    print(dr_df)
-    obsPeptides_traces = tl.get_obsPep_tr(observed_peptides)
+    obsPeptides_traces = tl.get_obsPep_tr(observed_peptides, colors[0], colors[1])
     
 
-    return [ dbc.Table.from_dataframe(table),
+    return [dbc.Table.from_dataframe(table),
             {'data': main_traces, 'layout': tl.get_main_layout(x_range, y_range)},
             {'data': list(dr_df['trace']),'layout': tl.get_dr_layout(dr_df)},        
             {'data': obsPeptides_traces, 'layout': tl.get_obsPep_layout()}]
             
 def update_ms_counts(topN, method, data, selected_resolution, ms2_resolution, 
                      parallel, mit_clicked,  mit_ms2 ):
-    #update only counts of MS spectra, i.e. no changes to main spectrum applied
+    #update counts of MS spectra and cycle time graph, no changes to main spectrum applied
     boxCar = (method == 'bc')
-    parallel = True if len(parallel) > 0 else False #??
+    parallel = True if len(parallel) > 0 else False #value is a list of selected options
     ms2_resolution = params.resolutions_list[ms2_resolution]
     resolution = params.resolutions_list[selected_resolution]
+    
     if data == None:
        return 'Select topN', '', ''
     else:
@@ -418,9 +416,14 @@ def update_ms_counts(topN, method, data, selected_resolution, ms2_resolution,
             cycletime, ms1_scan_n, ms2_scan_n, queues = mechanics.get_MS_counts('full', data.iloc[0,0], 
                                                          resolution, topN, ms2_resolution, mit_ms2,
                                                          params.LC_time, parallel=parallel)
-    iat =['Accumulation ' + i for i in list(data.columns) + ['MS2 ' + str(j) for j in range(1,topN + 1)]]
+    
+    ms1_scan_text = 'MS1 Scans in {} minutes: {}'.format(params.LC_time, ms1_scan_n)
+    ms2_scan_text = 'MS2 Scans in {} minutes: {}'.format(params.LC_time, ms2_scan_n)
+    
+    iat =['Accumulation ' + i for i in list(data.columns) + ['MS2 ' + str(j) for j in range(1, topN + 1)]]
     ot = ['Acquisition '+ i for i in list(data.columns)]
     ot_names = ['Acquisition ' + i for i in list(data.columns)]
+    
     main_colors = colors[2: 2 + len(data.columns)]
     theta_start = 90 - pd.Series(queues['IS'][::2]) / cycletime * 360
     theta_end = 90 - pd.Series(queues['IS'][1::2]) / cycletime * 360
@@ -440,7 +443,7 @@ def update_ms_counts(topN, method, data, selected_resolution, ms2_resolution,
         main_colors += [qualitative.Dark2[-1]] * topN
 #    print( main_colors)
     aqc_names = [ 'Accumulation ' + i for i in list(data.columns) + ['MS2 '] * topN]
-    aqc_show_legend = [True] * len(data.columns)+ [True] + [False] * (topN - 1)
+    aqc_show_legend = [True] * len(data.columns) + [True] + [False] * (topN - 1)
 #    print(len(iat + ot + it))
 #    print(len(aqc_names + ot_names + it_names))
 #    print(len(aqc_show_legend))
@@ -451,7 +454,7 @@ def update_ms_counts(topN, method, data, selected_resolution, ms2_resolution,
     cycle_df = pd.DataFrame({'text': iat + ot + it, 
                            'mode': 'lines',
                            'name': aqc_names + ot_names + it_names,
-                           'hoverinfo': 'text',#  
+                           'hoverinfo': 'text',
                            'hoveron': 'fills',
                            'showlegend': aqc_show_legend * 2,
                            'r': [0.9] * len(iat) + [0.7] * len(ot) + [0.5] * len(it),
@@ -466,12 +469,14 @@ def update_ms_counts(topN, method, data, selected_resolution, ms2_resolution,
     cycle_traces = [tl.get_cycle_grid_tr()]
     cycle_traces += list(cycle_df['traces'])
     cycle_traces.append(tl.get_cycle_annotations_tr(cycletime))
-    cycle_traces.append(tl.get_cycle_text_tr(ms1_scan_n, ms2_scan_n))    
+    cycle_traces.append(tl.get_cycle_text_tr(ms1_scan_text, ms2_scan_text))    
     return  [{'data': cycle_traces,'layout': tl.get_cycle_layout()}]
                       
 
 def update_resolution_graph(selected_resolution):
+    #change only the resolution graph
     resolution = 1000 if selected_resolution == 0 else params.resolutions_list[selected_resolution]
+    #ion trap have resolution ~1000 (0.1 Th) at 100
     resolution_spectrum = mechanics.get_profile_spectrum(tmt_spectrum, resolution, points=51)
     resolution_traces = [go.Scatter(x=resolution_spectrum[0],
                                     y=resolution_spectrum[1],

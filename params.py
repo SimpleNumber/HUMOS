@@ -15,5 +15,5 @@ LC_time = 60 #LC method length in minutes
 resolutions_list = ['IT'] + [7500*(2**x) for x in range(0,6)] #list of resolutions
 agc_list = [1e5, 3e5, 5e5, 1e6, 3e6, 1e7] #list of AGC targets
 transients = {resolutions_list[x + 1]: 16*(2**x) + 9 for x in range(0,6)} # transients and overhead DOI: 10.1021/pr500985w
-transients['IT'] = 35
+transients['IT'] = 35 #transient for ion trap
 ion_models = ['equal', 'lognormal', 'lognormal-major'] #list of ion models
