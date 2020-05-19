@@ -434,13 +434,12 @@ def update_ms_counts(topN, method, data, selected_resolution, ms2_resolution,
     if len(queues['IT']) > 1:
         it = ['Acquisition MS2 ' + str(i) for i in range(1, topN + 1)]
         it_names = ['Acquisition MS2 '] * topN
-        main_colors += [qualitative.Dark2[5]] * topN
         theta_start = theta_start.append(90 - pd.Series(queues['IT'][::2]) / cycletime * 360, ignore_index=True)
         theta_end = theta_end.append(90 - pd.Series(queues['IT'][1::2]) / cycletime * 360, ignore_index=True)
     else:
         ot += ['Acquisition MS2 ' + str(i) for i in range(1, topN + 1)]
         ot_names += ['Acquisition MS2 '] * topN
-        main_colors += [qualitative.Dark2[-1]] * topN
+    main_colors += [qualitative.Dark2[-1]] * topN
 #    print( main_colors)
     aqc_names = [ 'Accumulation ' + i for i in list(data.columns) + ['MS2 '] * topN]
     aqc_show_legend = [True] * len(data.columns) + [True] + [False] * (topN - 1)
