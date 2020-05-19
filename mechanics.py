@@ -621,7 +621,6 @@ def tabletodf(data):
     else:
         raise Exception("Not a Table")
     
-<<<<<<< HEAD
 def lightening_color(rgb_color):
     '''
     Lighten the color tone
@@ -651,19 +650,6 @@ def lightening_color(rgb_color):
     r, g, b = [int(i * 255) for i in colorsys.hsv_to_rgb(*hsv_color)]
     
     return 'rgb({}, {}, {})'.format(r, g, b)
-=======
-def lightening_color(rgb_color, coef=0.4):
-    r, g, b = [int(i) for i in rgb_color[4:-1].split(',')]
-    hsv_color = list(colorsys.rgb_to_hsv(r,g,b))
-    hsv_color[1] *= 0.5
-    if hsv_color[1] == 0:
-        hsv_color[2] = min(255,hsv_color[2] * 1.7) 
-    else:
-        hsv_color[2] = min(255,hsv_color[2] * 1.2)
-    r, g, b = [int(i) for i in colorsys.hsv_to_rgb(*hsv_color)]
-    
-    return 'rgb({},{},{})'.format(r, g, b)
->>>>>>> parent of 74e63f7... change colors
 
 def get_colors(n_scans):
     '''

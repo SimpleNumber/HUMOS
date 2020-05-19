@@ -116,11 +116,9 @@ def get_cycle_text_tr(ms1_scan_text, ms2_scan_text):
                                  text= [ms1_scan_text, ms2_scan_text],
                                  showlegend=False,
                                  textfont={'size': [14] * 2},
-                                 textposition='bottom center',
+                                 textposition='bottom right',
                                  hoverinfo='skip')
     return text_trace
-
-
     
 def get_cycle_tr(row):
     trace = go.Scatterpolar(r=[row['r']] * len(row['theta']),

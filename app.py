@@ -445,11 +445,8 @@ def update_ms_counts(topN, method, data, selected_resolution, ms2_resolution,
         main_colors += [qualitative.Dark2[-1]] * topN
 #    print( main_colors)
     aqc_names = [ 'Accumulation ' + i for i in list(data.columns) + ['MS2 '] * topN]
-<<<<<<< HEAD
     aqc_show_legend = [True] * len(data.columns) + [True] + [False] * (topN - 1)
-=======
-    aqc_show_legend = [True] * len(data.columns)+ [False] * topN
->>>>>>> parent of 1699ff7... Fix cycle fig legend
+
 #    print(len(iat + ot + it))
 #    print(len(aqc_names + ot_names + it_names))
 #    print(len(aqc_show_legend))
