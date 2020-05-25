@@ -18,13 +18,12 @@ def get_main_layout(x_range, y_range):
 
 #dynamic range trace
 def get_dr_tr(row):
-    trace = go.Scatter(x=row['x'],
-                       y=row['y'],
-                       line={'width': 7, 'color':row['color']},
-                       mode='lines+text',
-                       text=['{:.2f}'.format(np.log10(row['x'][0] / row['x'][1])), row['text']],        
-                       textposition=['middle right', 'middle left']) 
-    return trace
+    return go.Scatter(x=row['x'],
+                      y=row['y'],
+                      line={'width': 7, 'color':row['color']},
+                      mode='lines+text',
+                      text=['{:.2f}'.format(np.log10(row['x'][0] / row['x'][1])), row['text']],        
+                      textposition=['middle right', 'middle left']) 
 
 #layout for dynamic range plot    
 def get_dr_layout(dr_df):
@@ -45,24 +44,23 @@ def get_dr_layout(dr_df):
 
 #observed peptides trace
 def get_obsPep_tr(observed_peptides, observed_color, missing_color):
-    traces = [go.Bar(x=[0],
-                     y=[observed_peptides],
-                     width=1,
-                     orientation='v',
-                     name='% observed peptides',
-                     text=str(observed_peptides),
-                     textposition='inside',
-                     marker_color=observed_color
-                    ),
-              go.Bar(x=[0],
-                     y=[100 - observed_peptides],
-                     width=1,
-                     orientation='v',
-                     name='% missing peptides',
-                     marker_color=missing_color
-                    )
-              ]   
-    return traces
+    return [go.Bar(x=[0],
+                   y=[observed_peptides],
+                   width=1,
+                   orientation='v',
+                   name='% observed peptides',
+                   text=str(observed_peptides),
+                   textposition='inside',
+                   marker_color=observed_color
+                  ),
+            go.Bar(x=[0],
+                   y=[100 - observed_peptides],
+                   width=1,
+                   orientation='v',
+                   name='% missing peptides',
+                   marker_color=missing_color
+                  )
+            ]   
 
 #observed peptides layout
 def get_obsPep_layout():
@@ -79,14 +77,31 @@ def get_obsPep_layout():
                     height=180,
                     hovermode=False)
 
-def get_theta_ranges(theta_range):
-    theta = np.arange(theta_range[0], theta_range[1], -0.2)
-    return np.append(theta, theta_range[1])
+def get_theta_range(theta_range, step=0.2):
+    '''
+    Generate array with points in a range [start, stop, step],
+    including both ends
 
+    Parameters
+    ----------
+    theta_range : tuple
+        begining and the end of range.
+    step : float
+        distance between points
+
+    Returns
+    -------
+    np.ndarray
+        range points.
+
+    '''
+    step = -1 * step if theta_range[1] < theta_range[0] else step
+    theta = np.arange(theta_range[0], theta_range[1], step)
+    return np.append(theta, theta_range[1])
     
 def get_cycle_grid_tr():
-    grid_trace = go.Scatterpolar(r=[0.5] * 50 + [0.7] * 50 + [0.9] * 50,
-                                 theta=list(np.linspace(90, 450, 50)) * 3,
+    grid_trace = go.Scatterpolar(r=[0.5] * 120 + [0.7] * 120 + [0.9] * 120,
+                                 theta=np.concatenate([np.linspace(90, 450, 120)]*3),
                                  mode='lines',
                                  line={'width': 1, 'color':'#cccccc'},
                                  showlegend=False,
@@ -142,7 +157,7 @@ def get_cycle_layout():
                      legend={'x': 0.95,
                              'y': 0.85},
                      margin={'l':0,
-                             'r':300,
+                             'r':250,
                              'b':0,
                              't':0,
                              'pad':4}

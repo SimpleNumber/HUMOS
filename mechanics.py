@@ -573,23 +573,6 @@ def make_table(real_ats, real_agcs, labels, resolution):
     df.insert(0, ' ', ['Ion accumulation time, ms', 'Accumulated ions', 'Scan time, ms'])
     return df
 
-#helper functions to parse Dash Table element
-def getContent(row):
-    content = []
-    for child in row['props']['children']:
-        if child['type'] == 'Td' or child['type'] == 'Th':
-            content.append(child['props']['children'])
-    
-    return content
-
-def getRows(data):
-    rows = []
-    for child in data['props']['children']:
-        if child['type'] == 'Tr':
-            rows.append(getContent(child))
-    
-    return rows
-
 def tabletodf(data):
     '''
     Parse the table from HTML components format to pandas.DataFrame
@@ -610,6 +593,24 @@ def tabletodf(data):
         representation of Dash table.
 
     '''
+    #helper functions to parse Dash Table element
+    def getContent(row):
+        content = []
+        for child in row['props']['children']:
+            if child['type'] == 'Td' or child['type'] == 'Th':
+                content.append(child['props']['children'])
+        
+        return content
+    
+    def getRows(data):
+        rows = []
+        for child in data['props']['children']:
+            if child['type'] == 'Tr':
+                rows.append(getContent(child))
+        
+        return rows
+    
+    #function body
     if data['type'] == 'Table':
         for child in data['props']['children']:
             if child['type'] == 'Thead':

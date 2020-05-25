@@ -19,9 +19,8 @@ from dash.dependencies import Input, Output, State
 #color scheme
 colors = mechanics.get_colors(params.nScans)
 
-#fixed data for resolution graph and space-charge effect graph
+#fixed data for resolution graph
 tmt_spectrum =  np.array([[127.12476, 1],[127.13108, 2]])
-agc_spectrum = np.array([[1277.13108, 1]])
 
 #generate DataFrame with theoretical ion currents for all models
 ion_data = mechanics.get_ion_data(params.peptide_collection_size)
@@ -33,8 +32,8 @@ mechanics.add_boxes(ion_data, boxes)
 block_style = {'width':'400px'}
 small_panel_style = {'width': '80%','padding-left':'1%', 'padding-right':'10%', 'margin-top':'1rem', 'margin-bottom':'1rem'}
 big_panel_style = { 'display':'flex', 'flex-wrap': 'wrap', 'padding-bottom': '4rem', 'justify-content': 'space-around'}
-res_figure_style = {'width':'500px', 'height':'425px', 'padding-bottom': '4rem'}
-cycle_figure_style = {'width':'650px', 'height':'425px', 'padding-bottom': '4rem'}
+res_figure_style = {'width':'600px', 'height':'425px', 'padding-bottom': '4rem'}
+cycle_figure_style = {'width':'600px', 'height':'425px', 'padding-bottom': '4rem'}
 info_style = {'height': '15px', 'padding-bottom':'5px', 'padding-left':'3px', 'display':'inline'}
 i_src = '/assets/info.png'
 
@@ -45,19 +44,16 @@ def table_dynRange_html():
                         html.H6('Information table', id='table-header'),
                         html.Img(id='i-table', src=i_src, style=info_style),
                         html.Div(id='table')
-                        ], style={'height': '240px'}),
+                        ], style={'flex-grow': '1'}),
                 html.Div([
                         html.H6('Dynamic range', id='dynamic-range-header'),
                         html.Img(id='i-dynamic-range', src=i_src, style=info_style),
-                        html.Div([
-                                dcc.Graph(id='dynamic-range-bar', config={'displayModeBar': False}),
-                                dcc.Graph(id='observed-peptides', config={'displayModeBar': False})
-                                ],
-                                style={'display':'flex', 'flex-wrap': 'wrap'}
-                                ),
-    
-                        ],
-                    style={'height': '240px'}),
+                        dcc.Graph(id='dynamic-range-bar', config={'displayModeBar': False})
+                        ], style={'height': '240px'}),
+                html.Div([
+                        dcc.Graph(id='observed-peptides', config={'displayModeBar': False})
+                        ], style={'height': '210px', 'padding-top': '30px'}),
+                
                 toolTips.text_tooltip(toolTips.table_descript, 'table-header'),
                 toolTips.text_tooltip(toolTips.table_descript, 'i-table'),
                 toolTips.text_tooltip(toolTips.dynRange_descript, 'dynamic-range-header'),
@@ -84,7 +80,7 @@ def block1_html():
                                     ],
                             value='lognormal'),
                             style=small_panel_style
-                               ),
+                            ),
                     html.H6('Ion Current (charge/sec)', id='ion-current-header'),
                     html.Img(id='i-ion-current', src=i_src, style=info_style),
                     html.Div(dcc.Slider(
@@ -107,6 +103,7 @@ def block1_html():
                             value='ms1'),
                             style=small_panel_style
                             ),
+                    
                     toolTips.text_tooltip(toolTips.pep_distr_descript, 'peptide-distr-header'),
                     toolTips.text_tooltip(toolTips.pep_distr_descript, 'i-peptide-distr'),
                     toolTips.text_tooltip(toolTips.ionCurrent_discript, 'ion-current-header'),
@@ -151,6 +148,7 @@ def block2_html():
                         ],
                         style=small_panel_style
                         ),
+                    
                     toolTips.text_tooltip(toolTips.resolution_descript, 'MS1-resolution-header'),
                     toolTips.text_tooltip(toolTips.resolution_descript, 'i-ms1-res'),
                     toolTips.text_tooltip(toolTips.AGC_discript, 'MS1-AGC-header'),
@@ -172,7 +170,8 @@ def block3_html():
                             value=2,
                             marks={i: str(resolution) for i,resolution in enumerate(params.resolutions_list)},
                             step=1,
-                            ),], style=small_panel_style),
+                            ),
+                            ], style=small_panel_style),
 
                     html.H6('MS2 Max Injection Time (ms)', id='IT-MS2-header'),
                     html.Img(id='i-ms2-mit', src=i_src, style=info_style),
@@ -193,6 +192,7 @@ def block3_html():
                                 marks={5*i: '{}'.format(5*i) for i in range(1,9)},
                                 )],
                         style=small_panel_style),
+                    
                     dcc.Checklist(id='paral-checklist',
                                              options=[{'label': 'Parallelization', 'value': 'on'},],
                                              value=['on'],
@@ -248,7 +248,7 @@ app.layout = html.Div([
                         'padding-right': '2rem',
                         'transform': 'rotate(-10deg) skewY(4deg)'}),
             toolTips.logo_tooltip()
-             ], style={'display': 'flex'}),
+             ], style={'display': 'flex', 'padding-bottom': '1rem'}),
     
     #upper part - info table, dynamic range plot, observed peptides
     table_dynRange_html(),
@@ -270,12 +270,12 @@ app.layout = html.Div([
     html.Div([
             res_fig_html(),
             cycle_time_html()
-        ],style=big_panel_style),
+            ], style=big_panel_style),
 
     #footer part
     html.Div([
         html.Img(src='/assets/sdu_logo.png',
-                    style={'height': '30px', 'padding-top': '4rem'}),
+                    style={'height': '30px'}),
             ], style={'textAlign': 'center'}),
     html.Div([
         html.P('Department of Biochemistry and Molecular Biology, University of Southern Denmark'),
@@ -284,7 +284,7 @@ app.layout = html.Div([
 			   u' write to vgor (\u0430t) bmb.sdu.dk or juliabubis (\u0430t) gmail.com'
                ])
             ], style={'textAlign': 'center'}),
-        ], style={'marginLeft':25, 'marginRight':25, 'marginBottom': 25, 'marginTop': 25}
+        ], style={'margin': '25px'}
     )
 
 def get_zoom(relayout_data, min_x, max_x, min_y, max_y):
@@ -309,13 +309,16 @@ def get_zoom(relayout_data, min_x, max_x, min_y, max_y):
 
 def update_figure(selected_resolution, selected_agc, distribution, mit_clicked,
                   method, ionFlux, relayout_data, max_it):
-    #respond to changes in modeling parameters
+    '''
+    Update of the main graph, dynamic range graph and information table
+    '''
+    
     boxCar = (method == 'bc')
     resolution = params.resolutions_list[selected_resolution]
     agc = params.agc_list[selected_agc]
     ionFlux = params.TIC[ionFlux]
 
-    mechanics.scale_ion_currents(ion_data, ionFlux)
+    mechanics.scale_ion_currents(ion_data, ionFlux) #apply TIC value
     
     centroid_spectrum, real_st, real_agc, peptides, max_int, min_int = \
                mechanics.get_full_spectrum(ion_data, distribution, agc, max_it)
@@ -398,14 +401,17 @@ def update_figure(selected_resolution, selected_agc, distribution, mit_clicked,
             
 def update_ms_counts(topN, method, data, selected_resolution, ms2_resolution, 
                      parallel, mit_clicked,  mit_ms2 ):
-    #update counts of MS spectra and cycle time graph, no changes to main spectrum applied
+    '''
+    Update counts of MS spectra and cycle time graph
+    '''
+    
     boxCar = (method == 'bc')
     parallel = True if len(parallel) > 0 else False #value is a list of selected options
     ms2_resolution = params.resolutions_list[ms2_resolution]
     resolution = params.resolutions_list[selected_resolution]
     
     if data == None:
-       return 'Select topN', '', ''
+       return 'Select topN', '', '' #void return, before table data is ready
     else:
         data = mechanics.tabletodf(data)
         data = data.iloc[:, 1:].apply(pd.to_numeric)
@@ -436,24 +442,17 @@ def update_ms_counts(topN, method, data, selected_resolution, ms2_resolution,
     if len(queues['IT']) > 1:
         it = ['Acquisition MS2 ' + str(i) for i in range(1, topN + 1)]
         it_names = ['Acquisition MS2 '] * topN
-        main_colors += [qualitative.Dark2[5]] * topN
+        main_colors += [qualitative.Dark2[6]] * topN
         theta_start = theta_start.append(90 - pd.Series(queues['IT'][::2]) / cycletime * 360, ignore_index=True)
         theta_end = theta_end.append(90 - pd.Series(queues['IT'][1::2]) / cycletime * 360, ignore_index=True)
     else:
         ot += ['Acquisition MS2 ' + str(i) for i in range(1, topN + 1)]
         ot_names += ['Acquisition MS2 '] * topN
-        main_colors += [qualitative.Dark2[-1]] * topN
-#    print( main_colors)
+        main_colors += [qualitative.Dark2[6]] * topN
+
     aqc_names = [ 'Accumulation ' + i for i in list(data.columns) + ['MS2 '] * topN]
     aqc_show_legend = [True] * len(data.columns) + [True] + [False] * (topN - 1)
 
-#    print(len(iat + ot + it))
-#    print(len(aqc_names + ot_names + it_names))
-#    print(len(aqc_show_legend))
-#    print(len([mechanics.lightening_color(i) for i in main_colors] + main_colors))
-#    print(len(aqc_names + ot_names + it_names))
-#    print(len(aqc_names + ot_names + it_names))
-    
     cycle_df = pd.DataFrame({'text': iat + ot + it, 
                            'mode': 'lines',
                            'name': aqc_names + ot_names + it_names,
@@ -467,7 +466,7 @@ def update_ms_counts(topN, method, data, selected_resolution, ms2_resolution,
                            'end': theta_end ,
                            })
 
-    cycle_df['theta'] = cycle_df.loc[:,['start', 'end']].apply(tl.get_theta_ranges, axis=1)
+    cycle_df['theta'] = cycle_df.loc[:,['start', 'end']].apply(tl.get_theta_range, axis=1)
     cycle_df['traces'] = cycle_df.apply(tl.get_cycle_tr, axis=1)
     cycle_traces = [tl.get_cycle_grid_tr()]
     cycle_traces += list(cycle_df['traces'])
@@ -475,11 +474,12 @@ def update_ms_counts(topN, method, data, selected_resolution, ms2_resolution,
     cycle_traces.append(tl.get_cycle_text_tr(ms1_scan_text, ms2_scan_text))    
     return  [{'data': cycle_traces,'layout': tl.get_cycle_layout()}]
                       
-
 def update_resolution_graph(selected_resolution):
-    #change only the resolution graph
+    '''
+    Update resolution graph
+    '''
+    #ion trap has resolution ~1000 (0.1 Th) at 100
     resolution = 1000 if selected_resolution == 0 else params.resolutions_list[selected_resolution]
-    #ion trap have resolution ~1000 (0.1 Th) at 100
     resolution_spectrum = mechanics.get_profile_spectrum(tmt_spectrum, resolution, points=51)
     resolution_traces = [go.Scatter(x=resolution_spectrum[0],
                                     y=resolution_spectrum[1],
@@ -488,13 +488,16 @@ def update_resolution_graph(selected_resolution):
                                     y=[0, tmt_spectrum[0,1]],
                                     text='TMT 127N',
                                     name='',
-                                    mode='lines'
+                                    mode='lines',
+                                    line={'color': qualitative.Dark2[5]}
                                     ),
                          go.Scatter(x=[tmt_spectrum[1,0], tmt_spectrum[1,0]],
                                     y=[0, tmt_spectrum[1,1]],
                                     text='TMT 127C',
                                     name='',
-                                    mode='lines')]
+                                    mode='lines',
+                                    line={'color': qualitative.Dark2[6]}
+                                    )]
 
     return [ {'data': resolution_traces,
               'layout': go.Layout(
@@ -518,8 +521,7 @@ app.callback(
       State('mit-box', 'value')])(update_figure)
 
 app.callback(
-    [
-     Output('cycle-time-graph', 'figure')],
+    [Output('cycle-time-graph', 'figure')],
     [Input('topN-slider', 'value'),
      Input('method-choice', 'value'),
      Input('table','children'),

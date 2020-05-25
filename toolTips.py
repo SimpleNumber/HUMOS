@@ -12,8 +12,8 @@ import dash_html_components as html
 tooltip_style = {'background-color':'white',
                  'box-shadow':  '2px 2px 5px 3px #b3b3b3',
                  'width': '350px',
-                 'marginRight': '10px',
-                 'marginleft': '10px',
+                 'margin-right': '10px',
+                 'margin-left': '10px',
                  'padding-left': '5px',
                  'padding-right': '5px'
                 }
@@ -65,7 +65,7 @@ acquisition_discript = '''
 #Block2 MS1 parameters
 resolution_descript = 'Allows changing the mass spectral resolution of MS1 spectra.'
 
-AGC_discript = '''**Automatic Gate Control (AGC)** target is the maximum total number of 
+AGC_discript = '''**Automatic Gain Control (AGC)** target is the maximum total number of 
                ions that can be collected prior to ion detection in the Orbitrap.'''
                
 IT_descript = '''**Maximum injection time** is the time allowed to be spent to 
