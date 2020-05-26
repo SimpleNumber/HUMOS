@@ -41,12 +41,12 @@ def table_dynRange_html():
  #AGC info table and Dynamic range graph
      return html.Div([
                 html.Div([
-                        html.H6('Information table', id='table-header'),
+                        html.H6('Information Table', id='table-header'),
                         html.Img(id='i-table', src=i_src, style=info_style),
                         html.Div(id='table')
                         ], style={'flex-grow': '1'}),
                 html.Div([
-                        html.H6('Dynamic range', id='dynamic-range-header'),
+                        html.H6('Dynamic Range', id='dynamic-range-header'),
                         html.Img(id='i-dynamic-range', src=i_src, style=info_style),
                         dcc.Graph(id='dynamic-range-bar', config={'displayModeBar': False})
                         ], style={'height': '240px'}),
@@ -69,7 +69,7 @@ def table_dynRange_html():
 def block1_html():
     #Block1 distribution and Acquisition method
     return html.Div([
-                    html.H6('Peptide distribution', id='peptide-distr-header'),
+                    html.H6('Peptide Distribution', id='peptide-distr-header'),
                     html.Img(id='i-peptide-distr', src=i_src, style=info_style),
                     html.Div(dcc.RadioItems(
                             id='distribution',
@@ -81,7 +81,7 @@ def block1_html():
                             value='lognormal'),
                             style=small_panel_style
                             ),
-                    html.H6('Ion Current (charge/sec)', id='ion-current-header'),
+                    html.H6('Total Ion Current (ion/sec)', id='ion-current-header'),
                     html.Img(id='i-ion-current', src=i_src, style=info_style),
                     html.Div(dcc.Slider(
                                 id='ionFlux',
