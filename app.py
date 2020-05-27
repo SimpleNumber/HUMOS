@@ -54,11 +54,11 @@ def table_dynRange_html():
                         dcc.Graph(id='observed-peptides', config={'displayModeBar': False})
                         ], style={'height': '210px', 'padding-top': '30px'}),
                 
-                toolTips.text_tooltip(toolTips.table_descript, 'table-header'),
-                toolTips.text_tooltip(toolTips.table_descript, 'i-table'),
-                toolTips.text_tooltip(toolTips.dynRange_descript, 'dynamic-range-header'),
-                toolTips.text_tooltip(toolTips.dynRange_descript, 'i-dynamic-range'),
-                toolTips.text_tooltip(toolTips.obsPeptides_descript, 'observed-peptides')],
+                toolTips.text_tooltip(toolTips.info_table, 'table-header'),
+                toolTips.text_tooltip(toolTips.info_table, 'i-table'),
+                toolTips.text_tooltip(toolTips.dynamic_range, 'dynamic-range-header'),
+                toolTips.text_tooltip(toolTips.dynamic_range, 'i-dynamic-range'),
+                toolTips.text_tooltip(toolTips.observed_peptides, 'observed-peptides')],
                 style={'display':'flex',
                        'flex-wrap': 'wrap',
                        'padding-bottom': '0rem',
@@ -104,12 +104,12 @@ def block1_html():
                             style=small_panel_style
                             ),
                     
-                    toolTips.text_tooltip(toolTips.pep_distr_descript, 'peptide-distr-header'),
-                    toolTips.text_tooltip(toolTips.pep_distr_descript, 'i-peptide-distr'),
-                    toolTips.text_tooltip(toolTips.ionCurrent_discript, 'ion-current-header'),
-                    toolTips.text_tooltip(toolTips.ionCurrent_discript, 'i-ion-current'),
-                    toolTips.text_tooltip(toolTips.acquisition_discript, 'acquisition-meth-header'),
-                    toolTips.text_tooltip(toolTips.acquisition_discript, 'i-acquisition-meth'),
+                    toolTips.text_tooltip(toolTips.peptide_distribution, 'peptide-distr-header'),
+                    toolTips.text_tooltip(toolTips.peptide_distribution, 'i-peptide-distr'),
+                    toolTips.text_tooltip(toolTips.ion_current, 'ion-current-header'),
+                    toolTips.text_tooltip(toolTips.ion_current, 'i-ion-current'),
+                    toolTips.text_tooltip(toolTips.acquisition, 'acquisition-meth-header'),
+                    toolTips.text_tooltip(toolTips.acquisition, 'i-acquisition-meth'),
                     ],
                     style=block_style)
 
@@ -149,12 +149,12 @@ def block2_html():
                         style=small_panel_style
                         ),
                     
-                    toolTips.text_tooltip(toolTips.resolution_descript, 'MS1-resolution-header'),
-                    toolTips.text_tooltip(toolTips.resolution_descript, 'i-ms1-res'),
-                    toolTips.text_tooltip(toolTips.AGC_discript, 'MS1-AGC-header'),
-                    toolTips.text_tooltip(toolTips.AGC_discript, 'i-ms1-agc'),
-                    toolTips.text_tooltip(toolTips.IT_descript,'MS1-IT-header'),
-                    toolTips.text_tooltip(toolTips.IT_descript,'i-ms1-mit'),
+                    toolTips.text_tooltip(toolTips.resolution, 'MS1-resolution-header'),
+                    toolTips.text_tooltip(toolTips.resolution, 'i-ms1-res'),
+                    toolTips.text_tooltip(toolTips.AGC, 'MS1-AGC-header'),
+                    toolTips.text_tooltip(toolTips.AGC, 'i-ms1-agc'),
+                    toolTips.text_tooltip(toolTips.MaxIT,'MS1-IT-header'),
+                    toolTips.text_tooltip(toolTips.MaxIT,'i-ms1-mit'),
                     ],
                 style=block_style)
 
@@ -200,13 +200,13 @@ def block3_html():
                                              style={'padding-bottom': '1rem', 'display':'inline' }),
                     html.Img(id='i-paral', src=i_src, style=info_style,),
 
-                    toolTips.text_tooltip(toolTips.resolutionMS2_descript,'MS2-resolution-header'),
-                    toolTips.text_tooltip(toolTips.resolutionMS2_descript,'i-ms2-resolution'),
-                    toolTips.text_tooltip(toolTips.IT_descript,'IT-MS2-header'),
-                    toolTips.text_tooltip(toolTips.IT_descript,'i-ms2-mit'),
-                    toolTips.text_tooltip(toolTips.topN_discript,'topN-header'),
-                    toolTips.text_tooltip(toolTips.topN_discript,'i-topN'),
-                    toolTips.text_tooltip(toolTips.parallel_descript,'i-paral'),
+                    toolTips.text_tooltip(toolTips.resolutionMS2,'MS2-resolution-header'),
+                    toolTips.text_tooltip(toolTips.resolutionMS2,'i-ms2-resolution'),
+                    toolTips.text_tooltip(toolTips.MaxIT,'IT-MS2-header'),
+                    toolTips.text_tooltip(toolTips.MaxIT,'i-ms2-mit'),
+                    toolTips.text_tooltip(toolTips.topN,'topN-header'),
+                    toolTips.text_tooltip(toolTips.topN,'i-topN'),
+                    toolTips.text_tooltip(toolTips.parallel,'i-paral'),
                     ], style=block_style)
 
 def res_fig_html():
@@ -225,9 +225,13 @@ def cycle_time_html():
     #cycle time plot etc
     return html.Div([
                     html.Center([
-                            html.H6('Cycle Time'),
+                            html.H6('Cycle Time', id='cycle-time-header'),
+                            html.Img(id='i-cycle-time', src=i_src, style=info_style),
                             dcc.Graph(id='cycle-time-graph')
                             ]),
+                        
+                            toolTips.text_tooltip(toolTips.cycle_time,'cycle-time-header'),
+                            toolTips.text_tooltip(toolTips.cycle_time,'i-cycle-time')
                     ],
                     style=cycle_figure_style)
 
@@ -288,22 +292,24 @@ app.layout = html.Div([
     )
 
 def get_zoom(relayout_data, min_x, max_x, min_y, max_y):
-    #reads and preserves zoom information from a plotly graph
+    '''
+    Reads and preserves zoom information from a plotly graph
+    '''
     x_range = []
     y_range = []
+    
     if 'xaxis.range[0]' in relayout_data.keys():
-        x_range =[relayout_data['xaxis.range[0]'],
-                    relayout_data['xaxis.range[1]']
-                ]
+        x_range = [ relayout_data['xaxis.range[0]'],
+                    relayout_data['xaxis.range[1]'] ]
     else:
         x_range = [min_x, max_x]
+        
     if 'yaxis.range[0]' in (relayout_data.keys()):
-            y_range= [
-                    relayout_data['yaxis.range[0]'],
-                    relayout_data['yaxis.range[1]']
-                ]
+            y_range= [ relayout_data['yaxis.range[0]'],
+                       relayout_data['yaxis.range[1]'] ]
     else:
         y_range = [min_y, max_y]
+        
     return x_range, y_range
 
 
@@ -323,6 +329,7 @@ def update_figure(selected_resolution, selected_agc, distribution, mit_clicked,
     centroid_spectrum, real_st, real_agc, peptides, max_int, min_int = \
                mechanics.get_full_spectrum(ion_data, distribution, agc, max_it)
     
+    #DataFrame with dynamic range information
     dr_df = pd.DataFrame({'text':['Peptide'], 
                           'x': [[ion_data['ic_' + distribution].max(),
                                  ion_data['ic_' + distribution].min()]],
@@ -333,34 +340,39 @@ def update_figure(selected_resolution, selected_agc, distribution, mit_clicked,
         dr_df = dr_df.append(pd.DataFrame({'text': 'MS1',
                                            'x': [[max_int, min_int]],
                                            'color': colors[2]}),
-                               ignore_index=True)
+                             ignore_index=True)
     
     real_agcs = [real_agc]
     real_sts = [real_st]
     main_spectrum = mechanics.get_profile_spectrum(centroid_spectrum, resolution)
 
+    #save zoom region or use default
     if relayout_data == None:
         x_range = [min(main_spectrum[0]), max(main_spectrum[0])]
-        y_range = [0, max(main_spectrum[1])]
+        y_range = [0, max(main_spectrum[1]) * 1.01]
     else:
         x_range, y_range = get_zoom(relayout_data,
                                     min(main_spectrum[0]),
                                     max(main_spectrum[0]),
                                     0,
-                                    max(main_spectrum[1]))
+                                    max(main_spectrum[1]) * 1.01)
     
-    main_traces = [go.Scatter(x=main_spectrum[0], y=main_spectrum[1],
-                                  name='MS1 spectrum')]
+    main_traces = [go.Scatter(x=main_spectrum[0],
+                              y=main_spectrum[1],
+                              name='MS1 spectrum')]
     
+    #process BoxCar spectra
     labels_bc = []
     if boxCar:
         bc_spectra = mechanics.get_boxcar_spectra(ion_data, distribution,
-                                                       agc, max_it, params.nBoxes, params.nScans)
+                                                  agc, max_it, params.nBoxes, params.nScans)
+        
         labels_bc = ['BoxCar scan {}'.format(i) for i in range(1, params.nScans + 1)]
+        
         dr_df = dr_df.append(pd.DataFrame({'text': labels_bc,
                                            'x':list(bc_spectra[:, 4:6]),
                                            'color':colors[3:]}),
-                                         ignore_index=True)
+                             ignore_index=True)
 
         for bc_index, bc_label in enumerate(labels_bc):
             bc_spectrum = mechanics.get_profile_spectrum(bc_spectra[bc_index][0], resolution)
@@ -382,22 +394,23 @@ def update_figure(selected_resolution, selected_agc, distribution, mit_clicked,
     dr_df = dr_df.append(pd.DataFrame({'text': 'Spectrum',
                                        'x': [[max_int, min_int]],
                                        'color': colors[0]}),
-                           ignore_index=True)
-
+                         ignore_index=True)
+    
     observed_peptides = np.round(100 * len(peptides) / len(ion_data["sequence"].unique()), 1)
-
+    
+    #information table
     table = mechanics.make_table(real_sts, real_agcs, ['MS1'] + labels_bc, resolution)
     
-    dr_df['y'] = [[i,i] for i in range(0, len(dr_df))]
-    dr_df['trace'] = dr_df.apply(tl.get_dr_tr, axis=1)
+    #finalize dynamic range DataFrame
+    dr_df['y'] = [[i, i] for i in range(0, len(dr_df))]
     dr_df.index = dr_df['text']
-
-    obsPeptides_traces = tl.get_obsPep_tr(observed_peptides, colors[0], colors[1])    
-
+    
     return [dbc.Table.from_dataframe(table),
             {'data': main_traces, 'layout': tl.get_main_layout(x_range, y_range)},
-            {'data': list(dr_df['trace']), 'layout': tl.get_dr_layout(dr_df)},        
-            {'data': obsPeptides_traces, 'layout': tl.get_obsPep_layout()}]
+            {'data': dr_df.apply(tl.get_dynrange_trace, axis=1).tolist(),
+             'layout': tl.get_dynrange_layout(dr_df)},        
+            {'data': tl.get_obsPep_trace(observed_peptides, colors[0], colors[1]),
+             'layout': tl.get_obsPep_layout()}]
             
 def update_ms_counts(topN, method, data, selected_resolution, ms2_resolution, 
                      parallel, mit_clicked,  mit_ms2 ):
@@ -413,7 +426,7 @@ def update_ms_counts(topN, method, data, selected_resolution, ms2_resolution,
     if data == None:
        return 'Select topN', '', '' #void return, before table data is ready
     else:
-        data = mechanics.tabletodf(data)
+        data = mechanics.tabletodf(data) #parse infromation table
         data = data.iloc[:, 1:].apply(pd.to_numeric)
         if boxCar:
             cycletime, ms1_scan_n, ms2_scan_n, queues = mechanics.get_MS_counts('boxcar', data.iloc[0,:],
@@ -428,50 +441,62 @@ def update_ms_counts(topN, method, data, selected_resolution, ms2_resolution,
     ms1_scan_text = 'MS1 Scans in {} minutes: {}'.format(params.LC_time, ms1_scan_n)
     ms2_scan_text = 'MS2 Scans in {} minutes: {}'.format(params.LC_time, ms2_scan_n)
     
-    iat =['Accumulation ' + i for i in list(data.columns) + ['MS2 ' + str(j) for j in range(1, topN + 1)]]
-    ot = ['Acquisition '+ i for i in list(data.columns)]
-    ot_names = ['Acquisition ' + i for i in list(data.columns)]
+    #preparing data for cycle plot
+    #Add all data for accumulation traces;
+    #labels are hovering above blocks, names are used in the legend
+    ia_labels = ['Accumulation ' + i for i in list(data.columns) + ['MS2 ' + str(j) for j in range(1, topN + 1)]]
+    ia_names = ['Accumulation ' + i for i in list(data.columns) + ['MS2'] * topN]
     
-    main_colors = colors[2: 2 + len(data.columns)]
-    theta_start = 90 - pd.Series(queues['IS'][::2]) / cycletime * 360
-    theta_end = 90 - pd.Series(queues['IS'][1::2]) / cycletime * 360
-    theta_start = theta_start.append(90 - pd.Series(queues['OT'][::2]) / cycletime * 360, ignore_index=True)
-    theta_end = theta_end.append(90 - pd.Series(queues['OT'][1::2]) / cycletime * 360, ignore_index=True)
-    it = []
-    it_names= []
-    if len(queues['IT']) > 1:
-        it = ['Acquisition MS2 ' + str(i) for i in range(1, topN + 1)]
-        it_names = ['Acquisition MS2 '] * topN
-        main_colors += [qualitative.Dark2[6]] * topN
-        theta_start = theta_start.append(90 - pd.Series(queues['IT'][::2]) / cycletime * 360, ignore_index=True)
-        theta_end = theta_end.append(90 - pd.Series(queues['IT'][1::2]) / cycletime * 360, ignore_index=True)
+    #Add MS1 and BoxCar scans to OT traces
+    ot_labels = ['Acquisition ' + i for i in list(data.columns)] 
+    ot_names = ot_labels[:]
+    
+    #Converting linear coordinates to circular
+    theta_start = queues['IS'][:, 0] / cycletime * 360
+    theta_end = queues['IS'][:, 1] / cycletime * 360
+    theta_start = np.concatenate((theta_start, queues['OT'][:, 0] / cycletime * 360))
+    theta_end = np.concatenate((theta_end, queues['OT'][:, 1] / cycletime * 360))
+    
+    if queues['IT'].shape[0] > 0: #IT was used
+        it_labels = ['Acquisition MS2 ' + str(i) for i in range(1, topN + 1)]
+        it_names = ['Acquisition MS2'] * topN
+        theta_start = np.concatenate((theta_start, queues['IT'][:, 0] / cycletime * 360))
+        theta_end = np.concatenate((theta_end, queues['IT'][:, 1] / cycletime * 360))
     else:
-        ot += ['Acquisition MS2 ' + str(i) for i in range(1, topN + 1)]
-        ot_names += ['Acquisition MS2 '] * topN
-        main_colors += [qualitative.Dark2[6]] * topN
+        it_labels = []
+        it_names = []
+        ot_labels += ['Acquisition MS2 ' + str(i) for i in range(1, topN + 1)]
+        ot_names += ['Acquisition MS2'] * topN
+    
+    #colors of traces
+    main_colors = colors[2: 2 + len(data.columns)] + [qualitative.Dark2[6]] * topN
+    
+    #select information to be shown in the legend
+    #show names for MS1 and BoxCar (data.columns) and one label for MS2
+    #repeat twice, first for accumulation, second for acquisition
+    show_legend = ([True] * (len(data.columns) + 1) + [False] * (topN - 1)) * 2
 
-    aqc_names = [ 'Accumulation ' + i for i in list(data.columns) + ['MS2 '] * topN]
-    aqc_show_legend = [True] * len(data.columns) + [True] + [False] * (topN - 1)
+    #create DataFrame with all information
+    cycle_df = pd.DataFrame({'text': ia_labels + ot_labels + it_labels,
+                             'mode': 'lines',
+                             'name': ia_names + ot_names + it_names,
+                             'hoverinfo': 'text',
+                             'hoveron': 'fills',
+                             'showlegend': show_legend,
+                             'r': [0.9] * len(ia_labels) + [0.7] * len(ot_labels) + [0.5] * len(it_labels),
+                             'line_color': [mechanics.lightening_color(i) for i in main_colors] + main_colors,
+                             'line_width': 13,
+                             'start': theta_start,
+                             'end': theta_end,
+                            })
 
-    cycle_df = pd.DataFrame({'text': iat + ot + it, 
-                           'mode': 'lines',
-                           'name': aqc_names + ot_names + it_names,
-                           'hoverinfo': 'text',
-                           'hoveron': 'fills',
-                           'showlegend': aqc_show_legend * 2,
-                           'r': [0.9] * len(iat) + [0.7] * len(ot) + [0.5] * len(it),
-                           'line_color': [mechanics.lightening_color(i) for i in main_colors] + main_colors,
-                           'line_width': 13,
-                           'start': theta_start ,
-                           'end': theta_end ,
-                           })
-
-    cycle_df['theta'] = cycle_df.loc[:,['start', 'end']].apply(tl.get_theta_range, axis=1)
-    cycle_df['traces'] = cycle_df.apply(tl.get_cycle_tr, axis=1)
-    cycle_traces = [tl.get_cycle_grid_tr()]
-    cycle_traces += list(cycle_df['traces'])
-    cycle_traces.append(tl.get_cycle_annotations_tr(cycletime))
-    cycle_traces.append(tl.get_cycle_text_tr(ms1_scan_text, ms2_scan_text))    
+    cycle_df['theta'] = cycle_df.loc[:, ['start', 'end']].apply(tl.get_range, axis=1)
+    
+    #collecting traces
+    cycle_traces = tl.get_cycle_grid()
+    cycle_traces += cycle_df.apply(tl.get_cycle_trace, axis=1).tolist()
+    cycle_traces.append(tl.get_cycle_texts(cycletime, ms1_scan_text, ms2_scan_text))    
+    
     return  [{'data': cycle_traces,'layout': tl.get_cycle_layout()}]
                       
 def update_resolution_graph(selected_resolution):
@@ -480,6 +505,7 @@ def update_resolution_graph(selected_resolution):
     '''
     #ion trap has resolution ~1000 (0.1 Th) at 100
     resolution = 1000 if selected_resolution == 0 else params.resolutions_list[selected_resolution]
+    
     resolution_spectrum = mechanics.get_profile_spectrum(tmt_spectrum, resolution, points=51)
     resolution_traces = [go.Scatter(x=resolution_spectrum[0],
                                     y=resolution_spectrum[1],
@@ -504,7 +530,7 @@ def update_resolution_graph(selected_resolution):
                             margin={'t':10},
                             showlegend=False,
                             xaxis={'title': 'm/z'},
-                            yaxis={'title': 'Intensity'})}]
+                            yaxis={'title': 'Abundance'})}]
 
 app.callback(
     [Output('table', 'children'),

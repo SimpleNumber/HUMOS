@@ -133,9 +133,11 @@ class Cycler:
         '''
         Get cycle time and queues
         
-        Queues are represented as lists with even number of elements, each pair
-        indicates when device is busy from - to, if the queue contains only one
-        element it  should be discarded.
+        Queues are represented as [N, 2] numpy.ndarrays,
+        first dimnension - blocks, second dimension - from - to:
+        [[start1, end1]
+             ...
+         [startN, endN]]
         
         Depending on parallelization, cycle time can be shorter, than longest
         device queue
@@ -156,7 +158,14 @@ class Cycler:
         else:
             cycletime = self.whenAllFree()
             
-        return cycletime, {'IS': self.IS, 'IT': self.IT, 'OT': self.OT}
+        #checking for empty queues
+        for queue in ['IS', 'IT', 'OT']:
+            if len(self.__getattribute__(queue)) == 1:
+                self.__getattribute__(queue).pop()
+            
+        return cycletime, {'IS': np.array(self.IS).reshape(-1, 2),
+                           'IT': np.array(self.IT).reshape(-1, 2),
+                           'OT': np.array(self.OT).reshape(-1, 2)}
 
       
 def get_ions(pep_mass, charge):

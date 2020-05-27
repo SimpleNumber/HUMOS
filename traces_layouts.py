@@ -23,9 +23,9 @@ def get_main_layout(x_range, y_range):
     return go.Layout(showlegend=True,
                      margin={'t':30},
                      xaxis={'title': 'm/z', 'range':x_range},
-                     yaxis={'title': 'Intensity', 'range': y_range})
+                     yaxis={'title': 'Abundance', 'range': y_range})
 
-def get_dr_tr(row):
+def get_dynrange_trace(row):
     '''
     Single trace in dynamic range plot
     '''
@@ -36,7 +36,7 @@ def get_dr_tr(row):
                       text=['{:.2f}'.format(np.log10(row['x'][0] / row['x'][1])), row['text']],        
                       textposition=['middle right', 'middle left']) 
 
-def get_dr_layout(dr_df):
+def get_dynrange_layout(dr_df):
     '''
     Dynamic range plot layout
 
@@ -54,13 +54,13 @@ def get_dr_layout(dr_df):
                             'range': [np.log10(dr_df.at['Peptide','x'][1]) - 2, 
                                       np.log10(dr_df.at['Peptide','x'][0]) + 1] },
                      yaxis={'visible': False,
-                            'range': [-1, len(dr_df)]},
+                            'range': [-1, len(dr_df)] },
                      showlegend=False,
                      width= 400,
                      height=180,
                      hovermode=False)
 
-def get_obsPep_tr(observed_peptides, observed_color, missing_color):
+def get_obsPep_trace(observed_peptides, observed_color, missing_color):
     '''
     Traces for observed peptides plot
 
@@ -87,19 +87,18 @@ def get_obsPep_tr(observed_peptides, observed_color, missing_color):
                    width=1,
                    orientation='v',
                    name='% missing peptides',
-                   marker_color=missing_color)
-            ]
+                   marker_color=missing_color) ]
 
 def get_obsPep_layout():
     '''
     Observed peptides plot layout
     '''
-    return go.Layout(margin={'t':10,
-                             'l':40,
-                             'r':10,
+    return go.Layout(margin={'t': 10,
+                             'l': 40,
+                             'r': 10,
                              'b': 10},
                      xaxis={'visible': False},
-                     yaxis={'title': '% visible peptides',
+                     yaxis={'title': '% detected peptides',
                             'range': [0, 100]},
                      showlegend=False,
                      barmode='stack',
@@ -107,7 +106,7 @@ def get_obsPep_layout():
                      height=180,
                      hovermode=False)
 
-def get_theta_range(theta_range, step=1):
+def get_range(theta_range, step=1):
     '''
     Generate array with points in a range [start, stop] with step distance
     between points. Both ends are included.
@@ -129,62 +128,58 @@ def get_theta_range(theta_range, step=1):
     theta = np.arange(theta_range[0], theta_range[1], step)
     return np.append(theta, theta_range[1])
     
-def get_cycle_grid_tr():
+def get_cycle_grid():
     '''
-    Circular grid of cycle time plot
+    Circular grid of cycle time plot with annotations
     '''
-    return go.Scatterpolar(r=[0.5] * 120 + [0.7] * 120 + [0.9] * 120,
-                           theta=np.concatenate([np.linspace(90, 450, 120)]*3),
-                           mode='lines',
-                           line={'width': 1, 'color':'#cccccc'},
-                           showlegend=False,
-                           hoverinfo='skip')
+    return [ go.Scatterpolar(r=[0.5] * 120 + [0.7] * 120 + [0.9] * 120,
+                             theta=np.concatenate([np.linspace(0, 360, 120)] * 3),
+                             mode='lines',
+                             line={'width': 1,
+                                   'color': '#cccccc'},
+                             showlegend=False,
+                             hoverinfo='skip'),
+        
+             go.Scatterpolar(r=[0.57, 0.77, 0.97],
+                             theta=[0] * 3,
+                             mode='text',
+                             text=['Ion Trap', 'Orbitrap', 'Ion Accumulation'],
+                             showlegend=False,
+                             textfont={'size': [11] * 3},
+                             textposition='middle center',
+                             hoverinfo='skip') ]
 
-def get_cycle_annotations_tr(cycletime):
-    '''
-    Annotations of circular grid
-    
-    Parameters
-    ----------
-    cycletime : float
-        length of the duty cycle.
-    '''
-    return go.Scatterpolar(r=[0.0, 0.57, 0.77, 0.97],
-                           theta=[90] * 4,
-                           mode='text',
-                           text=['{:.3f} sec'.format(cycletime/1000),
-                                 'Ion Trap', 'Orbitrap', 'Ion Accumulation'],
-                           showlegend=False,
-                           textfont={'size': [18] + [11] * 3},
-                           textposition='middle center',
-                           hoverinfo='skip')
-
-def get_cycle_text_tr(ms1_scan_text, ms2_scan_text):
+def get_cycle_texts(cycletime, ms1_scan_text, ms2_scan_text):
     '''
     Number of MS1 and MS2 scans, located at the cycle plot
 
     Parameters
     ----------
+    cycletime : float
+        length of duty cycle
     ms1_scan_text : string
         Text with MS1 scan information.
     ms2_scan_text : string
         Text with MS2 scan information.
     '''
+    
+    theta1 = 130
+    theta2 = 137
     r1 = 1.1
-    theta1 = -115
-    theta2 = -125
-    r2 = r1 * math.cos(abs(theta1) * np.pi / 180) / math.cos(abs(theta2) * np.pi / 180)
-    text_trace = go.Scatterpolar(r=[r1, r2],
-                                 theta=[theta1, theta2],
+    r2 = r1 * math.sin(theta1 * math.pi / 180) / math.sin(theta2 * math.pi / 180)
+    
+    text_trace = go.Scatterpolar(r=[0, r1, r2],
+                                 theta=[0, theta1, theta2],
                                  mode='text',
-                                 text= [ms1_scan_text, ms2_scan_text],
+                                 text= ['{:.3f} sec'.format(cycletime/1000),
+                                        ms1_scan_text, ms2_scan_text],
                                  showlegend=False,
-                                 textfont={'size': [14] * 2},
-                                 textposition='bottom right',
+                                 textfont={'size': [18] + [14] * 2},
+                                 textposition=['middle center'] + ['bottom right'] * 2,
                                  hoverinfo='skip')
     return text_trace
     
-def get_cycle_tr(row):
+def get_cycle_trace(row):
     '''
     Single trace in a circular plot
     '''
@@ -194,7 +189,8 @@ def get_cycle_tr(row):
                            text=row['text'],
                            name=row['name'],
                            showlegend=row['showlegend'],
-                           line={'width': row['line_width'], 'color':row['line_color']},
+                           line={'width': row['line_width'],
+                                 'color': row['line_color']},
                            textposition='bottom right',
                            hoverinfo='text')
 
@@ -204,13 +200,15 @@ def get_cycle_layout():
     '''
     Cycle Time plot layout
     '''
-    return go.Layout(polar={'radialaxis': {'visible':False},
-                            'angularaxis': {'visible':False} },
+    return go.Layout(polar={'radialaxis': {'visible': False},
+                            'angularaxis': {'rotation': 90, #start at the top
+                                            'direction': 'clockwise', #increase angle clockwise
+                                            'visible': False} },
                      showlegend=True,
                      legend={'x': 0.95,
                              'y': 0.85},
-                     margin={'l':0,
-                             'r':250,
-                             'b':0,
-                             't':0,
-                             'pad':4})
+                     margin={'l': 0,
+                             'r': 200,
+                             'b': 0,
+                             't': 0,
+                             'pad': 0})

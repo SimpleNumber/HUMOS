@@ -27,9 +27,9 @@ def text_tooltip(text, target):
                        target=target, delay={'show':1000},  placement='top-start')
 
 #AGC info table and Dynamic range graph
-table_descript = '''Table with actual acquisition parameters.'''
+info_table = 'Table with actual acquisition parameters.'
 
-dynRange_descript = '''
+dynamic_range = '''
 **Peptide** - dynamic range of peptide mixture
 
 **MS1**, **BoxCar scans** - dynamic range of individual spectra
@@ -39,12 +39,13 @@ dynRange_descript = '''
 Number to the left corresponds to covered orders of magnitude
 '''
 
-obsPeptides_descript = '''**Visible peptides** percent of peptides in the mixture
-detected with current settings
+observed_peptides = '''
+**Detected peptides** percent of peptides in the mixture detected with current
+settings
 '''
 
 #Block1 distribution and Acquisition method
-pep_distr_descript = '''
+peptide_distribution = '''
 **Equimolar** - fictional peptide mixture having equal amount of each peptide.
 
 **Regular** - peptide mixture similar to common proteomics samples, for
@@ -55,29 +56,45 @@ number of peptides corresponding to the most of the sample, for example, plasma
 samples.
 '''
 
-ionCurrent_discript = 'Ion current for acquiring spectra.'
+ion_current = 'Ion current for acquiring spectra.'
 
-acquisition_discript = '''
+acquisition = '''
 **Usual MS1** all ions are accumulated simultaneously.
 
-**BoxCar** ions are selected in narrow __packages__ according to their _m/z_.'''
+**BoxCar** ions are selected in narrow __packages__ according to their _m/z_.
+'''
 
 #Block2 MS1 parameters
-resolution_descript = 'Allows changing the mass spectral resolution of MS1 spectra.'
+resolution = 'Allows changing the mass spectral resolution of MS1 spectra.'
 
-AGC_discript = '''**Automatic Gain Control (AGC)** target is the maximum total number of 
-               ions that can be collected prior to ion detection in the Orbitrap.'''
+AGC = '''
+**Automatic Gain Control (AGC)** target is the maximum total number of 
+ions that can be collected prior to ion detection in the Orbitrap.
+'''
                
-IT_descript = '''**Maximum injection time** is the time allowed to be spent to 
-accumulate ions and potentially reach the corresponding AGC target value.'''
-
+MaxIT = '''
+**Maximum injection time** is the time allowed to be spent to 
+accumulate ions and potentially reach the corresponding AGC target value.
+'''
 
 #Block3 MS2 parameters
-resolutionMS2_descript = '''Allows changing the mass spectral resolution of MS2 spectra.
+resolutionMS2 = '''
+Allows changing the mass spectral resolution of MS2 spectra.
 
 **IT** - MS2 scan acquired in Ion Trap.'''
 
-topN_discript = '''Controls the number of fragmentation events (MS2 scans) that 
-is scheduled for each parent ion scan.'''
+topN = '''
+Controls the number of fragmentation events (MS2 scans) that is scheduled for
+each parent ion scan.'''
 
-parallel_descript = '''Acquire MS1 and MS2 spectra in parallel.'''
+parallel = '''Acquire MS1 and MS2 spectra in parallel.'''
+
+#Cycle time
+cycle_time = '''
+Visual representation of duty cycle. Each circle correspond to a specific mass
+spectrometer part.
+
+Thick parts show when a part is busy, colors correspond to spectra types.
+
+The text in the middle is the length of the duty cycle.
+'''
