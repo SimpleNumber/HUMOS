@@ -11,13 +11,12 @@ import dash_bootstrap_components as dbc
 import plotly.graph_objs as go
 import numpy as np
 import pandas as pd
-import mechanics, params, toolTips
-import traces_layouts as tl
+import art, mechanics, params, tooltips
 from plotly.express.colors import qualitative
 from dash.dependencies import Input, Output, State
 
 #color scheme
-colors = mechanics.get_colors(params.nScans)
+colors = art.get_colors(params.nScans)
 
 #fixed data for resolution graph
 tmt_spectrum =  np.array([[127.12476, 1],[127.13108, 2]])
@@ -28,18 +27,20 @@ mechanics.normalize_ion_currents(ion_data, params.low_mass, params.high_mass)
 boxes = mechanics.get_boxes(params.low_mass, params.high_mass, params.nBoxes, params.nScans, params.box_overlap)
 mechanics.add_boxes(ion_data, boxes)
 
-#interface
+### Interface building blocks ###
 block_style = {'width':'400px'}
 small_panel_style = {'width': '80%','padding-left':'1%', 'padding-right':'10%', 'margin-top':'1rem', 'margin-bottom':'1rem'}
 big_panel_style = { 'display':'flex', 'flex-wrap': 'wrap', 'padding-bottom': '4rem', 'justify-content': 'space-around'}
-res_figure_style = {'width':'600px', 'height':'425px', 'padding-bottom': '4rem'}
-cycle_figure_style = {'width':'600px', 'height':'425px', 'padding-bottom': '4rem'}
+res_figure_style = {'width':'600px', 'height':'450px', 'padding-bottom': '4rem'}
+cycle_figure_style = {'width':'600px', 'height':'450px', 'padding-bottom': '4rem'}
 info_style = {'height': '15px', 'padding-bottom':'5px', 'padding-left':'3px', 'display':'inline'}
 i_src = '/assets/info.png'
 
 def table_dynRange_html():
- #AGC info table and Dynamic range graph
-     return html.Div([
+    '''
+    AGC info table and Dynamic range graph
+    '''
+    return html.Div([
                 html.Div([
                         html.H6('Information Table', id='table-header'),
                         html.Img(id='i-table', src=i_src, style=info_style),
@@ -52,13 +53,15 @@ def table_dynRange_html():
                         ], style={'height': '240px'}),
                 html.Div([
                         dcc.Graph(id='observed-peptides', config={'displayModeBar': False})
-                        ], style={'height': '210px', 'padding-top': '30px'}),
+                        ],
+                        id='i-observed-peptides',
+                        style={'height': '210px', 'padding-top': '30px'}),
                 
-                toolTips.text_tooltip(toolTips.info_table, 'table-header'),
-                toolTips.text_tooltip(toolTips.info_table, 'i-table'),
-                toolTips.text_tooltip(toolTips.dynamic_range, 'dynamic-range-header'),
-                toolTips.text_tooltip(toolTips.dynamic_range, 'i-dynamic-range'),
-                toolTips.text_tooltip(toolTips.observed_peptides, 'observed-peptides')],
+                tooltips.text_tooltip(tooltips.info_table, 'table-header'),
+                tooltips.text_tooltip(tooltips.info_table, 'i-table'),
+                tooltips.text_tooltip(tooltips.dynamic_range, 'dynamic-range-header'),
+                tooltips.text_tooltip(tooltips.dynamic_range, 'i-dynamic-range'),
+                tooltips.text_tooltip(tooltips.observed_peptides, 'i-observed-peptides')],
                 style={'display':'flex',
                        'flex-wrap': 'wrap',
                        'padding-bottom': '0rem',
@@ -66,8 +69,10 @@ def table_dynRange_html():
                        'padding-right':'10%',
                        'justify-content': 'space-between'})
 
-def block1_html():
-    #Block1 distribution and Acquisition method
+def block_global_html():
+    '''
+    Global parameters: Distribution, TIC, and Acquisition method
+    '''
     return html.Div([
                     html.H6('Peptide Distribution', id='peptide-distr-header'),
                     html.Img(id='i-peptide-distr', src=i_src, style=info_style),
@@ -79,8 +84,8 @@ def block1_html():
                                     {'label': 'Regular with majors', 'value': 'lognormal-major'}
                                     ],
                             value='lognormal'),
-                            style=small_panel_style
-                            ),
+                            style=small_panel_style),
+    
                     html.H6('Total Ion Current (ion/sec)', id='ion-current-header'),
                     html.Img(id='i-ion-current', src=i_src, style=info_style),
                     html.Div(dcc.Slider(
@@ -90,8 +95,8 @@ def block1_html():
                                 value=2,
                                 marks={i: '{:1.0e}'.format(v) for i, v in enumerate(params.TIC)},
                                 step=1),
-                            style=small_panel_style
-                            ),
+                            style=small_panel_style),
+    
                     html.H6('Acquisition Method', id='acquisition-meth-header'),
                     html.Img(id='i-acquisition-meth', src=i_src, style=info_style),
                     html.Div(dcc.RadioItems(
@@ -101,20 +106,21 @@ def block1_html():
                                     {'label': 'Usual MS1', 'value': 'ms1'},
                                     ],
                             value='ms1'),
-                            style=small_panel_style
-                            ),
+                            style=small_panel_style),
                     
-                    toolTips.text_tooltip(toolTips.peptide_distribution, 'peptide-distr-header'),
-                    toolTips.text_tooltip(toolTips.peptide_distribution, 'i-peptide-distr'),
-                    toolTips.text_tooltip(toolTips.ion_current, 'ion-current-header'),
-                    toolTips.text_tooltip(toolTips.ion_current, 'i-ion-current'),
-                    toolTips.text_tooltip(toolTips.acquisition, 'acquisition-meth-header'),
-                    toolTips.text_tooltip(toolTips.acquisition, 'i-acquisition-meth'),
+                    tooltips.text_tooltip(tooltips.peptide_distribution, 'peptide-distr-header'),
+                    tooltips.text_tooltip(tooltips.peptide_distribution, 'i-peptide-distr'),
+                    tooltips.text_tooltip(tooltips.ion_current, 'ion-current-header'),
+                    tooltips.text_tooltip(tooltips.ion_current, 'i-ion-current'),
+                    tooltips.text_tooltip(tooltips.acquisition, 'acquisition-meth-header'),
+                    tooltips.text_tooltip(tooltips.acquisition, 'i-acquisition-meth'),
                     ],
                     style=block_style)
 
-def block2_html():
-    #Block2 MS1 parameters
+def block_MS1_html():
+    '''
+    MS1-related parameters
+    '''
     return html.Div([
                     html.H6('MS1 Resolution', id='MS1-resolution-header'),
                     html.Img(id='i-ms1-res', src=i_src, style=info_style),
@@ -149,17 +155,19 @@ def block2_html():
                         style=small_panel_style
                         ),
                     
-                    toolTips.text_tooltip(toolTips.resolution, 'MS1-resolution-header'),
-                    toolTips.text_tooltip(toolTips.resolution, 'i-ms1-res'),
-                    toolTips.text_tooltip(toolTips.AGC, 'MS1-AGC-header'),
-                    toolTips.text_tooltip(toolTips.AGC, 'i-ms1-agc'),
-                    toolTips.text_tooltip(toolTips.MaxIT,'MS1-IT-header'),
-                    toolTips.text_tooltip(toolTips.MaxIT,'i-ms1-mit'),
+                    tooltips.text_tooltip(tooltips.resolution, 'MS1-resolution-header'),
+                    tooltips.text_tooltip(tooltips.resolution, 'i-ms1-res'),
+                    tooltips.text_tooltip(tooltips.AGC, 'MS1-AGC-header'),
+                    tooltips.text_tooltip(tooltips.AGC, 'i-ms1-agc'),
+                    tooltips.text_tooltip(tooltips.MaxIT,'MS1-IT-header'),
+                    tooltips.text_tooltip(tooltips.MaxIT,'i-ms1-mit'),
                     ],
-                style=block_style)
+                    style=block_style)
 
-def block3_html():
-    #Block3 MS2 parameters
+def block_MS2_html():
+    '''
+    MS2-related parameters
+    '''
     return html.Div([
                     html.H6('MS2 Resolution', id='MS2-resolution-header'),
                     html.Img(id='i-ms2-resolution', src=i_src, style=info_style),
@@ -179,8 +187,7 @@ def block3_html():
                             dcc.Input(id='mit-ms2-box', type='number',size='20', value=30),
                             html.Button('set', id='it-ms2-button')
                             ],
-                            style=small_panel_style
-                        ),
+                            style=small_panel_style),
 
                     html.H6('TopN', id='topN-header'),
                     html.Img(id='i-topN', src=i_src, style=info_style),
@@ -189,28 +196,31 @@ def block3_html():
                                 min=1,
                                 max=40,
                                 value=15,
-                                marks={5*i: '{}'.format(5*i) for i in range(1,9)},
-                                )],
-                        style=small_panel_style),
+                                marks={5*i: '{}'.format(5*i) for i in range(1,9)})
+                             ],
+                             style=small_panel_style),
                     
                     dcc.Checklist(id='paral-checklist',
-                                             options=[{'label': 'Parallelization', 'value': 'on'},],
-                                             value=['on'],
-                                             labelStyle={'display': 'inline-block'},
-                                             style={'padding-bottom': '1rem', 'display':'inline' }),
-                    html.Img(id='i-paral', src=i_src, style=info_style,),
+                                  options=[{'label': 'Parallelization', 'value': 'on'},],
+                                  value=['on'],
+                                  labelStyle={'display': 'inline-block'},
+                                  style={'padding-bottom': '1rem', 'display':'inline'}),
+                    html.Img(id='i-paral', src=i_src, style=info_style),
 
-                    toolTips.text_tooltip(toolTips.resolutionMS2,'MS2-resolution-header'),
-                    toolTips.text_tooltip(toolTips.resolutionMS2,'i-ms2-resolution'),
-                    toolTips.text_tooltip(toolTips.MaxIT,'IT-MS2-header'),
-                    toolTips.text_tooltip(toolTips.MaxIT,'i-ms2-mit'),
-                    toolTips.text_tooltip(toolTips.topN,'topN-header'),
-                    toolTips.text_tooltip(toolTips.topN,'i-topN'),
-                    toolTips.text_tooltip(toolTips.parallel,'i-paral'),
-                    ], style=block_style)
+                    tooltips.text_tooltip(tooltips.resolutionMS2,'MS2-resolution-header'),
+                    tooltips.text_tooltip(tooltips.resolutionMS2,'i-ms2-resolution'),
+                    tooltips.text_tooltip(tooltips.MaxIT,'IT-MS2-header'),
+                    tooltips.text_tooltip(tooltips.MaxIT,'i-ms2-mit'),
+                    tooltips.text_tooltip(tooltips.topN,'topN-header'),
+                    tooltips.text_tooltip(tooltips.topN,'i-topN'),
+                    tooltips.text_tooltip(tooltips.parallel,'i-paral'),
+                    ],
+                    style=block_style)
 
-def res_fig_html():
-     #smaller graphs
+def res_plot_html():
+    '''
+    Mass Spectral Resolution plot
+    '''
     return html.Div([
                     html.Center([
                             html.H6('Mass Spectral Resolution'),
@@ -222,7 +232,9 @@ def res_fig_html():
                     style=res_figure_style)
 
 def cycle_time_html():
-    #cycle time plot etc
+    '''
+    Cycle time plot
+    '''
     return html.Div([
                     html.Center([
                             html.H6('Cycle Time', id='cycle-time-header'),
@@ -230,12 +242,14 @@ def cycle_time_html():
                             dcc.Graph(id='cycle-time-graph')
                             ]),
                         
-                            toolTips.text_tooltip(toolTips.cycle_time,'cycle-time-header'),
-                            toolTips.text_tooltip(toolTips.cycle_time,'i-cycle-time')
+                            tooltips.text_tooltip(tooltips.cycle_time,'cycle-time-header'),
+                            tooltips.text_tooltip(tooltips.cycle_time,'i-cycle-time')
                     ],
                     style=cycle_figure_style)
 
-#Main window
+### End interface building blocks ###
+
+### Main window ###
 app = dash.Dash(__name__,
                 meta_tags=[{'name': 'robots',
                             'content': 'noindex, nofollow'}])
@@ -251,7 +265,7 @@ app.layout = html.Div([
                         'padding-left': '2rem',
                         'padding-right': '2rem',
                         'transform': 'rotate(-10deg) skewY(4deg)'}),
-            toolTips.logo_tooltip()
+            tooltips.logo_tooltip()
              ], style={'display': 'flex', 'padding-bottom': '1rem'}),
     
     #upper part - info table, dynamic range plot, observed peptides
@@ -262,25 +276,26 @@ app.layout = html.Div([
 
     #model parameters switches
     html.Div([
-            #Block1 distribution and Acquisition
-            block1_html(),
-            #Block2 MS1 parameters
-            block2_html(),
-            #Block3 MS2 parameters
-            block3_html(),
+            #Block distribution, TIC and Acquisition
+            block_global_html(),
+            #Block MS1 parameters
+            block_MS1_html(),
+            #Block MS2 parameters
+            block_MS2_html(),
             ], style=big_panel_style),
 
     #lower part - resolution plot, cycle time plot
     html.Div([
-            res_fig_html(),
+            res_plot_html(),
             cycle_time_html()
             ], style=big_panel_style),
 
     #footer part
     html.Div([
         html.Img(src='/assets/sdu_logo.png',
-                    style={'height': '30px'}),
-            ], style={'textAlign': 'center'}),
+                 style={'height': '30px'}),
+             ], style={'textAlign': 'center'}),
+                 
     html.Div([
         html.P('Department of Biochemistry and Molecular Biology, University of Southern Denmark'),
         html.P(['Do you have any questions and suggestions about HUMOS? Contact us via ',
@@ -288,8 +303,11 @@ app.layout = html.Div([
 			   u' write to vgor (\u0430t) bmb.sdu.dk or juliabubis (\u0430t) gmail.com'
                ])
             ], style={'textAlign': 'center'}),
+    
         ], style={'margin': '25px'}
-    )
+        
+    ) #end layout
+### End main window ###
 
 def get_zoom(relayout_data, min_x, max_x, min_y, max_y):
     '''
@@ -399,18 +417,18 @@ def update_figure(selected_resolution, selected_agc, distribution, mit_clicked,
     observed_peptides = np.round(100 * len(peptides) / len(ion_data["sequence"].unique()), 1)
     
     #information table
-    table = mechanics.make_table(real_sts, real_agcs, ['MS1'] + labels_bc, resolution)
+    table = art.make_table(real_sts, real_agcs, ['MS1'] + labels_bc, resolution)
     
     #finalize dynamic range DataFrame
     dr_df['y'] = [[i, i] for i in range(0, len(dr_df))]
     dr_df.index = dr_df['text']
     
     return [dbc.Table.from_dataframe(table),
-            {'data': main_traces, 'layout': tl.get_main_layout(x_range, y_range)},
-            {'data': dr_df.apply(tl.get_dynrange_trace, axis=1).tolist(),
-             'layout': tl.get_dynrange_layout(dr_df)},        
-            {'data': tl.get_obsPep_trace(observed_peptides, colors[0], colors[1]),
-             'layout': tl.get_obsPep_layout()}]
+            {'data': main_traces, 'layout': art.get_main_layout(x_range, y_range)},
+            {'data': dr_df.apply(art.get_dynrange_trace, axis=1).tolist(),
+             'layout': art.get_dynrange_layout(dr_df)},        
+            {'data': art.get_obsPep_trace(observed_peptides, colors[0], colors[1]),
+             'layout': art.get_obsPep_layout()}]
             
 def update_ms_counts(topN, method, data, selected_resolution, ms2_resolution, 
                      parallel, mit_clicked,  mit_ms2 ):
@@ -425,19 +443,22 @@ def update_ms_counts(topN, method, data, selected_resolution, ms2_resolution,
     
     if data == None:
        return 'Select topN', '', '' #void return, before table data is ready
-    else:
-        data = mechanics.tabletodf(data) #parse infromation table
-        data = data.iloc[:, 1:].apply(pd.to_numeric)
-        if boxCar:
-            cycletime, ms1_scan_n, ms2_scan_n, queues = mechanics.get_MS_counts('boxcar', data.iloc[0,:],
-                                                         resolution, topN, ms2_resolution, mit_ms2,
-                                                         params.LC_time, parallel=parallel)
 
-        else:
-            cycletime, ms1_scan_n, ms2_scan_n, queues = mechanics.get_MS_counts('full', data.iloc[0,0], 
-                                                         resolution, topN, ms2_resolution, mit_ms2,
-                                                         params.LC_time, parallel=parallel)
+    #parse infromation table
+    data = art.tabletodf(data) 
+    data = data.iloc[:, 1:].apply(pd.to_numeric)
     
+    #perfrom calculation
+    if boxCar:
+        cycletime, ms1_scan_n, ms2_scan_n, queues = mechanics.get_MS_counts('boxcar', data.iloc[0,:],
+                                                     resolution, topN, ms2_resolution, mit_ms2,
+                                                     params.LC_time, parallel=parallel)
+
+    else:
+        cycletime, ms1_scan_n, ms2_scan_n, queues = mechanics.get_MS_counts('full', data.iloc[0,0], 
+                                                     resolution, topN, ms2_resolution, mit_ms2,
+                                                     params.LC_time, parallel=parallel)
+
     ms1_scan_text = 'MS1 Scans in {} minutes: {}'.format(params.LC_time, ms1_scan_n)
     ms2_scan_text = 'MS2 Scans in {} minutes: {}'.format(params.LC_time, ms2_scan_n)
     
@@ -473,7 +494,7 @@ def update_ms_counts(topN, method, data, selected_resolution, ms2_resolution,
     
     #select information to be shown in the legend
     #show names for MS1 and BoxCar (data.columns) and one label for MS2
-    #repeat twice, first for accumulation, second for acquisition
+    #repeat twice, first for accumulation traces, second for acquisition traces
     show_legend = ([True] * (len(data.columns) + 1) + [False] * (topN - 1)) * 2
 
     #create DataFrame with all information
@@ -484,20 +505,20 @@ def update_ms_counts(topN, method, data, selected_resolution, ms2_resolution,
                              'hoveron': 'fills',
                              'showlegend': show_legend,
                              'r': [0.9] * len(ia_labels) + [0.7] * len(ot_labels) + [0.5] * len(it_labels),
-                             'line_color': [mechanics.lightening_color(i) for i in main_colors] + main_colors,
+                             'line_color': [art.lightening_color(i) for i in main_colors] + main_colors,
                              'line_width': 13,
                              'start': theta_start,
                              'end': theta_end,
                             })
 
-    cycle_df['theta'] = cycle_df.loc[:, ['start', 'end']].apply(tl.get_range, axis=1)
+    cycle_df['theta'] = cycle_df.loc[:, ['start', 'end']].apply(art.get_range, axis=1)
     
     #collecting traces
-    cycle_traces = tl.get_cycle_grid()
-    cycle_traces += cycle_df.apply(tl.get_cycle_trace, axis=1).tolist()
-    cycle_traces.append(tl.get_cycle_texts(cycletime, ms1_scan_text, ms2_scan_text))    
+    cycle_traces = art.get_cycle_grid()
+    cycle_traces += cycle_df.apply(art.get_cycle_trace, axis=1).tolist()
+    cycle_traces.append(art.get_cycle_texts(cycletime, ms1_scan_text, ms2_scan_text))    
     
-    return  [{'data': cycle_traces,'layout': tl.get_cycle_layout()}]
+    return  [{'data': cycle_traces,'layout': art.get_cycle_layout()}]
                       
 def update_resolution_graph(selected_resolution):
     '''
@@ -509,28 +530,29 @@ def update_resolution_graph(selected_resolution):
     resolution_spectrum = mechanics.get_profile_spectrum(tmt_spectrum, resolution, points=51)
     resolution_traces = [go.Scatter(x=resolution_spectrum[0],
                                     y=resolution_spectrum[1],
-                                    name=' '.join(['R =', str(resolution)])),
+                                    name=' '.join(['R = ', str(resolution)])),
+        
                          go.Scatter(x=[tmt_spectrum[0,0], tmt_spectrum[0,0]],
                                     y=[0, tmt_spectrum[0,1]],
                                     text='TMT 127N',
                                     name='',
                                     mode='lines',
-                                    line={'color': qualitative.Dark2[5]}
-                                    ),
+                                    line={'color': qualitative.Dark2[5]}),
+                                    
                          go.Scatter(x=[tmt_spectrum[1,0], tmt_spectrum[1,0]],
                                     y=[0, tmt_spectrum[1,1]],
                                     text='TMT 127C',
                                     name='',
                                     mode='lines',
                                     line={'color': qualitative.Dark2[6]}
-                                    )]
+                                    ) ]
 
     return [ {'data': resolution_traces,
-              'layout': go.Layout(
-                            margin={'t':10},
-                            showlegend=False,
-                            xaxis={'title': 'm/z'},
-                            yaxis={'title': 'Abundance'})}]
+              'layout': go.Layout(margin={'t': 10},
+                                  showlegend=False,
+                                  xaxis={'title': 'm/z'},
+                                  yaxis={'title': 'Abundance'})
+              } ]
 
 app.callback(
     [Output('table', 'children'),

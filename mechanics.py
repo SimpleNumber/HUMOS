@@ -1,17 +1,14 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 '''
-This file contains supportive/backend functions
+This file contains supportive/backend functions related to modeling
 '''
 
 import pandas as pd
 import numpy as np
 import params
-import colorsys
 from pyteomics import mass
 from IsoSpecPy import IsoSpecPy
-from plotly.colors import convert_colors_to_same_type
-from plotly.express.colors import qualitative
 
 class Cycler:
     '''
@@ -309,9 +306,7 @@ def expand_isotopes(peptide, charge_states=[2,3]):
     mz = np.concatenate([get_ions(mz0, z) for z in charge_states])
     ic = np.concatenate([int0 * peptide['{}+'.format(z)] for z in charge_states])
     charge = np.concatenate([np.repeat(z, mz0.shape[0]) for z in charge_states])
-    #TODO consider if isotopes are necessary
-    isotope = np.concatenate([np.arange(mz0.shape[0]),  np.arange(mz0.shape[0])])
-    result = pd.DataFrame({'mz': mz, 'ic': ic, 'z': charge, 'iso': isotope})
+    result = pd.DataFrame({'mz': mz, 'ic': ic, 'z': charge})
     result['sequence'] = peptide['sequence']
     for model in params.ion_models:
         result['ic_{}'.format(model)] = result['ic'] * peptide[model]
@@ -551,136 +546,3 @@ def get_MS_counts(scan_method, acc_time, resolution, topN, ms2resolution,
     nMS2 = int(topN * nMS1)
     
     return cycletime, nMS1, nMS2, queues
-
-def make_table(real_ats, real_agcs, labels, resolution):
-    '''
-    Create a table with acquisition parameters 
-
-    Parameters
-    ----------
-    real_ats : list
-        ion accumulation times per scan.
-    real_agcs : list
-        number of collected ions per scan.
-    labels : list
-        labels for scans.
-    resolution : int
-        used resolution.
-
-    Returns
-    -------
-    df : pandas.DataFrame
-        acquisition parameters table.
-
-    '''
-    real_sts = [max(acc_time, params.transients[resolution]) for acc_time in real_ats]
-    df = pd.DataFrame([real_ats, real_agcs, real_sts], index = ["AT", "AGC", "ST"])
-    df.loc['ST', :] = df.loc['ST', :].map('{:.2f}'.format)
-    df.loc['AT', :] = df.loc['AT', :].map('{:.2f}'.format)
-    df.loc['AGC', :] = df.loc['AGC', :].map('{:.1e}'.format)
-    df.columns = labels
-    df.insert(0, ' ', ['Ion accumulation time, ms', 'Accumulated ions', 'Scan time, ms'])
-    return df
-
-def tabletodf(data):
-    '''
-    Parse the table from HTML components format to pandas.DataFrame
-
-    Parameters
-    ----------
-    data : dict
-        table structure as returned by Dash, has to be `Table` type.
-
-    Raises
-    ------
-    Exception
-        if the type of element is not Table.
-
-    Returns
-    -------
-    pandas.DataFrame
-        representation of Dash table.
-
-    '''
-    #helper functions to parse Dash Table element
-    def getContent(row):
-        content = []
-        for child in row['props']['children']:
-            if child['type'] == 'Td' or child['type'] == 'Th':
-                content.append(child['props']['children'])
-        
-        return content
-    
-    def getRows(data):
-        rows = []
-        for child in data['props']['children']:
-            if child['type'] == 'Tr':
-                rows.append(getContent(child))
-        
-        return rows
-    
-    #function body
-    if data['type'] == 'Table':
-        for child in data['props']['children']:
-            if child['type'] == 'Thead':
-                headers = getContent(child['props']['children'])
-            elif child['type'] == 'Tbody':
-                data = getRows(child)
-                
-        return pd.DataFrame(data, columns=headers)
-    else:
-        raise Exception("Not a Table")
-    
-def lightening_color(rgb_color):
-    '''
-    Lighten the color tone
-
-    Parameters
-    ----------
-    rgb_color : str
-        string representation of color in the following format
-        'rgb(r, g, b)', where r, g, b are integers from 0 to 255.
-
-    Returns
-    -------
-    str
-        string representation of lightened color in the same format
-        'rgb(r, g, b)', where r, g, b are integers from 0 to 255.
-
-    '''
-    r, g, b = [int(i) / 255 for i in rgb_color[4:-1].split(',')]
-    hsv_color = list(colorsys.rgb_to_hsv(r,g,b))
-    hsv_color[1] *= 0.5 #desaturate 50%
-    
-    if hsv_color[1] == 0: # gray tones (magic stuff)
-        hsv_color[2] = min(1.0, hsv_color[2] * 1.7) 
-    else:
-        hsv_color[2] = min(1.0, hsv_color[2] * 1.2)
-        
-    r, g, b = [int(i * 255) for i in colorsys.hsv_to_rgb(*hsv_color)]
-    
-    return 'rgb({}, {}, {})'.format(r, g, b)
-
-def get_colors(n_scans):
-    '''
-    Create color palette used in the tool
-
-    Parameters
-    ----------
-    n_scans : int
-        number of BoxCar Scans.
-
-    Returns
-    -------
-    colors : list
-        color codes in tuple type.
-
-    '''
-    colors = ['rgb(171, 226, 251)', qualitative.Dark2[-1], qualitative.D3[0]]
-    
-    #colors forBoxCar plots  
-    c = qualitative.D3[1:3] + qualitative.Antique
-    additional =  c * (n_scans // len(c)) + c [:n_scans % len(c)] #cycling palette
-    colors += additional
-
-    return convert_colors_to_same_type(colors)[0]
