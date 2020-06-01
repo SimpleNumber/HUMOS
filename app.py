@@ -490,7 +490,7 @@ def update_ms_counts(topN, method, data, selected_resolution, ms2_resolution,
         ot_names += ['Acquisition MS2'] * topN
     
     #colors of traces
-    main_colors = colors[2: 2 + len(data.columns)] + [qualitative.Dark2[6]] * topN
+    main_colors = colors[2: 2 + len(data.columns)] + [qualitative.Dark2[-1]] * topN
     
     #select information to be shown in the legend
     #show names for MS1 and BoxCar (data.columns) and one label for MS2
