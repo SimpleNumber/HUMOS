@@ -300,7 +300,7 @@ def get_cycle_texts(cycletime, ms1_scan_text, ms2_scan_text):
         Text with MS2 scan information.
     '''
     
-    #placing text elements
+    #calculte the location of text elements
     theta1 = 130
     theta2 = 136
     r1 = 1.05

@@ -27,74 +27,77 @@ def text_tooltip(text, target):
                        target=target, delay={'show':1000},  placement='top-start')
 
 #AGC info table and Dynamic range graph
-info_table = 'Table with actual acquisition parameters.'
+info_table = 'The table with the actual acquisition parameters.'
 
 dynamic_range = '''
-**Peptide** - dynamic range of peptide mixture
+**Peptide** - the dynamic range of the peptide mixture
 
-**MS1**, **BoxCar scans** - dynamic range of individual spectra
+**MS1**, **BoxCar scans** - the dynamic range of individual spectra
 
-**Spectrum** - combined dynamic range of all spectra
+**Spectrum** - the combined dynamic range of all spectra
 
-Number to the left corresponds to covered orders of magnitude
+Numbers to the right correspond to the covered orders of magnitude
 '''
 
 observed_peptides = '''
-**Detected peptides** percent of peptides in the mixture detected with current
-settings
+**Detected peptides** - percent of peptides in the mixture that are detected
+with the current settings
 '''
 
 #Block1 distribution and Acquisition method
 peptide_distribution = '''
-**Equimolar** - fictional peptide mixture having equal amount of each peptide.
+**Equimolar** - the fictional peptide mixture having equal amount of each
+peptide.
 
-**Regular** - peptide mixture similar to common proteomics samples, for
-example, cell digest.
+**Regular** - the peptide mixture observed for common proteomics samples, for
+example, a cell digest.
  
-**Regular with majors** - peptide mixture similar to samples wherre small
-number of peptides corresponding to the most of the sample, for example, plasma
+**Regular with majors** - the peptide mixture observed for samples where a
+small number of peptides make the most of the sample, for example, plasma
 samples.
 '''
 
-ion_current = 'Ion current for acquiring spectra.'
+ion_current = 'The ion current used for spectra aquisition.'
 
 acquisition = '''
-**Usual MS1** all ions are accumulated simultaneously.
+**Usual MS1** - all ions are accumulated simultaneously.
 
-**BoxCar** ions are selected in narrow __packages__ according to their _m/z_.
+**BoxCar** - ions are accumulated in narrow __packages__ according to their
+ _m/z_.
 '''
 
 #Block2 MS1 parameters
-resolution = 'Allows changing the mass spectral resolution of MS1 spectra.'
+resolution = 'Mass spectral resolution for MS1 spectra.'
 
 AGC = '''
 **Automatic Gain Control (AGC)** target is the maximum total number of 
-ions that can be collected prior to ion detection in the Orbitrap.
+ions that can be collected before the ion detection in the Orbitrap.
 '''
                
 MaxIT = '''
-**Maximum injection time** is the time allowed to be spent to 
-accumulate ions and potentially reach the corresponding AGC target value.
+**Maximum injection time** is the time allowed to be spent to accumulate ions
+and (potentially) reach the corresponding AGC target value.
 '''
 
 #Block3 MS2 parameters
 resolutionMS2 = '''
-Allows changing the mass spectral resolution of MS2 spectra.
+Mass spectral resolution for MS2 spectra.
 
-**IT** - MS2 scan acquired in Ion Trap.'''
+**IT** - MS2 spectra are acquired in an ion trap.'''
 
 topN = '''
-Controls the number of fragmentation events (MS2 scans) that is scheduled for
-each parent ion scan.'''
+The number of fragmentation events (MS2 spectra) that are scheduled for
+each parent ion scan (MS1 spectrum).
+'''
 
-parallel = '''Acquire MS1 and MS2 spectra in parallel.'''
+parallel = '''Allow using different instrument parts in parallel (if possible)'''
 
 #Cycle time
 cycle_time = '''
-Visual representation of duty cycle. Each circle correspond to a specific mass
-spectrometer part.
+The visual representation of the duty cycle. Each circle corresponds to a
+specific mass spectrometer part.
 
-Thick parts show when a part is busy, colors correspond to spectra types.
+Thick parts show when a part is busy, colors correspond to the spectra types.
 
 The text in the middle is the length of the duty cycle.
 '''
