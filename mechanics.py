@@ -6,9 +6,9 @@ This file contains supportive/backend functions related to modeling
 
 import pandas as pd
 import numpy as np
+import IsoSpecPy
 import params
 from pyteomics import mass
-from IsoSpecPy import IsoSpecPy
 
 class Cycler:
     '''
@@ -300,9 +300,9 @@ def expand_isotopes(peptide, charge_states=[2,3]):
             sequence - peptide sequence
     '''
     formula=''.join(['{}{}'.format(x, y) for x, y in mass.Composition(peptide['sequence']).items()])
-    cluster = IsoSpecPy.IsoSpec.IsoFromFormula(formula, cutoff=0.005, method='threshold_absolute').getConfs()
-    mz0 = np.array(cluster[0])
-    int0 = np.exp(cluster[1])    
+    cluster = IsoSpecPy.IsoThreshold(formula=formula, threshold=0.005, absolute=True)
+    mz0 = cluster.np_masses()
+    int0 = cluster.np_probs()    
     mz = np.concatenate([get_ions(mz0, z) for z in charge_states])
     ic = np.concatenate([int0 * peptide['{}+'.format(z)] for z in charge_states])
     charge = np.concatenate([np.repeat(z, mz0.shape[0]) for z in charge_states])
