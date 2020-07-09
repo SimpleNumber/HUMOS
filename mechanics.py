@@ -70,7 +70,7 @@ class Cycler:
     
     def pushToQueue(self, queue, start, duration):
         '''
-        Add element to queue
+        Add element to a queue
 
         Parameters
         ----------
@@ -95,6 +95,29 @@ class Cycler:
             workingQueue.pop()
         
         workingQueue.extend([start, start + duration])
+        
+    def popFromQueue(self, queue):
+        '''
+        Remove last element from a queue
+
+        Parameters
+        ----------
+        queue : string
+            name of the queue, should be one of IT/OT/IS.
+        
+        Returns
+        -------
+        None.
+
+        '''
+        try:
+            workingQueue = self.__getattribute__(queue)
+        except:
+            raise ValueError("Unknown queue name: {}".format(queue))
+        
+        if len(workingQueue) > 1: # if the queue is empty do nothing        
+            workingQueue.pop()
+            workingQueue.pop()
         
     def pushTask(self, task):
         '''
@@ -125,6 +148,45 @@ class Cycler:
             
         self.pushToQueue('IS', starttime, isTime)
         self.pushToQueue(device, starttime + isTime, devTime)
+    
+    def removeLastTask(self, device):
+        '''
+        Remove last acquisition task in a cycle
+
+        Parameters
+        ----------
+        device : str
+            name of device queue, should be IT/OT,
+            
+        Returns
+        -------
+        None.
+
+        '''
+        self.popFromQueue('IS')
+        self.popFromQueue(device)
+    
+    def getCurrentCycleLength(self):
+        '''
+        Get current cycle time
+        
+        Depending on parallelization, cycle time can be shorter, than longest
+        device queue
+
+        Returns
+        -------
+        cycletime : numeric
+            length of cycle time.
+        
+        '''
+        if self.parallel: #parallalelize first ion collection with last dwell time
+            firstInjection = self.IS[1]
+            devFree = max(self.whenFree('OT'), self.whenFree('IT'))
+            cycletime = max(self.whenFree('IS'), devFree - firstInjection)
+        else:
+            cycletime = self.whenAllFree()
+        
+        return cycletime
         
     def getCycle(self):
         '''
@@ -148,13 +210,8 @@ class Cycler:
             queue name is used as a key.
 
         '''
-        if self.parallel: #parallalelize first ion collection with last dwell time
-            firstInjection = self.IS[1]
-            devFree = max(self.whenFree('OT'), self.whenFree('IT'))
-            cycletime = max(self.whenFree('IS'), devFree - firstInjection)
-        else:
-            cycletime = self.whenAllFree()
-            
+        cycletime = self.getCurrentCycleLength()
+        
         #checking for empty queues
         for queue in ['IS', 'IT', 'OT']:
             if len(self.__getattribute__(queue)) == 1:
@@ -506,8 +563,8 @@ def get_boxcar_spectra(ion_data, distribution, agc_target, max_it, nBoxes, nScan
     
     return np.array(BCscans)
 
-def get_MS_counts(scan_method, acc_time, resolution, topN, ms2resolution,
-                  ms2IT, time, parallel=False):
+def get_MS_counts(scan_method, acc_time, resolution, ms2resolution,
+                  ms2IT, time, parallel=False, **kwargs):
     '''
     Calculate number of MS1 and MS2 scans using parameters below.
     Parameters:
@@ -517,6 +574,8 @@ def get_MS_counts(scan_method, acc_time, resolution, topN, ms2resolution,
             in case of boxcar scan, the iterable has to be, MS1 accumulation time, and acc_times for all boxcar scans
         resolution, int, used resolution (used to calculate transient time)
         topN, float, average TopN
+        topSpeed, float, desired cycle time
+        (NOTE: either topN or topSpeed has to be defined, if both present topN is used)
         ms2resolution, int or string, resolution for MS/MS scans
         ms2IT, float, injection time for MS/MS scans
         time, float, the length of the gradient
@@ -537,12 +596,28 @@ def get_MS_counts(scan_method, acc_time, resolution, topN, ms2resolution,
     else:
         raise ValueError('scan_method has to be one of "full"|"boxcar"')
     
-    for _ in range(topN):
-        cycler.pushTask((ms2IT, ms2device, params.transients[ms2resolution]))
+    if 'topN' in kwargs.keys():
+        topN = kwargs['topN']
+        for _ in range(kwargs['topN']):
+            cycler.pushTask((ms2IT, ms2device, params.transients[ms2resolution]))
+    elif 'topSpeed' in kwargs.keys():
+        #correct requested cycle time to be at least top0 - i.e. MS1/BoxCar only
+        minimalLength = max(cycler.getCurrentCycleLength(), kwargs['topSpeed'])
+        
+        topN = 0
+        while cycler.getCurrentCycleLength() <= minimalLength:
+            cycler.pushTask((ms2IT, ms2device, params.transients[ms2resolution]))
+            topN += 1
+        
+        if topN > 0: #if there was any MS2
+            cycler.removeLastTask(ms2device) #remove the last MS2 task (the one that exceeds TopSpeed time)
+            topN -= 1
+    else:
+        raise NameError('Either topN or topSpeed has to be used')
         
     cycletime, queues = cycler.getCycle()
     
-    nMS1 = int(60000 * time / cycletime)
+    nMS1 = int(60000 * time / cycletime) #1min = 60000 ms
     nMS2 = int(topN * nMS1)
     
-    return cycletime, nMS1, nMS2, queues
+    return cycletime, topN, nMS1, nMS2, queues

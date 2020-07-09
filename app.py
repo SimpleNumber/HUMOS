@@ -189,15 +189,21 @@ def block_MS2_html():
                             ],
                             style=small_panel_style),
 
-                    html.H6('TopN', id='topN-header'),
+                    dcc.RadioItems(id='topN-topSpeed-choice', 
+                                   options=[
+                                           {'label': 'TopN', 'value': 'topN'},
+                                           {'label': 'TopSpeed', 'value': 'topSpeed'}
+                                           ],
+                                   value='topN',
+                                   labelStyle={'display': 'inline', 'font-size': '2.0rem', 'margin-bottom': '1rem', 'margin-top': '1rem'},
+                                   style={'display': 'inline'}),
                     html.Img(id='i-topN', src=i_src, style=info_style),
-                    html.Div([dcc.Slider(
-                                id='topN-slider',
-                                min=1,
-                                max=40,
-                                value=15,
-                                marks={5*i: '{}'.format(5*i) for i in range(1,9)})
-                             ],
+                    html.Div([dcc.Slider(id='topN-slider',
+                                         min=0,
+                                         max=40,
+                                         value=15,
+                                         marks={i: '{}'.format(i) for i in range(0, 41, 5)},
+                                         tooltip={'placement': 'bottom'})],
                              style=small_panel_style),
                     
                     dcc.Checklist(id='paral-checklist',
@@ -211,7 +217,7 @@ def block_MS2_html():
                     tooltips.text_tooltip(tooltips.resolutionMS2,'i-ms2-resolution'),
                     tooltips.text_tooltip(tooltips.MaxIT,'IT-MS2-header'),
                     tooltips.text_tooltip(tooltips.MaxIT,'i-ms2-mit'),
-                    tooltips.text_tooltip(tooltips.topN,'topN-header'),
+                    tooltips.text_tooltip(tooltips.topN,'topN-topSpeed-choice'),
                     tooltips.text_tooltip(tooltips.topN,'i-topN'),
                     tooltips.text_tooltip(tooltips.parallel,'i-paral'),
                     ],
@@ -431,7 +437,7 @@ def update_figure(selected_resolution, selected_agc, distribution, mit_clicked,
              'layout': art.get_obsPep_layout()}]
             
 def update_ms_counts(topN, method, data, selected_resolution, ms2_resolution, 
-                     parallel, mit_clicked,  mit_ms2 ):
+                     parallel, mit_clicked,  mit_ms2, top_mode ):
     '''
     Update counts of MS spectra and cycle time graph
     '''
@@ -442,23 +448,36 @@ def update_ms_counts(topN, method, data, selected_resolution, ms2_resolution,
     resolution = params.resolutions_list[selected_resolution]
     
     if data == None:
-       return 'Select topN', '', '' #void return, before table data is ready
+       return None #void return, before table data is ready
 
     #parse infromation table
     data = art.tabletodf(data) 
     data = data.iloc[:, 1:].apply(pd.to_numeric)
     
-    #perfrom calculation
+    #cycletime calculation paramters
+    ccParam = {'resolution' : resolution,
+               'ms2resolution': ms2_resolution,
+               'ms2IT': mit_ms2,
+               'time': params.LC_time, 
+               'parallel': parallel}
+    
+    #translate topN and topSpeed
+    if top_mode == 'topN':
+        ccParam['topN'] = topN
+    elif top_mode == 'topSpeed':
+        ccParam['topSpeed']= topN * 1000
+
+    #translate scan method
     if boxCar:
-        cycletime, ms1_scan_n, ms2_scan_n, queues = mechanics.get_MS_counts('boxcar', data.iloc[0,:],
-                                                     resolution, topN, ms2_resolution, mit_ms2,
-                                                     params.LC_time, parallel=parallel)
-
+        ccParam['scan_method'] = 'boxcar'
+        ccParam['acc_time'] = data.iloc[0,:]
     else:
-        cycletime, ms1_scan_n, ms2_scan_n, queues = mechanics.get_MS_counts('full', data.iloc[0,0], 
-                                                     resolution, topN, ms2_resolution, mit_ms2,
-                                                     params.LC_time, parallel=parallel)
+        ccParam['scan_method'] = 'full'
+        ccParam['acc_time'] = data.iloc[0,0]
 
+    #perform calculation
+    cycletime, topN, ms1_scan_n, ms2_scan_n, queues = mechanics.get_MS_counts(**ccParam)
+    
     ms1_scan_text = 'MS1 Scans in {} minutes: {}'.format(params.LC_time, ms1_scan_n)
     ms2_scan_text = 'MS2 Scans in {} minutes: {}'.format(params.LC_time, ms2_scan_n)
     
@@ -493,9 +512,12 @@ def update_ms_counts(topN, method, data, selected_resolution, ms2_resolution,
     main_colors = colors[2: 2 + len(data.columns)] + [qualitative.Dark2[-1]] * topN
     
     #select information to be shown in the legend
-    #show names for MS1 and BoxCar (data.columns) and one label for MS2
+    #show names for MS1 and BoxCar (data.columns) and one label for MS2 (if there any MS2)
     #repeat twice, first for accumulation traces, second for acquisition traces
-    show_legend = ([True] * (len(data.columns) + 1) + [False] * (topN - 1)) * 2
+    if topN > 0:
+        show_legend = ([True] * (len(data.columns) + 1) + [False] * (topN - 1)) * 2
+    else:
+        show_legend = ([True] * (len(data.columns))) * 2
 
     #create DataFrame with all information
     cycle_df = pd.DataFrame({'text': ia_labels + ot_labels + it_labels,
@@ -516,7 +538,7 @@ def update_ms_counts(topN, method, data, selected_resolution, ms2_resolution,
     #collecting traces
     cycle_traces = art.get_cycle_grid()
     cycle_traces += cycle_df.apply(art.get_cycle_trace, axis=1).tolist()
-    cycle_traces.append(art.get_cycle_texts(cycletime, ms1_scan_text, ms2_scan_text))    
+    cycle_traces.append(art.get_cycle_texts(cycletime, topN, ms1_scan_text, ms2_scan_text))    
     
     return  [{'data': cycle_traces,'layout': art.get_cycle_layout()}]
                       
@@ -554,6 +576,26 @@ def update_resolution_graph(selected_resolution):
                                   yaxis={'title': 'Abundance'})
               } ]
 
+def update_top_slider(choice_value):
+    '''
+    Switch between TopN and TopSpeed sliders
+    '''
+    if choice_value == 'topN':
+        return (0, #min
+                40, #max
+                1, #step
+                15, #value
+                {i: '{}'.format(i) for i in range(0, 41, 5)}) #marks
+    elif choice_value == 'topSpeed':
+        return (0.0, #min
+                5.0, #max
+                0.05, #step
+                2.0, #value
+                {i: '{}s'.format(i) for i in range(0, 6)}) #marks
+    else:
+        raise ValueError('Unknown value ({}) in TopN-TopSpeed choice'.format(choice_value))
+                             
+
 app.callback(
     [Output('table', 'children'),
      Output('main-graph', 'figure'),
@@ -577,13 +619,22 @@ app.callback(
      Input('resolution-ms2-slider', 'value'),
      Input('paral-checklist', 'value'),
      Input('it-ms2-button','n_clicks')],
-    [State('mit-ms2-box', 'value')])(update_ms_counts)
+    [State('mit-ms2-box', 'value'),
+     State('topN-topSpeed-choice', 'value')])(update_ms_counts)
 
 app.callback(
     [Output('resolution-graph', 'figure')],
     [Input('resolution-ms2-slider', 'value')])(update_resolution_graph)
 
+app.callback(
+        [Output('topN-slider', 'min'),
+         Output('topN-slider', 'max'),
+         Output('topN-slider', 'step'),
+         Output('topN-slider', 'value'),
+         Output('topN-slider', 'marks')],
+        [Input('topN-topSpeed-choice', 'value')])(update_top_slider)
+
 server = app.server
 
 if __name__ == '__main__':
-    app.run_server()
+    app.run_server(debug=True)

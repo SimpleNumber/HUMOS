@@ -88,6 +88,11 @@ Mass spectral resolution for MS2 spectra.
 topN = '''
 The number of fragmentation events (MS2 spectra) that are scheduled for
 each parent ion scan (MS1 spectrum).
+
+**TopN** - the number of fragmentation events is defined directly.
+
+**TopSpeed** - the number of fragmentation events is calculated dynamically in
+order to reach defined duty cycle length.
 '''
 
 parallel = '''Allow using different instrument parts in parallel (if possible)'''
@@ -99,5 +104,5 @@ specific mass spectrometer part.
 
 Thick parts show when a part is busy, colors correspond to the spectra types.
 
-The text in the middle is the length of the duty cycle.
+The text in the middle is the length and number of MS2 scans in the duty cycle.
 '''

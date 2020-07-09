@@ -286,14 +286,16 @@ def get_cycle_grid():
                              textposition='middle center',
                              hoverinfo='skip') ]
 
-def get_cycle_texts(cycletime, ms1_scan_text, ms2_scan_text):
+def get_cycle_texts(cycletime, topN, ms1_scan_text, ms2_scan_text):
     '''
-    Number of MS1 and MS2 scans, located at the cycle plot
+    Text objects located at the cycle plot
 
     Parameters
     ----------
     cycletime : float
         length of duty cycle
+    topN : int
+        number of MS2 spectra per cycle
     ms1_scan_text : string
         Text with MS1 scan information.
     ms2_scan_text : string
@@ -306,14 +308,15 @@ def get_cycle_texts(cycletime, ms1_scan_text, ms2_scan_text):
     r1 = 1.05
     r2 = r1 * math.sin(theta1 * math.pi / 180) / math.sin(theta2 * math.pi / 180)
     
-    text_trace = go.Scatterpolar(r=[0, r1, r2],
-                                 theta=[0, theta1, theta2],
+    text_trace = go.Scatterpolar(r=[0.07, 0.07, r1, r2],
+                                 theta=[0, 180, theta1, theta2],
                                  mode='text',
                                  text= ['{:.3f} sec'.format(cycletime/1000),
+                                        '#MS2: {}'.format(topN),
                                         ms1_scan_text, ms2_scan_text],
                                  showlegend=False,
-                                 textfont={'size': [18] + [14] * 2},
-                                 textposition=['middle center'] + ['bottom right'] * 2,
+                                 textfont={'size': [18] * 2 + [14] * 2},
+                                 textposition=['middle center'] * 2 + ['bottom right'] * 2,
                                  hoverinfo='skip')
     return text_trace
     
