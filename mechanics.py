@@ -236,6 +236,24 @@ def get_profile_peak(mz, intensity, mz_grid, sigma):
     sigma /= 2 * np.sqrt(2 * np.log(2))
     return intensity*np.exp(-(mz_grid-mz)**2/(2*(sigma**2)))
 
+def AUC(x, y, xlim=(None, None)):
+    '''
+    Calculate area under the curve, the curve is defined as x and y array
+    
+    Parameters
+    ----------
+    x : x-array of the curve
+    y : y-array of the curve
+    
+    Return
+        float, area
+    '''    
+    h = x[1:] - x[:-1] #trapezoid heights
+    area = (y[1:] + y[:-1])/2 * h #trapezoid areas
+    
+    return area.sum()
+
+
 def get_profile_spectrum(mz_intensity_list, r, points=41):        
     '''
     Parameters

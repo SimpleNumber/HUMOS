@@ -30,10 +30,13 @@ mechanics.add_boxes(ion_data, boxes)
 ### Interface building blocks ###
 block_style = {'width':'400px'}
 small_panel_style = {'width': '80%','padding-left':'1%', 'padding-right':'10%', 'margin-top':'1rem', 'margin-bottom':'1rem'}
-big_panel_style = { 'display':'flex', 'flex-wrap': 'wrap', 'padding-bottom': '4rem', 'justify-content': 'space-around'}
+big_panel_style = {'display':'flex', 'flex-wrap': 'wrap', 'padding-bottom': '4rem', 'justify-content': 'space-around'}
+main_graph_style ={'flex': '1 1 800px', 'min-width': '400px'}
 res_figure_style = {'width':'600px', 'height':'450px', 'padding-bottom': '4rem'}
 cycle_figure_style = {'width':'600px', 'height':'450px', 'padding-bottom': '4rem'}
 info_style = {'height': '15px', 'padding-bottom':'5px', 'padding-left':'3px', 'display':'inline'}
+header_style = {'display': 'inline', 'font-size': '2.0rem', 'margin-bottom': '1rem', 'margin-top': '1rem'}
+ppp_figure_style = {'width':'300px', 'padding-bottom': '4rem'}
 i_src = '/assets/info.png'
 
 def table_dynRange_html():
@@ -195,7 +198,7 @@ def block_MS2_html():
                                            {'label': 'TopSpeed', 'value': 'topSpeed'}
                                            ],
                                    value='topN',
-                                   labelStyle={'display': 'inline', 'font-size': '2.0rem', 'margin-bottom': '1rem', 'margin-top': '1rem'},
+                                   labelStyle=header_style,
                                    style={'display': 'inline'}),
                     html.Img(id='i-topN', src=i_src, style=info_style),
                     html.Div([dcc.Slider(id='topN-slider',
@@ -277,8 +280,11 @@ app.layout = html.Div([
     #upper part - info table, dynamic range plot, observed peptides
     table_dynRange_html(),
     
-    #simulated mass spectrum
-    dcc.Graph(id='main-graph'),
+    #simulated mass spectrum and points-pep-peak graph
+    html.Div([
+            dcc.Graph(id='main-graph', style=main_graph_style),
+            dcc.Graph(id='ppp-graph', style=ppp_figure_style, config={'displayModeBar': False})
+            ], style=big_panel_style),
 
     #model parameters switches
     html.Div([
@@ -439,7 +445,7 @@ def update_figure(selected_resolution, selected_agc, distribution, mit_clicked,
 def update_ms_counts(topN, method, data, selected_resolution, ms2_resolution, 
                      parallel, mit_clicked,  mit_ms2, top_mode ):
     '''
-    Update counts of MS spectra and cycle time graph
+    Update counts of MS spectra, cycle time graph and ponts-per-peak plot
     '''
     
     boxCar = (method == 'bc')
@@ -538,9 +544,48 @@ def update_ms_counts(topN, method, data, selected_resolution, ms2_resolution,
     #collecting traces
     cycle_traces = art.get_cycle_grid()
     cycle_traces += cycle_df.apply(art.get_cycle_trace, axis=1).tolist()
-    cycle_traces.append(art.get_cycle_texts(cycletime, topN, ms1_scan_text, ms2_scan_text))    
+    cycle_traces.append(art.get_cycle_texts(cycletime, topN, ms1_scan_text, ms2_scan_text))
     
-    return  [{'data': cycle_traces,'layout': art.get_cycle_layout()}]
+    #Points per peak plot
+    #data for LC peak
+    center = 5
+    width = 4
+    top = 1
+    
+    #theoretical LC peak
+    tRT = np.linspace(0, 10, 100)
+    tProfile = mechanics.get_profile_peak(center, top, tRT, width)
+    
+    tArea = mechanics.AUC(tRT, tProfile)
+    #area under Gaussian curve (a*exp(-(x - b)^2/2*c^2) is a*c*sqrt(2*pi)
+    #tArea = top * width * np.sqrt(np.math.pi / np.log(2)) / 2
+    
+    #sampling LC peak
+    sRT = np.arange(0, 10, cycletime/1000)
+    sRT = np.append(sRT, sRT[-1] + cycletime/1000) #last point
+    sProfile = mechanics.get_profile_peak(center, top, sRT, width)
+    
+    #area under sampling curve
+    sArea = mechanics.AUC(sRT, sProfile)
+    
+    ppp_data = [go.Scatter(x=tRT,
+                           y=tProfile,
+                           mode='lines',
+                           name='Elution profile',
+                           fill='tozeroy'),
+                go.Scatter(x=sRT,
+                           y=sProfile,
+                           mode='lines+markers',
+                           name='MS1 scans',
+                           fill='tozeroy'),
+                go.Scatter(x=[5],
+                           y=[0.1],
+                           mode='text',
+                           text='{:.1f}%'.format(100*sArea/tArea),
+                           textposition='bottom center')]
+    
+    return  [{'data': cycle_traces, 'layout': art.get_cycle_layout()},
+             {'data': ppp_data, 'layout': art.get_ppp_layout()}]
                       
 def update_resolution_graph(selected_resolution):
     '''
@@ -594,7 +639,6 @@ def update_top_slider(choice_value):
                 {i: '{}s'.format(i) for i in range(0, 6)}) #marks
     else:
         raise ValueError('Unknown value ({}) in TopN-TopSpeed choice'.format(choice_value))
-                             
 
 app.callback(
     [Output('table', 'children'),
@@ -611,7 +655,8 @@ app.callback(
       State('mit-box', 'value')])(update_figure)
 
 app.callback(
-    [Output('cycle-time-graph', 'figure')],
+    [Output('cycle-time-graph', 'figure'),
+     Output('ppp-graph', 'figure')],
     [Input('topN-slider', 'value'),
      Input('method-choice', 'value'),
      Input('table','children'),

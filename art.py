@@ -351,3 +351,19 @@ def get_cycle_layout():
                              'b': 0,
                              't': 0,
                              'pad': 0})
+
+def get_ppp_layout():
+    '''
+    Points-per-peak plot layout
+    '''
+    return go.Layout(showlegend=False,
+                     margin={'l': 0,
+                             'r': 0,
+                             'b': 40,
+                             't': 20},
+                     xaxis={'range': [0, 10],
+                            'title': 'RT (s)',
+                            'showticklabels': False,
+                            'zeroline': False},
+                     yaxis={'ticks': ''},
+                     hovermode=False)
