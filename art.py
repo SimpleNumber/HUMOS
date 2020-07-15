@@ -160,7 +160,8 @@ def get_main_layout(x_range, y_range):
     return go.Layout(showlegend=True,
                      margin={'t':30},
                      xaxis={'title': 'm/z', 'range':x_range},
-                     yaxis={'title': 'Abundance', 'range': y_range})
+                     yaxis={'title': 'Abundance', 'range': y_range},
+                     legend={'yanchor':"top", 'y':0.99, 'xanchor':"right",'x':0.99})
 
 def get_dynrange_trace(row):
     '''

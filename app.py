@@ -36,7 +36,7 @@ res_figure_style = {'width':'600px', 'height':'450px', 'padding-bottom': '4rem'}
 cycle_figure_style = {'width':'600px', 'height':'450px', 'padding-bottom': '4rem'}
 info_style = {'height': '15px', 'padding-bottom':'5px', 'padding-left':'3px', 'display':'inline'}
 header_style = {'display': 'inline', 'font-size': '2.0rem', 'margin-bottom': '1rem', 'margin-top': '1rem'}
-ppp_figure_style = {'width':'300px', 'padding-bottom': '4rem'}
+ppp_figure_style = {'width':'300px', 'padding-bottom': '4rem' , 'padding-right': '4rem'}
 i_src = '/assets/info.png'
 
 def table_dynRange_html():
@@ -283,7 +283,11 @@ app.layout = html.Div([
     #simulated mass spectrum and points-pep-peak graph
     html.Div([
             dcc.Graph(id='main-graph', style=main_graph_style),
-            dcc.Graph(id='ppp-graph', style=ppp_figure_style, config={'displayModeBar': False})
+            html.Div([
+                     html.H6('Points per chromotographic peak'),
+                     dcc.Graph(id='ppp-graph', config={'displayModeBar': False})
+                    ],  style=ppp_figure_style)
+           
             ], style=big_panel_style),
 
     #model parameters switches
@@ -556,7 +560,7 @@ def update_ms_counts(topN, method, data, selected_resolution, ms2_resolution,
     tRT = np.linspace(0, 10, 100)
     tProfile = mechanics.get_profile_peak(center, top, tRT, width)
     
-    tArea = mechanics.AUC(tRT, tProfile)
+#    tArea = mechanics.AUC(tRT, tProfile)
     #area under Gaussian curve (a*exp(-(x - b)^2/2*c^2) is a*c*sqrt(2*pi)
     #tArea = top * width * np.sqrt(np.math.pi / np.log(2)) / 2
     
@@ -564,25 +568,21 @@ def update_ms_counts(topN, method, data, selected_resolution, ms2_resolution,
     sRT = np.arange(0, 10, cycletime/1000)
     sRT = np.append(sRT, sRT[-1] + cycletime/1000) #last point
     sProfile = mechanics.get_profile_peak(center, top, sRT, width)
-    
-    #area under sampling curve
-    sArea = mechanics.AUC(sRT, sProfile)
+
     
     ppp_data = [go.Scatter(x=tRT,
                            y=tProfile,
                            mode='lines',
                            name='Elution profile',
-                           fill='tozeroy'),
+                           fill='tozeroy',
+                           line={'color':colors[1]}),
                 go.Scatter(x=sRT,
                            y=sProfile,
                            mode='lines+markers',
                            name='MS1 scans',
-                           fill='tozeroy'),
-                go.Scatter(x=[5],
-                           y=[0.1],
-                           mode='text',
-                           text='{:.1f}%'.format(100*sArea/tArea),
-                           textposition='bottom center')]
+                           fill='tozeroy',
+                           line={'color':colors[0]})
+                ]
     
     return  [{'data': cycle_traces, 'layout': art.get_cycle_layout()},
              {'data': ppp_data, 'layout': art.get_ppp_layout()}]
