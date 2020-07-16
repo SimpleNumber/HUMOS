@@ -31,9 +31,9 @@ class Cycler:
         None.
 
         '''
-        self.IS = [0] #ion source queue
-        self.OT = [0] #OT queue
-        self.IT = [0] #IT queue
+        self.IS = [] #ion source queue
+        self.OT = [] #OT queue
+        self.IT = [] #IT queue
         self.parallel = parallel #parallelization
 
     def whenFree(self, queue):
@@ -52,10 +52,14 @@ class Cycler:
 
         '''
         try:
-            return self.__getattribute__(queue)[-1]
-        except Exception as e:
-            print(e)
+            queueData = self.__getattribute__(queue)
+        except:
             raise ValueError("Unknown queue name: {}".format(queue))
+        
+        if len(queueData) > 0:
+            return queueData[-1]
+        else:
+            return 0
     
     def whenAllFree(self):
         '''
@@ -67,7 +71,7 @@ class Cycler:
             time when all queues are free.
 
         '''
-        return max(self.IS[-1], self.IT[-1], self.OT[-1])
+        return max(self.whenFree('IS'), self.whenFree('IT'), self.whwnFree('OT'))
     
     def pushToQueue(self, queue, start, duration):
         '''
@@ -91,9 +95,6 @@ class Cycler:
             workingQueue = self.__getattribute__(queue)
         except:
             raise ValueError("Unknown queue name: {}".format(queue))
-        
-        if len(workingQueue) == 1: # first element
-            workingQueue.pop()
         
         workingQueue.extend([start, start + duration])
         
@@ -213,11 +214,6 @@ class Cycler:
         '''
         cycletime = self.getCurrentCycleLength()
         
-        #checking for empty queues
-        for queue in ['IS', 'IT', 'OT']:
-            if len(self.__getattribute__(queue)) == 1:
-                self.__getattribute__(queue).pop()
-            
         return cycletime, {'IS': np.array(self.IS).reshape(-1, 2),
                            'IT': np.array(self.IT).reshape(-1, 2),
                            'OT': np.array(self.OT).reshape(-1, 2)}
@@ -227,7 +223,7 @@ def get_ions(pep_mass, charge):
     '''
     Convert neutral mass to m/z value
     '''
-    return  (pep_mass + charge * 1.00727) / charge  
+    return  (pep_mass + charge * 1.007276) / charge  
 
 def get_profile_peak(mz, intensity, mz_grid, sigma):
     '''

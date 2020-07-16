@@ -29,12 +29,12 @@ mechanics.add_boxes(ion_data, boxes)
 
 ### Interface building blocks ###
 block_style = {'width':'400px'}
-small_panel_style = {'width': '90%','padding-left':'2%', 'padding-right':'2%', 'margin-top':'1rem', 'margin-bottom':'1rem'}
-big_panel_style = {'display':'flex', 'flex-wrap': 'wrap', 'padding': '0 1% 4rem 1%', 'justify-content': 'space-between'}
+small_panel_style = {'padding-left': '2%', 'padding-right': '2%', 'margin-top': '1rem', 'margin-bottom': '1rem'}
+big_panel_style = {'display': 'flex', 'flex-wrap': 'wrap', 'padding': '0 1% 4rem 1%', 'justify-content': 'space-between'}
 main_graph_style ={'flex': '1 1 800px', 'min-width': '400px'}
-res_figure_style = {'width':'600px', 'height':'450px', 'padding-bottom': '4rem'}
-cycle_figure_style = {'width':'600px', 'height':'450px', 'padding-bottom': '4rem'}
-info_style = {'height': '15px', 'padding-bottom':'5px', 'padding-left':'3px', 'display':'inline'}
+res_figure_style = {'width': '600px', 'height': '450px', 'padding-bottom': '4rem'}
+cycle_figure_style = {'width': '600px', 'height': '450px', 'padding-bottom': '4rem'}
+info_style = {'height': '15px', 'padding-bottom': '5px', 'padding-left': '3px', 'display': 'inline'}
 header_style = {'display': 'inline', 'font-size': '2rem', 'margin-bottom': '1rem', 'margin-top': '1rem'}
 ppp_figure_style = {'width':'300px', 'padding-bottom': '4rem', 'padding-right': '1rem'}
 i_src = '/assets/info.png'
@@ -162,8 +162,8 @@ def block_MS1_html():
                     tooltips.text_tooltip(tooltips.resolution, 'i-ms1-res'),
                     tooltips.text_tooltip(tooltips.AGC, 'MS1-AGC-header'),
                     tooltips.text_tooltip(tooltips.AGC, 'i-ms1-agc'),
-                    tooltips.text_tooltip(tooltips.MaxIT,'MS1-IT-header'),
-                    tooltips.text_tooltip(tooltips.MaxIT,'i-ms1-mit'),
+                    tooltips.text_tooltip(tooltips.MaxIT, 'MS1-IT-header'),
+                    tooltips.text_tooltip(tooltips.MaxIT, 'i-ms1-mit'),
                     ],
                     style=block_style)
 
