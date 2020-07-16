@@ -53,7 +53,8 @@ class Cycler:
         '''
         try:
             return self.__getattribute__(queue)[-1]
-        except:
+        except Exception as e:
+            print(e)
             raise ValueError("Unknown queue name: {}".format(queue))
     
     def whenAllFree(self):
@@ -236,23 +237,30 @@ def get_profile_peak(mz, intensity, mz_grid, sigma):
     sigma /= 2 * np.sqrt(2 * np.log(2))
     return intensity*np.exp(-(mz_grid-mz)**2/(2*(sigma**2)))
 
-def AUC(x, y, xlim=(None, None)):
+def get_LC_profile(center, intensity, width, grid):
     '''
-    Calculate area under the curve, the curve is defined as x and y array
+    Generate an LC elution profile - Gaussian shape left from the top and
+    Lorentzian shape right the top
     
     Parameters
     ----------
-    x : x-array of the curve
-    y : y-array of the curve
+    center : float, top of the peak
+    intensity : float, magnitude of the peak
+    width : width of the peak
+    grid : grid of points to raster the peak
     
     Return
-        float, area
-    '''    
-    h = x[1:] - x[:-1] #trapezoid heights
-    area = (y[1:] + y[:-1])/2 * h #trapezoid areas
+        `np.array` of floats, shape profile
+    '''
+    #Gaussian part
+    left_x = grid[grid < center]
+    left_y = intensity * np.exp(-(left_x - center)**2 /((width**2) / 2))
     
-    return area.sum()
-
+    #lorentzian part
+    right_x = grid[grid >= center]
+    right_y = (width**2 / 3) * intensity / ((right_x - center)**2 + width**2 / 3)
+    
+    return np.concatenate((left_y, right_y))
 
 def get_profile_spectrum(mz_intensity_list, r, points=41):        
     '''

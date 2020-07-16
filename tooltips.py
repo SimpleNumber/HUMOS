@@ -106,3 +106,12 @@ Thick parts show when a part is busy, colors correspond to the spectra types.
 
 The text in the middle is the length and number of MS2 scans in the duty cycle.
 '''
+
+#Points-per-peak
+ppp = '''
+LC elution profile for the most abundant peptide.
+
+**Grey trace** - theoretical elution profile
+
+**Light blue trace** - observed elution profile with current duty cycle length
+'''

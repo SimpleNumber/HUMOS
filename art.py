@@ -13,6 +13,27 @@ from colorsys import rgb_to_hsv, hsv_to_rgb
 from plotly.colors import convert_colors_to_same_type
 from plotly.express.colors import qualitative
 
+def get_zoom(relayout_data, min_x, max_x, min_y, max_y):
+    '''
+    Reads and preserves zoom information from a plotly graph
+    '''
+    x_range = []
+    y_range = []
+    
+    if 'xaxis.range[0]' in relayout_data.keys():
+        x_range = [ relayout_data['xaxis.range[0]'],
+                    relayout_data['xaxis.range[1]'] ]
+    else:
+        x_range = [min_x, max_x]
+        
+    if 'yaxis.range[0]' in (relayout_data.keys()):
+            y_range= [ relayout_data['yaxis.range[0]'],
+                       relayout_data['yaxis.range[1]'] ]
+    else:
+        y_range = [min_y, max_y]
+        
+    return x_range, y_range
+
 def make_table(real_ats, real_agcs, labels, resolution):
     '''
     Create a table with acquisition parameters 
@@ -158,10 +179,12 @@ def get_main_layout(x_range, y_range):
         range of y-coordinates.
     '''
     return go.Layout(showlegend=True,
-                     margin={'t':30},
+                     margin={'t': 30,
+                             'l': 50},
                      xaxis={'title': 'm/z', 'range':x_range},
                      yaxis={'title': 'Abundance', 'range': y_range},
-                     legend={'yanchor':"top", 'y':0.99, 'xanchor':"right",'x':0.99})
+                     legend={'yanchor': 'top', 'y': 0.99,
+                             'xanchor': 'right', 'x':0.99})
 
 def get_dynrange_trace(row):
     '''
@@ -353,11 +376,59 @@ def get_cycle_layout():
                              't': 0,
                              'pad': 0})
 
+def get_ppp_trace(tX, tY, tC, sX, sY, sC, peptide):
+    '''
+    Data traces for points-per-peak plot
+    
+    Parameters
+    ----------
+    tX : `np.array`
+        theoretical trace, x-array
+    tY : `np.array`
+        theoretical trace, y-array
+    tC : string
+        theoretical trace, color
+    sX : `np.array`
+        observed trace, x-array
+    sY : `np.array`
+        observed trace, y-array
+    sC : string
+        observed trace, color
+    peptide : `pd.Series`
+        `ion_data` element for the most abundant peak in all mass traces
+    '''
+    texts = [peptide['sequence'],
+             'm/z {:.2f} {}+'.format(peptide['mz'], peptide['z'])]
+    
+    return [go.Scatter(x=tX,
+                       y=tY,
+                       mode='lines',
+                       name='Theoretical',
+                       fill='tozeroy',
+                       line={'color': tC}),
+            
+            go.Scatter(x=sX,
+                       y=sY,
+                       mode='lines+markers',
+                       name='Observed',
+                       fill='tozeroy',
+                       line={'color': sC}),
+            
+            go.Scatter(x=[9.5, 9.5],
+                       y=[0.63, 0.57],
+                       mode='text',
+                       showlegend=False,
+                       text=texts,
+                       textposition='bottom left',
+                       textfont={'size': 14}) ]
+
 def get_ppp_layout():
     '''
     Points-per-peak plot layout
     '''
-    return go.Layout(showlegend=False,
+    return go.Layout(showlegend=True,
+                     legend={'xanchor': 'right', 'x':0.99,
+                             'yanchor': 'top', 'y': 0.99,},
                      margin={'l': 0,
                              'r': 0,
                              'b': 40,
@@ -366,5 +437,6 @@ def get_ppp_layout():
                             'title': 'RT (s)',
                             'showticklabels': False,
                             'zeroline': False},
-                     yaxis={'ticks': ''},
+                     yaxis={'range': [0, 1.01],
+                            'ticks': ''},
                      hovermode=False)

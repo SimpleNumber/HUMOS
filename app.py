@@ -29,14 +29,14 @@ mechanics.add_boxes(ion_data, boxes)
 
 ### Interface building blocks ###
 block_style = {'width':'400px'}
-small_panel_style = {'width': '80%','padding-left':'1%', 'padding-right':'10%', 'margin-top':'1rem', 'margin-bottom':'1rem'}
-big_panel_style = {'display':'flex', 'flex-wrap': 'wrap', 'padding-bottom': '4rem', 'justify-content': 'space-around'}
+small_panel_style = {'width': '90%','padding-left':'2%', 'padding-right':'2%', 'margin-top':'1rem', 'margin-bottom':'1rem'}
+big_panel_style = {'display':'flex', 'flex-wrap': 'wrap', 'padding': '0 1% 4rem 1%', 'justify-content': 'space-between'}
 main_graph_style ={'flex': '1 1 800px', 'min-width': '400px'}
 res_figure_style = {'width':'600px', 'height':'450px', 'padding-bottom': '4rem'}
 cycle_figure_style = {'width':'600px', 'height':'450px', 'padding-bottom': '4rem'}
 info_style = {'height': '15px', 'padding-bottom':'5px', 'padding-left':'3px', 'display':'inline'}
-header_style = {'display': 'inline', 'font-size': '2.0rem', 'margin-bottom': '1rem', 'margin-top': '1rem'}
-ppp_figure_style = {'width':'300px', 'padding-bottom': '4rem' , 'padding-right': '4rem'}
+header_style = {'display': 'inline', 'font-size': '2rem', 'margin-bottom': '1rem', 'margin-top': '1rem'}
+ppp_figure_style = {'width':'300px', 'padding-bottom': '4rem', 'padding-right': '1rem'}
 i_src = '/assets/info.png'
 
 def table_dynRange_html():
@@ -69,7 +69,7 @@ def table_dynRange_html():
                        'flex-wrap': 'wrap',
                        'padding-bottom': '0rem',
                        'padding-left':'1%',
-                       'padding-right':'10%',
+                       'padding-right':'1%',
                        'justify-content': 'space-between'})
 
 def block_global_html():
@@ -216,13 +216,13 @@ def block_MS2_html():
                                   style={'padding-bottom': '1rem', 'display':'inline'}),
                     html.Img(id='i-paral', src=i_src, style=info_style),
 
-                    tooltips.text_tooltip(tooltips.resolutionMS2,'MS2-resolution-header'),
-                    tooltips.text_tooltip(tooltips.resolutionMS2,'i-ms2-resolution'),
-                    tooltips.text_tooltip(tooltips.MaxIT,'IT-MS2-header'),
-                    tooltips.text_tooltip(tooltips.MaxIT,'i-ms2-mit'),
-                    tooltips.text_tooltip(tooltips.topN,'topN-topSpeed-choice'),
-                    tooltips.text_tooltip(tooltips.topN,'i-topN'),
-                    tooltips.text_tooltip(tooltips.parallel,'i-paral'),
+                    tooltips.text_tooltip(tooltips.resolutionMS2, 'MS2-resolution-header'),
+                    tooltips.text_tooltip(tooltips.resolutionMS2, 'i-ms2-resolution'),
+                    tooltips.text_tooltip(tooltips.MaxIT, 'IT-MS2-header'),
+                    tooltips.text_tooltip(tooltips.MaxIT, 'i-ms2-mit'),
+                    tooltips.text_tooltip(tooltips.topN, 'topN-topSpeed-choice'),
+                    tooltips.text_tooltip(tooltips.topN, 'i-topN'),
+                    tooltips.text_tooltip(tooltips.parallel, 'i-paral'),
                     ],
                     style=block_style)
 
@@ -251,8 +251,8 @@ def cycle_time_html():
                             dcc.Graph(id='cycle-time-graph')
                             ]),
                         
-                            tooltips.text_tooltip(tooltips.cycle_time,'cycle-time-header'),
-                            tooltips.text_tooltip(tooltips.cycle_time,'i-cycle-time')
+                            tooltips.text_tooltip(tooltips.cycle_time, 'cycle-time-header'),
+                            tooltips.text_tooltip(tooltips.cycle_time, 'i-cycle-time')
                     ],
                     style=cycle_figure_style)
 
@@ -274,7 +274,7 @@ app.layout = html.Div([
                         'padding-left': '2rem',
                         'padding-right': '2rem',
                         'transform': 'rotate(-10deg) skewY(4deg)'}),
-            tooltips.logo_tooltip()
+        tooltips.logo_tooltip()
              ], style={'display': 'flex', 'padding-bottom': '1rem'}),
     
     #upper part - info table, dynamic range plot, observed peptides
@@ -284,9 +284,12 @@ app.layout = html.Div([
     html.Div([
             dcc.Graph(id='main-graph', style=main_graph_style),
             html.Div([
-                     html.H6('Points per chromotographic peak'),
-                     dcc.Graph(id='ppp-graph', config={'displayModeBar': False})
-                    ],  style=ppp_figure_style)
+                    html.H6('Peptide elution profile'),
+                    html.Img(id='i-ppp-graph', src=i_src, style=info_style),
+                    dcc.Graph(id='ppp-graph', config={'displayModeBar': False}),
+                    
+                    tooltips.text_tooltip(tooltips.ppp, 'i-ppp-graph'),
+                    ], style=ppp_figure_style)
            
             ], style=big_panel_style),
 
@@ -325,28 +328,7 @@ app.layout = html.Div([
     ) #end layout
 ### End main window ###
 
-def get_zoom(relayout_data, min_x, max_x, min_y, max_y):
-    '''
-    Reads and preserves zoom information from a plotly graph
-    '''
-    x_range = []
-    y_range = []
-    
-    if 'xaxis.range[0]' in relayout_data.keys():
-        x_range = [ relayout_data['xaxis.range[0]'],
-                    relayout_data['xaxis.range[1]'] ]
-    else:
-        x_range = [min_x, max_x]
-        
-    if 'yaxis.range[0]' in (relayout_data.keys()):
-            y_range= [ relayout_data['yaxis.range[0]'],
-                       relayout_data['yaxis.range[1]'] ]
-    else:
-        y_range = [min_y, max_y]
-        
-    return x_range, y_range
-
-
+### Callback functions ###
 def update_figure(selected_resolution, selected_agc, distribution, mit_clicked,
                   method, ionFlux, relayout_data, max_it):
     '''
@@ -385,7 +367,7 @@ def update_figure(selected_resolution, selected_agc, distribution, mit_clicked,
         x_range = [min(main_spectrum[0]), max(main_spectrum[0])]
         y_range = [0, max(main_spectrum[1]) * 1.01]
     else:
-        x_range, y_range = get_zoom(relayout_data,
+        x_range, y_range = art.get_zoom(relayout_data,
                                     min(main_spectrum[0]),
                                     max(main_spectrum[0]),
                                     0,
@@ -447,7 +429,7 @@ def update_figure(selected_resolution, selected_agc, distribution, mit_clicked,
              'layout': art.get_obsPep_layout()}]
             
 def update_ms_counts(topN, method, data, selected_resolution, ms2_resolution, 
-                     parallel, mit_clicked,  mit_ms2, top_mode ):
+                     parallel, mit_clicked, main_graph, mit_ms2, top_mode):
     '''
     Update counts of MS spectra, cycle time graph and ponts-per-peak plot
     '''
@@ -550,39 +532,38 @@ def update_ms_counts(topN, method, data, selected_resolution, ms2_resolution,
     cycle_traces += cycle_df.apply(art.get_cycle_trace, axis=1).tolist()
     cycle_traces.append(art.get_cycle_texts(cycletime, topN, ms1_scan_text, ms2_scan_text))
     
-    #Points per peak plot
-    #data for LC peak
-    center = 5
-    width = 4
-    top = 1
+    ##Points per peak plot
+    ppp_data = [] #default data is empty
     
-    #theoretical LC peak
-    tRT = np.linspace(0, 10, 100)
-    tProfile = mechanics.get_profile_peak(center, top, tRT, width)
+    #Detect highest peak in all spectra
+    maxMz = 0
+    maxInt = 0
+    for trace in main_graph['data']:
+        maxI = np.argmax(trace['y'])
+        if trace['y'][maxI] > maxInt:
+            maxInt = trace['y'][maxI]
+            maxMz = trace['x'][maxI]
     
-#    tArea = mechanics.AUC(tRT, tProfile)
-    #area under Gaussian curve (a*exp(-(x - b)^2/2*c^2) is a*c*sqrt(2*pi)
-    #tArea = top * width * np.sqrt(np.math.pi / np.log(2)) / 2
+    if maxInt > 0: #non-empty spectrum
+        topPeptide = ion_data.loc[(ion_data['mz'] - maxMz).abs().idxmin(), :]
+        
+        #data for LC peak
+        center = 3
+        width = 2
+        top = 1
+        
+        #theoretical LC peak
+        tRT = np.linspace(0, 10, 100)
+        tProfile = mechanics.get_LC_profile(center, top, width, tRT)
+        
+        #sampling LC peak
+        sRT = np.arange(0, 10, cycletime/1000)
+        sRT = np.append(sRT, sRT[-1] + cycletime/1000) #last point
+        sProfile = mechanics.get_LC_profile(center, top, width, sRT)
     
-    #sampling LC peak
-    sRT = np.arange(0, 10, cycletime/1000)
-    sRT = np.append(sRT, sRT[-1] + cycletime/1000) #last point
-    sProfile = mechanics.get_profile_peak(center, top, sRT, width)
-
-    
-    ppp_data = [go.Scatter(x=tRT,
-                           y=tProfile,
-                           mode='lines',
-                           name='Elution profile',
-                           fill='tozeroy',
-                           line={'color':colors[1]}),
-                go.Scatter(x=sRT,
-                           y=sProfile,
-                           mode='lines+markers',
-                           name='MS1 scans',
-                           fill='tozeroy',
-                           line={'color':colors[0]})
-                ]
+        ppp_data = art.get_ppp_trace(tRT, tProfile, colors[1],#theoretical
+                                     sRT, sProfile, colors[0],#sampling
+                                     topPeptide)
     
     return  [{'data': cycle_traces, 'layout': art.get_cycle_layout()},
              {'data': ppp_data, 'layout': art.get_ppp_layout()}]
@@ -615,7 +596,8 @@ def update_resolution_graph(selected_resolution):
                                     ) ]
 
     return [ {'data': resolution_traces,
-              'layout': go.Layout(margin={'t': 10},
+              'layout': go.Layout(margin={'t': 10,
+                                          'l': 50},
                                   showlegend=False,
                                   xaxis={'title': 'm/z'},
                                   yaxis={'title': 'Abundance'})
@@ -639,6 +621,7 @@ def update_top_slider(choice_value):
                 {i: '{}s'.format(i) for i in range(0, 6)}) #marks
     else:
         raise ValueError('Unknown value ({}) in TopN-TopSpeed choice'.format(choice_value))
+### End callback functions ###
 
 app.callback(
     [Output('table', 'children'),
@@ -664,7 +647,8 @@ app.callback(
      Input('resolution-ms2-slider', 'value'),
      Input('paral-checklist', 'value'),
      Input('it-ms2-button','n_clicks')],
-    [State('mit-ms2-box', 'value'),
+    [State('main-graph', 'figure'),
+     State('mit-ms2-box', 'value'),
      State('topN-topSpeed-choice', 'value')])(update_ms_counts)
 
 app.callback(
