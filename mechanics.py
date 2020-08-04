@@ -71,7 +71,7 @@ class Cycler:
             time when all queues are free.
 
         '''
-        return max(self.whenFree('IS'), self.whenFree('IT'), self.whwnFree('OT'))
+        return max(self.whenFree('IS'), self.whenFree('IT'), self.whenFree('OT'))
     
     def pushToQueue(self, queue, start, duration):
         '''
@@ -362,10 +362,10 @@ def get_charge_state_probabilities(peptide_collection_size):
     
     Return `numpy.array`(sample size, 2).
     '''
-    charge_state_2 = np.random.rand(peptide_collection_size,1)
-    return [charge_state_2 ,1 - charge_state_2]
+    charge_state_2 = np.random.rand(peptide_collection_size, 1)
+    return [charge_state_2, 1 - charge_state_2]
 
-def expand_isotopes(peptide, charge_states=[2,3]):
+def expand_isotopes(peptide, charge_states=[2, 3]):
     '''
     Convert peptide to DataFrame of isotopic peaks
     Input
@@ -586,7 +586,7 @@ def get_boxcar_spectra(ion_data, distribution, agc_target, max_it, nBoxes, nScan
     return np.array(BCscans)
 
 def get_MS_counts(scan_method, acc_time, resolution, ms2resolution,
-                  ms2IT, time, parallel=False, **kwargs):
+                  ms2IT, LC_time, parallel=False, **kwargs):
     '''
     Calculate number of MS1 and MS2 scans using parameters below.
     Parameters:
@@ -600,10 +600,11 @@ def get_MS_counts(scan_method, acc_time, resolution, ms2resolution,
         (NOTE: either topN or topSpeed has to be defined, if both present topN is used)
         ms2resolution, int or string, resolution for MS/MS scans
         ms2IT, float, injection time for MS/MS scans
-        time, float, the length of the gradient
+        LC_time, float, the length of the gradient
         parallel, bool, parallelization mode
     Return:
-        tuple, (cycle time, number of MS1 scans, number of MS2 scans, scan cycle queues)
+        tuple, (cycle time, number of MS2 scans per cycle,
+                number of MS1 scans, number of MS2 scans, scan cycle queues)
     '''
     ms2device = 'IT' if ms2resolution == 'IT' else 'OT' #select ms2 device
     
@@ -639,7 +640,7 @@ def get_MS_counts(scan_method, acc_time, resolution, ms2resolution,
         
     cycletime, queues = cycler.getCycle()
     
-    nMS1 = int(60000 * time / cycletime) #1min = 60000 ms
+    nMS1 = int(60000 * LC_time / cycletime) #1min = 60000 ms
     nMS2 = int(topN * nMS1)
     
     return cycletime, topN, nMS1, nMS2, queues

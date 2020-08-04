@@ -111,7 +111,7 @@ The text in the middle is the length and number of MS2 scans in the duty cycle.
 ppp = '''
 LC elution profile for the most abundant peptide.
 
-**Grey trace** - theoretical elution profile
+**Grey trace** - the theoretical elution profile.
 
-**Light blue trace** - observed elution profile with current duty cycle length
+**Light blue trace** - the observed elution profile with current duty cycle length.
 '''

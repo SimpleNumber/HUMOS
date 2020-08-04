@@ -30,7 +30,7 @@ mechanics.add_boxes(ion_data, boxes)
 ### Interface building blocks ###
 block_style = {'width':'400px'}
 small_panel_style = {'padding-left': '2%', 'padding-right': '2%', 'margin-top': '1rem', 'margin-bottom': '1rem'}
-big_panel_style = {'display': 'flex', 'flex-wrap': 'wrap', 'padding': '0 1% 4rem 1%', 'justify-content': 'space-between'}
+big_panel_style = {'display': 'flex', 'flex-wrap': 'wrap', 'padding': '0 1% 2rem 1%', 'justify-content': 'space-between'}
 main_graph_style ={'flex': '1 1 800px', 'min-width': '400px'}
 res_figure_style = {'width': '600px', 'height': '450px', 'padding-bottom': '4rem'}
 cycle_figure_style = {'width': '600px', 'height': '450px', 'padding-bottom': '4rem'}
@@ -67,7 +67,7 @@ def table_dynRange_html():
                 tooltips.text_tooltip(tooltips.observed_peptides, 'i-observed-peptides')],
                 style={'display':'flex',
                        'flex-wrap': 'wrap',
-                       'padding-bottom': '0rem',
+                       'padding-bottom': '2rem',
                        'padding-left':'1%',
                        'padding-right':'1%',
                        'justify-content': 'space-between'})
@@ -95,7 +95,7 @@ def block_global_html():
                                 id='ionFlux',
                                 min=0,
                                 max=len(params.TIC) - 1,
-                                value=2,
+                                value=4,
                                 marks={i: '{:1.0e}'.format(v) for i, v in enumerate(params.TIC)},
                                 step=1),
                             style=small_panel_style),
@@ -284,11 +284,12 @@ app.layout = html.Div([
     html.Div([
             dcc.Graph(id='main-graph', style=main_graph_style),
             html.Div([
-                    html.H6('Peptide elution profile'),
+                    html.H6('Peptide Elution Profile', id='ppp-header'),
                     html.Img(id='i-ppp-graph', src=i_src, style=info_style),
                     dcc.Graph(id='ppp-graph', config={'displayModeBar': False}),
                     
                     tooltips.text_tooltip(tooltips.ppp, 'i-ppp-graph'),
+                    tooltips.text_tooltip(tooltips.ppp, 'ppp-header')
                     ], style=ppp_figure_style)
            
             ], style=big_panel_style),
@@ -364,12 +365,12 @@ def update_figure(selected_resolution, selected_agc, distribution, mit_clicked,
 
     #save zoom region or use default
     if relayout_data == None:
-        x_range = [min(main_spectrum[0]), max(main_spectrum[0])]
+        x_range = [min(main_spectrum[0]) - 0.5, max(main_spectrum[0]) + 0.5]
         y_range = [0, max(main_spectrum[1]) * 1.01]
     else:
         x_range, y_range = art.get_zoom(relayout_data,
-                                    min(main_spectrum[0]),
-                                    max(main_spectrum[0]),
+                                    min(main_spectrum[0]) - 0.5,
+                                    max(main_spectrum[0]) + 0.5,
                                     0,
                                     max(main_spectrum[1]) * 1.01)
     
@@ -450,7 +451,7 @@ def update_ms_counts(topN, method, data, selected_resolution, ms2_resolution,
     ccParam = {'resolution' : resolution,
                'ms2resolution': ms2_resolution,
                'ms2IT': mit_ms2,
-               'time': params.LC_time, 
+               'LC_time': params.LC_time, 
                'parallel': parallel}
     
     #translate topN and topSpeed
@@ -547,7 +548,7 @@ def update_ms_counts(topN, method, data, selected_resolution, ms2_resolution,
     if maxInt > 0: #non-empty spectrum
         topPeptide = ion_data.loc[(ion_data['mz'] - maxMz).abs().idxmin(), :]
         
-        #data for LC peak
+        #parameters of LC peak
         center = 3
         width = 2
         top = 1
@@ -557,7 +558,7 @@ def update_ms_counts(topN, method, data, selected_resolution, ms2_resolution,
         tProfile = mechanics.get_LC_profile(center, top, width, tRT)
         
         #sampling LC peak
-        sRT = np.arange(0, 10, cycletime/1000)
+        sRT = np.arange(-cycletime/2000, 10, cycletime/1000)
         sRT = np.append(sRT, sRT[-1] + cycletime/1000) #last point
         sProfile = mechanics.get_LC_profile(center, top, width, sRT)
     
