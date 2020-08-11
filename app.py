@@ -29,11 +29,14 @@ mechanics.add_boxes(ion_data, boxes)
 
 ### Interface building blocks ###
 block_style = {'width':'400px'}
-small_panel_style = {'width': '80%','padding-left':'1%', 'padding-right':'10%', 'margin-top':'1rem', 'margin-bottom':'1rem'}
-big_panel_style = { 'display':'flex', 'flex-wrap': 'wrap', 'padding-bottom': '4rem', 'justify-content': 'space-around'}
-res_figure_style = {'width':'600px', 'height':'450px', 'padding-bottom': '4rem'}
-cycle_figure_style = {'width':'600px', 'height':'450px', 'padding-bottom': '4rem'}
-info_style = {'height': '15px', 'padding-bottom':'5px', 'padding-left':'3px', 'display':'inline'}
+small_panel_style = {'padding-left': '2%', 'padding-right': '2%', 'margin-top': '1rem', 'margin-bottom': '1rem'}
+big_panel_style = {'display': 'flex', 'flex-wrap': 'wrap', 'padding': '0 1% 2rem 1%', 'justify-content': 'space-between'}
+main_graph_style ={'flex': '1 1 800px', 'min-width': '400px'}
+res_figure_style = {'width': '600px', 'height': '450px', 'padding-bottom': '4rem'}
+cycle_figure_style = {'width': '600px', 'height': '450px', 'padding-bottom': '4rem'}
+info_style = {'height': '15px', 'padding-bottom': '5px', 'padding-left': '3px', 'display': 'inline'}
+header_style = {'display': 'inline', 'font-size': '2rem', 'margin-bottom': '1rem', 'margin-top': '1rem'}
+ppp_figure_style = {'width':'300px', 'padding-bottom': '4rem', 'padding-right': '1rem'}
 i_src = '/assets/info.png'
 
 def table_dynRange_html():
@@ -64,9 +67,9 @@ def table_dynRange_html():
                 tooltips.text_tooltip(tooltips.observed_peptides, 'i-observed-peptides')],
                 style={'display':'flex',
                        'flex-wrap': 'wrap',
-                       'padding-bottom': '0rem',
+                       'padding-bottom': '2rem',
                        'padding-left':'1%',
-                       'padding-right':'10%',
+                       'padding-right':'1%',
                        'justify-content': 'space-between'})
 
 def block_global_html():
@@ -92,7 +95,7 @@ def block_global_html():
                                 id='ionFlux',
                                 min=0,
                                 max=len(params.TIC) - 1,
-                                value=2,
+                                value=4,
                                 marks={i: '{:1.0e}'.format(v) for i, v in enumerate(params.TIC)},
                                 step=1),
                             style=small_panel_style),
@@ -159,8 +162,8 @@ def block_MS1_html():
                     tooltips.text_tooltip(tooltips.resolution, 'i-ms1-res'),
                     tooltips.text_tooltip(tooltips.AGC, 'MS1-AGC-header'),
                     tooltips.text_tooltip(tooltips.AGC, 'i-ms1-agc'),
-                    tooltips.text_tooltip(tooltips.MaxIT,'MS1-IT-header'),
-                    tooltips.text_tooltip(tooltips.MaxIT,'i-ms1-mit'),
+                    tooltips.text_tooltip(tooltips.MaxIT, 'MS1-IT-header'),
+                    tooltips.text_tooltip(tooltips.MaxIT, 'i-ms1-mit'),
                     ],
                     style=block_style)
 
@@ -189,15 +192,21 @@ def block_MS2_html():
                             ],
                             style=small_panel_style),
 
-                    html.H6('TopN', id='topN-header'),
+                    dcc.RadioItems(id='topN-topSpeed-choice', 
+                                   options=[
+                                           {'label': 'TopN', 'value': 'topN'},
+                                           {'label': 'TopSpeed', 'value': 'topSpeed'}
+                                           ],
+                                   value='topN',
+                                   labelStyle=header_style,
+                                   style={'display': 'inline'}),
                     html.Img(id='i-topN', src=i_src, style=info_style),
-                    html.Div([dcc.Slider(
-                                id='topN-slider',
-                                min=1,
-                                max=40,
-                                value=15,
-                                marks={5*i: '{}'.format(5*i) for i in range(1,9)})
-                             ],
+                    html.Div([dcc.Slider(id='topN-slider',
+                                         min=0,
+                                         max=40,
+                                         value=15,
+                                         marks={i: '{}'.format(i) for i in range(0, 41, 5)},
+                                         tooltip={'placement': 'bottom'})],
                              style=small_panel_style),
                     
                     dcc.Checklist(id='paral-checklist',
@@ -207,13 +216,13 @@ def block_MS2_html():
                                   style={'padding-bottom': '1rem', 'display':'inline'}),
                     html.Img(id='i-paral', src=i_src, style=info_style),
 
-                    tooltips.text_tooltip(tooltips.resolutionMS2,'MS2-resolution-header'),
-                    tooltips.text_tooltip(tooltips.resolutionMS2,'i-ms2-resolution'),
-                    tooltips.text_tooltip(tooltips.MaxIT,'IT-MS2-header'),
-                    tooltips.text_tooltip(tooltips.MaxIT,'i-ms2-mit'),
-                    tooltips.text_tooltip(tooltips.topN,'topN-header'),
-                    tooltips.text_tooltip(tooltips.topN,'i-topN'),
-                    tooltips.text_tooltip(tooltips.parallel,'i-paral'),
+                    tooltips.text_tooltip(tooltips.resolutionMS2, 'MS2-resolution-header'),
+                    tooltips.text_tooltip(tooltips.resolutionMS2, 'i-ms2-resolution'),
+                    tooltips.text_tooltip(tooltips.MaxIT, 'IT-MS2-header'),
+                    tooltips.text_tooltip(tooltips.MaxIT, 'i-ms2-mit'),
+                    tooltips.text_tooltip(tooltips.topN, 'topN-topSpeed-choice'),
+                    tooltips.text_tooltip(tooltips.topN, 'i-topN'),
+                    tooltips.text_tooltip(tooltips.parallel, 'i-paral'),
                     ],
                     style=block_style)
 
@@ -242,8 +251,8 @@ def cycle_time_html():
                             dcc.Graph(id='cycle-time-graph')
                             ]),
                         
-                            tooltips.text_tooltip(tooltips.cycle_time,'cycle-time-header'),
-                            tooltips.text_tooltip(tooltips.cycle_time,'i-cycle-time')
+                            tooltips.text_tooltip(tooltips.cycle_time, 'cycle-time-header'),
+                            tooltips.text_tooltip(tooltips.cycle_time, 'i-cycle-time')
                     ],
                     style=cycle_figure_style)
 
@@ -265,14 +274,25 @@ app.layout = html.Div([
                         'padding-left': '2rem',
                         'padding-right': '2rem',
                         'transform': 'rotate(-10deg) skewY(4deg)'}),
-            tooltips.logo_tooltip()
+        tooltips.logo_tooltip()
              ], style={'display': 'flex', 'padding-bottom': '1rem'}),
     
     #upper part - info table, dynamic range plot, observed peptides
     table_dynRange_html(),
     
-    #simulated mass spectrum
-    dcc.Graph(id='main-graph'),
+    #simulated mass spectrum and points-pep-peak graph
+    html.Div([
+            dcc.Graph(id='main-graph', style=main_graph_style),
+            html.Div([
+                    html.H6('Peptide Elution Profile', id='ppp-header'),
+                    html.Img(id='i-ppp-graph', src=i_src, style=info_style),
+                    dcc.Graph(id='ppp-graph', config={'displayModeBar': False}),
+                    
+                    tooltips.text_tooltip(tooltips.ppp, 'i-ppp-graph'),
+                    tooltips.text_tooltip(tooltips.ppp, 'ppp-header')
+                    ], style=ppp_figure_style)
+           
+            ], style=big_panel_style),
 
     #model parameters switches
     html.Div([
@@ -309,28 +329,7 @@ app.layout = html.Div([
     ) #end layout
 ### End main window ###
 
-def get_zoom(relayout_data, min_x, max_x, min_y, max_y):
-    '''
-    Reads and preserves zoom information from a plotly graph
-    '''
-    x_range = []
-    y_range = []
-    
-    if 'xaxis.range[0]' in relayout_data.keys():
-        x_range = [ relayout_data['xaxis.range[0]'],
-                    relayout_data['xaxis.range[1]'] ]
-    else:
-        x_range = [min_x, max_x]
-        
-    if 'yaxis.range[0]' in (relayout_data.keys()):
-            y_range= [ relayout_data['yaxis.range[0]'],
-                       relayout_data['yaxis.range[1]'] ]
-    else:
-        y_range = [min_y, max_y]
-        
-    return x_range, y_range
-
-
+### Callback functions ###
 def update_figure(selected_resolution, selected_agc, distribution, mit_clicked,
                   method, ionFlux, relayout_data, max_it):
     '''
@@ -366,12 +365,12 @@ def update_figure(selected_resolution, selected_agc, distribution, mit_clicked,
 
     #save zoom region or use default
     if relayout_data == None:
-        x_range = [min(main_spectrum[0]), max(main_spectrum[0])]
+        x_range = [min(main_spectrum[0]) - 0.5, max(main_spectrum[0]) + 0.5]
         y_range = [0, max(main_spectrum[1]) * 1.01]
     else:
-        x_range, y_range = get_zoom(relayout_data,
-                                    min(main_spectrum[0]),
-                                    max(main_spectrum[0]),
+        x_range, y_range = art.get_zoom(relayout_data,
+                                    min(main_spectrum[0]) - 0.5,
+                                    max(main_spectrum[0]) + 0.5,
                                     0,
                                     max(main_spectrum[1]) * 1.01)
     
@@ -431,9 +430,9 @@ def update_figure(selected_resolution, selected_agc, distribution, mit_clicked,
              'layout': art.get_obsPep_layout()}]
             
 def update_ms_counts(topN, method, data, selected_resolution, ms2_resolution, 
-                     parallel, mit_clicked,  mit_ms2 ):
+                     parallel, mit_clicked, main_graph, mit_ms2, top_mode):
     '''
-    Update counts of MS spectra and cycle time graph
+    Update counts of MS spectra, cycle time graph and ponts-per-peak plot
     '''
     
     boxCar = (method == 'bc')
@@ -442,23 +441,36 @@ def update_ms_counts(topN, method, data, selected_resolution, ms2_resolution,
     resolution = params.resolutions_list[selected_resolution]
     
     if data == None:
-       return 'Select topN', '', '' #void return, before table data is ready
+       return None #void return, before table data is ready
 
     #parse infromation table
     data = art.tabletodf(data) 
     data = data.iloc[:, 1:].apply(pd.to_numeric)
     
-    #perfrom calculation
+    #cycletime calculation paramters
+    ccParam = {'resolution' : resolution,
+               'ms2resolution': ms2_resolution,
+               'ms2IT': mit_ms2,
+               'LC_time': params.LC_time, 
+               'parallel': parallel}
+    
+    #translate topN and topSpeed
+    if top_mode == 'topN':
+        ccParam['topN'] = topN
+    elif top_mode == 'topSpeed':
+        ccParam['topSpeed']= topN * 1000
+
+    #translate scan method
     if boxCar:
-        cycletime, ms1_scan_n, ms2_scan_n, queues = mechanics.get_MS_counts('boxcar', data.iloc[0,:],
-                                                     resolution, topN, ms2_resolution, mit_ms2,
-                                                     params.LC_time, parallel=parallel)
-
+        ccParam['scan_method'] = 'boxcar'
+        ccParam['acc_time'] = data.iloc[0,:]
     else:
-        cycletime, ms1_scan_n, ms2_scan_n, queues = mechanics.get_MS_counts('full', data.iloc[0,0], 
-                                                     resolution, topN, ms2_resolution, mit_ms2,
-                                                     params.LC_time, parallel=parallel)
+        ccParam['scan_method'] = 'full'
+        ccParam['acc_time'] = data.iloc[0,0]
 
+    #perform calculation
+    cycletime, topN, ms1_scan_n, ms2_scan_n, queues = mechanics.get_MS_counts(**ccParam)
+    
     ms1_scan_text = 'MS1 Scans in {} minutes: {}'.format(params.LC_time, ms1_scan_n)
     ms2_scan_text = 'MS2 Scans in {} minutes: {}'.format(params.LC_time, ms2_scan_n)
     
@@ -493,9 +505,12 @@ def update_ms_counts(topN, method, data, selected_resolution, ms2_resolution,
     main_colors = colors[2: 2 + len(data.columns)] + [qualitative.Dark2[-1]] * topN
     
     #select information to be shown in the legend
-    #show names for MS1 and BoxCar (data.columns) and one label for MS2
+    #show names for MS1 and BoxCar (data.columns) and one label for MS2 (if there any MS2)
     #repeat twice, first for accumulation traces, second for acquisition traces
-    show_legend = ([True] * (len(data.columns) + 1) + [False] * (topN - 1)) * 2
+    if topN > 0:
+        show_legend = ([True] * (len(data.columns) + 1) + [False] * (topN - 1)) * 2
+    else:
+        show_legend = ([True] * (len(data.columns))) * 2
 
     #create DataFrame with all information
     cycle_df = pd.DataFrame({'text': ia_labels + ot_labels + it_labels,
@@ -516,9 +531,43 @@ def update_ms_counts(topN, method, data, selected_resolution, ms2_resolution,
     #collecting traces
     cycle_traces = art.get_cycle_grid()
     cycle_traces += cycle_df.apply(art.get_cycle_trace, axis=1).tolist()
-    cycle_traces.append(art.get_cycle_texts(cycletime, ms1_scan_text, ms2_scan_text))    
+    cycle_traces.append(art.get_cycle_texts(cycletime, topN, ms1_scan_text, ms2_scan_text))
     
-    return  [{'data': cycle_traces,'layout': art.get_cycle_layout()}]
+    ##Points per peak plot
+    ppp_data = [] #default data is empty
+    
+    #Detect highest peak in all spectra
+    maxMz = 0
+    maxInt = 0
+    for trace in main_graph['data']:
+        maxI = np.argmax(trace['y'])
+        if trace['y'][maxI] > maxInt:
+            maxInt = trace['y'][maxI]
+            maxMz = trace['x'][maxI]
+    
+    if maxInt > 0: #non-empty spectrum
+        topPeptide = ion_data.loc[(ion_data['mz'] - maxMz).abs().idxmin(), :]
+        
+        #parameters of LC peak
+        center = 3
+        width = 2
+        top = 1
+        
+        #theoretical LC peak
+        tRT = np.linspace(0, 10, 100)
+        tProfile = mechanics.get_LC_profile(center, top, width, tRT)
+        
+        #sampling LC peak
+        sRT = np.arange(-cycletime/2000, 10, cycletime/1000)
+        sRT = np.append(sRT, sRT[-1] + cycletime/1000) #last point
+        sProfile = mechanics.get_LC_profile(center, top, width, sRT)
+    
+        ppp_data = art.get_ppp_trace(tRT, tProfile, colors[1],#theoretical
+                                     sRT, sProfile, colors[0],#sampling
+                                     topPeptide)
+    
+    return  [{'data': cycle_traces, 'layout': art.get_cycle_layout()},
+             {'data': ppp_data, 'layout': art.get_ppp_layout()}]
                       
 def update_resolution_graph(selected_resolution):
     '''
@@ -548,11 +597,32 @@ def update_resolution_graph(selected_resolution):
                                     ) ]
 
     return [ {'data': resolution_traces,
-              'layout': go.Layout(margin={'t': 10},
+              'layout': go.Layout(margin={'t': 10,
+                                          'l': 50},
                                   showlegend=False,
                                   xaxis={'title': 'm/z'},
                                   yaxis={'title': 'Abundance'})
               } ]
+
+def update_top_slider(choice_value):
+    '''
+    Switch between TopN and TopSpeed sliders
+    '''
+    if choice_value == 'topN':
+        return (0, #min
+                40, #max
+                1, #step
+                15, #value
+                {i: '{}'.format(i) for i in range(0, 41, 5)}) #marks
+    elif choice_value == 'topSpeed':
+        return (0.0, #min
+                5.0, #max
+                0.05, #step
+                2.0, #value
+                {i: '{}s'.format(i) for i in range(0, 6)}) #marks
+    else:
+        raise ValueError('Unknown value ({}) in TopN-TopSpeed choice'.format(choice_value))
+### End callback functions ###
 
 app.callback(
     [Output('table', 'children'),
@@ -569,7 +639,8 @@ app.callback(
       State('mit-box', 'value')])(update_figure)
 
 app.callback(
-    [Output('cycle-time-graph', 'figure')],
+    [Output('cycle-time-graph', 'figure'),
+     Output('ppp-graph', 'figure')],
     [Input('topN-slider', 'value'),
      Input('method-choice', 'value'),
      Input('table','children'),
@@ -577,13 +648,23 @@ app.callback(
      Input('resolution-ms2-slider', 'value'),
      Input('paral-checklist', 'value'),
      Input('it-ms2-button','n_clicks')],
-    [State('mit-ms2-box', 'value')])(update_ms_counts)
+    [State('main-graph', 'figure'),
+     State('mit-ms2-box', 'value'),
+     State('topN-topSpeed-choice', 'value')])(update_ms_counts)
 
 app.callback(
     [Output('resolution-graph', 'figure')],
     [Input('resolution-ms2-slider', 'value')])(update_resolution_graph)
 
+app.callback(
+        [Output('topN-slider', 'min'),
+         Output('topN-slider', 'max'),
+         Output('topN-slider', 'step'),
+         Output('topN-slider', 'value'),
+         Output('topN-slider', 'marks')],
+        [Input('topN-topSpeed-choice', 'value')])(update_top_slider)
+
 server = app.server
 
 if __name__ == '__main__':
-    app.run_server()
+    app.run_server(debug=True)

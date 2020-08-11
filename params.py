@@ -5,7 +5,7 @@ This file contains all parameters used for simulation
 '''
 
 peptide_collection_size = 100 #number of modeled peptides
-TIC = [1e5, 1e7, 1e9] #total ion current
+TIC = [1e5, 1e6, 1e7, 1e8, 1e9] #total ion current
 low_mass = 350 #low mass cutoff
 high_mass = 1500 #high mass cutoff
 nScans = 2 #number of BoxCar scans
