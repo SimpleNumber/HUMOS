@@ -114,4 +114,7 @@ LC elution profile for the most abundant peptide.
 **Grey trace** - the theoretical elution profile.
 
 **Light blue trace** - the observed elution profile with current duty cycle length.
+
+Annotations on the plot show peptide sequence and charge, and the number of points
+in the observed elution profile.
 '''

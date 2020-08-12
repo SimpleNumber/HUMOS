@@ -400,26 +400,34 @@ def get_ppp_trace(tX, tY, tC, sX, sY, sC, peptide):
     texts = [peptide['sequence'],
              'm/z {:.2f} {}+'.format(peptide['mz'], peptide['z'])]
     
-    return [go.Scatter(x=tX,
+    return [go.Scatter(x=tX, #theoretical points
                        y=tY,
                        mode='lines',
                        name='Theoretical',
                        fill='tozeroy',
                        line={'color': tC}),
             
-            go.Scatter(x=sX,
+            go.Scatter(x=sX, #sampling points
                        y=sY,
                        mode='lines+markers',
                        name='Observed',
                        fill='tozeroy',
                        line={'color': sC}),
             
-            go.Scatter(x=[9.5, 9.5],
-                       y=[0.63, 0.57],
+            go.Scatter(x=[19.5, 19.5], #peptide info
+                       y=[0.64, 0.58],
                        mode='text',
                        showlegend=False,
                        text=texts,
                        textposition='bottom left',
+                       textfont={'size': 14}),
+                       
+            go.Scatter(x=[19.5], #points per peak info
+                       y=[0.75],
+                       mode='text',
+                       showlegend=False,
+                       text="Points/peak: {}".format(sX.shape[0] - 2), # explude border points
+                       textposition='top left',
                        textfont={'size': 14}) ]
 
 def get_ppp_layout():
@@ -433,7 +441,7 @@ def get_ppp_layout():
                              'r': 0,
                              'b': 40,
                              't': 20},
-                     xaxis={'range': [0, 10],
+                     xaxis={'range': [0, 20],
                             'title': 'RT (s)',
                             'showticklabels': False,
                             'zeroline': False},

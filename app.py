@@ -549,17 +549,21 @@ def update_ms_counts(topN, method, data, selected_resolution, ms2_resolution,
         topPeptide = ion_data.loc[(ion_data['mz'] - maxMz).abs().idxmin(), :]
         
         #parameters of LC peak
-        center = 3
-        width = 2
+        center = 6
+        width = 4
         top = 1
         
         #theoretical LC peak
-        tRT = np.linspace(0, 10, 100)
+        tRT = np.linspace(0, 20, 125)
         tProfile = mechanics.get_LC_profile(center, top, width, tRT)
         
+        #scale cycle time according to LC_time from parameters and convert it 
+        #to seconds
+        _cycletime = cycletime * 60 / params.LC_time / 1000
+        
         #sampling LC peak
-        sRT = np.arange(-cycletime/2000, 10, cycletime/1000)
-        sRT = np.append(sRT, sRT[-1] + cycletime/1000) #last point
+        sRT = np.arange(-_cycletime/2, 20, _cycletime)
+        sRT = np.append(sRT, sRT[-1] + _cycletime) #last point
         sProfile = mechanics.get_LC_profile(center, top, width, sRT)
     
         ppp_data = art.get_ppp_trace(tRT, tProfile, colors[1],#theoretical
@@ -667,4 +671,4 @@ app.callback(
 server = app.server
 
 if __name__ == '__main__':
-    app.run_server(debug=True)
+    app.run_server()
