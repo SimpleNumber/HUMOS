@@ -19,7 +19,7 @@ Unpack the zip into some folder, for example `HUMOS`
     unzip master.zip #this creates folder called HUMOS-master, 
     mkdir HUMOS #let's move it to folder HUMOS for simplicity
     mv HUMOS-master/* HUMOS/
-    rmdir HUMOS-master
+    rm -rf HUMOS-master
     rm master.zip
 ```
 
