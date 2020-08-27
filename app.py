@@ -89,7 +89,7 @@ def block_global_html():
                             value='lognormal'),
                             style=small_panel_style),
     
-                    html.H6('Total Ion Current (ion/sec)', id='ion-current-header'),
+                    html.H6('Total Ion Current (charges/sec)', id='ion-current-header'),
                     html.Img(id='i-ion-current', src=i_src, style=info_style),
                     html.Div(dcc.Slider(
                                 id='ionFlux',

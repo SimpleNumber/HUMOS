@@ -71,7 +71,7 @@ resolution = 'Mass spectral resolution for MS1 spectra.'
 
 AGC = '''
 **Automatic Gain Control (AGC)** target is the maximum total number of 
-ions that can be collected before the ion detection in the Orbitrap.
+charges that can be collected before the ion detection in the Orbitrap.
 '''
                
 MaxIT = '''

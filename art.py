@@ -61,7 +61,7 @@ def make_table(real_ats, real_agcs, labels, resolution):
     df.loc['AT', :] = df.loc['AT', :].map('{:.2f}'.format)
     df.loc['AGC', :] = df.loc['AGC', :].map('{:.1e}'.format)
     df.columns = labels
-    df.insert(0, ' ', ['Ion accumulation time, ms', 'Accumulated ions', 'Scan time, ms'])
+    df.insert(0, ' ', ['Ion accumulation time, ms', 'Accumulated charges', 'Scan time, ms'])
     return df
 
 def tabletodf(data):
