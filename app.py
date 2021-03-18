@@ -80,27 +80,23 @@ def block_global_html():
                     html.H6('Peptide Distribution', id='peptide-distr-header'),
                     html.Img(id='i-peptide-distr', src=i_src, style=info_style),
                     html.Div(dcc.RadioItems(
-                            id='distribution',
-                            options=[
-                                    {'label': 'Equimolar', 'value': 'equal', },
-                                    {'label': 'Regular', 'value': 'lognormal'},
-                                    {'label': 'Regular with majors', 'value': 'lognormal-major'},
-                                    {'label': 'Custom peptides', 'value': 'custom-peptides'}
-                                    ],
+                                id='distribution',
+                                options=[
+                                        {'label': 'Equimolar', 'value': 'equal', },
+                                        {'label': 'Regular', 'value': 'lognormal'},
+                                        {'label': 'Regular with majors', 'value': 'lognormal-major'},
+                                        ],
                             value='lognormal'),
+
                             style=small_panel_style),
-    
-                    html.H6('Total Ion Current (charges/sec)', id='ion-current-header'),
-                    html.Img(id='i-ion-current', src=i_src, style=info_style),
-                    html.Div(dcc.Slider(
-                                id='ionFlux',
-                                min=0,
-                                max=len(params.TIC) - 1,
-                                value=4,
-                                marks={i: '{:1.0e}'.format(v) for i, v in enumerate(params.TIC)},
-                                step=1),
-                            style=small_panel_style),
-    
+                    dcc.Checklist(id='custom-pep-checklist',
+                                  options=[{'label': 'Use custom peptides', 'value': 'on'},],
+                                  value=[]),
+                    dcc.Textarea(id='peptides-textarea',
+                                 value=tooltips.custom_peptides_textarea,
+                                 style={'width': '100%', 'height': 100},
+                                 disabled=False),
+                    html.Div(html.Button('set', id='custom-pep-button',  disabled=False)),
                     html.H6('Acquisition Method', id='acquisition-meth-header'),
                     html.Img(id='i-acquisition-meth', src=i_src, style=info_style),
                     html.Div(dcc.RadioItems(
@@ -114,7 +110,6 @@ def block_global_html():
                     
                     tooltips.text_tooltip(tooltips.peptide_distribution, 'peptide-distr-header'),
                     tooltips.text_tooltip(tooltips.peptide_distribution, 'i-peptide-distr'),
-                    tooltips.text_tooltip(tooltips.ion_current, 'ion-current-header'),
                     tooltips.text_tooltip(tooltips.ion_current, 'i-ion-current'),
                     tooltips.text_tooltip(tooltips.acquisition, 'acquisition-meth-header'),
                     tooltips.text_tooltip(tooltips.acquisition, 'i-acquisition-meth'),
@@ -126,6 +121,16 @@ def block_MS1_html():
     MS1-related parameters
     '''
     return html.Div([
+                    html.H6('Total Ion Current (charges/sec)', id='ion-current-header'),
+                                html.Img(id='i-ion-current', src=i_src, style=info_style),
+                                html.Div(dcc.Slider(
+                                            id='ionFlux',
+                                            min=0,
+                                            max=len(params.TIC) - 1,
+                                            value=4,
+                                            marks={i: '{:1.0e}'.format(v) for i, v in enumerate(params.TIC)},
+                                            step=1),
+                                        style=small_panel_style),
                     html.H6('MS1 Resolution', id='MS1-resolution-header'),
                     html.Img(id='i-ms1-res', src=i_src, style=info_style),
                     html.Div([dcc.Slider(
@@ -143,7 +148,7 @@ def block_MS1_html():
                     html.Div([dcc.Slider(
                                 id='AGC-slider',
                                 min=0,
-                                max=len(params.agc_list)-1,
+                                max=len(params.agc_list) - 1,
                                 value=2,
                                 marks={i: '{:.0e}'.format(agc) for i, agc in enumerate(params.agc_list)},
                                 )
@@ -159,6 +164,7 @@ def block_MS1_html():
                         style=small_panel_style
                         ),
                     
+                    tooltips.text_tooltip(tooltips.ion_current, 'ion-current-header'),
                     tooltips.text_tooltip(tooltips.resolution, 'MS1-resolution-header'),
                     tooltips.text_tooltip(tooltips.resolution, 'i-ms1-res'),
                     tooltips.text_tooltip(tooltips.AGC, 'MS1-AGC-header'),
@@ -331,12 +337,18 @@ app.layout = html.Div([
 ### End main window ###
 
 ### Callback functions ###
-def update_figure(selected_resolution, selected_agc, distribution, mit_clicked,
-                  method, ionFlux, relayout_data, max_it):
+def update_figure(custom_pep_clicked, selected_resolution, selected_agc, distribution, mit_clicked,
+                  method, ionFlux, custom_peptides, relayout_data, max_it):
+    
     '''
     Update of the main graph, dynamic range graph and information table
     '''
-    
+    global ion_data
+    print(custom_pep_clicked, custom_peptides )
+    if custom_pep_clicked:
+        peptides_list = pd.DataFrame({'sequence':custom_peptides.strip().split('\n')})
+        ion_data = mechanics.get_ion_data(len(peptides_list), peptide_data=peptides_list)
+        print('CHANGE PEPTIDSE\n', custom_pep_clicked, custom_peptides, custom_peptides.strip().split('\n') )
     boxCar = (method == 'bc')
     resolution = params.resolutions_list[selected_resolution]
     agc = params.agc_list[selected_agc]
@@ -443,7 +455,7 @@ def update_ms_counts(topN, method, data, selected_resolution, ms2_resolution,
     
     if data == None:
        return None #void return, before table data is ready
-
+    print(data)
     #parse infromation table
     data = art.tabletodf(data) 
     data = data.iloc[:, 1:].apply(pd.to_numeric)
@@ -567,7 +579,7 @@ def update_ms_counts(topN, method, data, selected_resolution, ms2_resolution,
         sRT = np.append(sRT, sRT[-1] + _cycletime) #last point
         sProfile = mechanics.get_LC_profile(center, top, width, sRT)
     
-        ppp_data = art.get_ppp_trace(tRT, tProfile, colors[1],#theoretical
+        ppp_data = art.get_ppp_trace(tRT, tProfile, colors[1],#theoretical 
                                      sRT, sProfile, colors[0],#sampling
                                      topPeptide)
     
@@ -634,14 +646,17 @@ app.callback(
      Output('main-graph', 'figure'),
      Output('dynamic-range-bar','figure'),
      Output('observed-peptides', 'figure')],
-    [Input('resolution-slider', 'value'),
+    [Input('custom-pep-button', 'n_clicks'),
+     Input('resolution-slider', 'value'),
      Input('AGC-slider', 'value'),
      Input('distribution', 'value'),
      Input('it-button', 'n_clicks'),
      Input('method-choice', 'value'),
-     Input('ionFlux', 'value')],
-     [State('main-graph', 'relayoutData'),
-      State('mit-box', 'value')])(update_figure)
+     Input('ionFlux', 'value'),
+    ],
+     [State('peptides-textarea', 'value' ),
+      State('main-graph', 'relayoutData'),
+      State('mit-box', 'value'),])(update_figure)
 
 app.callback(
     [Output('cycle-time-graph', 'figure'),

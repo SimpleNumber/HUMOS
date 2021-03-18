@@ -392,11 +392,13 @@ def expand_isotopes(peptide, charge_states=[2, 3]):
         
     return result
 
-def get_ion_data(nPeptides):
+def get_ion_data(nPeptides, peptide_data=None):
     '''
     Generate pandas.DataFrame with all ion data
     '''
-    peptide_data = get_peptides(nPeptides)
+    if peptide_data is None:
+        peptide_data = get_peptides(nPeptides)
+    print('GET_ION_DATA', peptide_data)
     prob2, prob3 = get_charge_state_probabilities(nPeptides)
     peptide_data['2+'] = prob2
     peptide_data['3+'] = prob3
@@ -407,6 +409,8 @@ def get_ion_data(nPeptides):
     ion_data.sort_values(by='mz', inplace=True)
     
     return ion_data
+
+
 
 def normalize_ion_currents(ion_data, low, high):
     '''

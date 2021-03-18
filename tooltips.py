@@ -118,3 +118,11 @@ LC elution profile for the most abundant peptide.
 Annotations on the plot show peptide sequence and charge, and the number of points
 in the observed elution profile.
 '''
+
+custom_peptides_textarea = """Write peptides (each one in a new line).
+Common modifications:
+    ox - oxidation
+    p - phosphrylation
+    ac -acetylation
+To use uncommon modifications write in square brackets chemical formula.
+Ex: PEPTID[CH2]E"""
