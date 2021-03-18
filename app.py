@@ -84,7 +84,8 @@ def block_global_html():
                             options=[
                                     {'label': 'Equimolar', 'value': 'equal', },
                                     {'label': 'Regular', 'value': 'lognormal'},
-                                    {'label': 'Regular with majors', 'value': 'lognormal-major'}
+                                    {'label': 'Regular with majors', 'value': 'lognormal-major'},
+                                    {'label': 'Custom peptides', 'value': 'custom-peptides'}
                                     ],
                             value='lognormal'),
                             style=small_panel_style),
@@ -132,7 +133,7 @@ def block_MS1_html():
                             min=1,
                             max=len(params.resolutions_list) - 1,
                             value=4,
-                            marks={i: str(resolution) for i, resolution in enumerate(params.resolutions_list)},
+                            marks={i: resolution for i, resolution in enumerate(params.resolutions_list_labels)},
                             step=1)
                             ],
                             style=small_panel_style),
@@ -179,7 +180,7 @@ def block_MS2_html():
                             min=0,
                             max=len(params.resolutions_list) - 1,
                             value=2,
-                            marks={i: str(resolution) for i,resolution in enumerate(params.resolutions_list)},
+                            marks={i: resolution for i, resolution in enumerate(params.resolutions_list_labels)},
                             step=1,
                             ),
                             ], style=small_panel_style),
