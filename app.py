@@ -5,8 +5,6 @@ This is web-app frontend
 '''
 
 import dash
-import dash_core_components as dcc
-import dash_html_components as html
 import dash_bootstrap_components as dbc
 import plotly.graph_objs as go
 import numpy as np
@@ -14,6 +12,8 @@ import pandas as pd
 import art, mechanics, params, tooltips
 from plotly.express.colors import qualitative
 from dash.dependencies import Input, Output, State
+from dash import dcc
+from dash import html
 
 #color scheme
 colors = art.get_colors(params.nScans)
@@ -347,17 +347,16 @@ def update_figure(selected_resolution, selected_agc, distribution, mit_clicked,
                mechanics.get_full_spectrum(ion_data, distribution, agc, max_it)
     
     #DataFrame with dynamic range information
-    dr_df = pd.DataFrame({'text':['Peptide'], 
-                          'x': [[ion_data['ic_' + distribution].max(),
-                                 ion_data['ic_' + distribution].min()]],
-                          'color': colors[1]})
+    dr_df = [pd.DataFrame({'text':['Peptide'], 
+                           'x': [[ion_data['ic_' + distribution].max(),
+                                  ion_data['ic_' + distribution].min()]],
+                           'color': colors[1]})]
     
     #Check if MS1 spectrum was empty
     if max_int > 0 and min_int > 0:
-        dr_df = dr_df.append(pd.DataFrame({'text': 'MS1',
-                                           'x': [[max_int, min_int]],
-                                           'color': colors[2]}),
-                             ignore_index=True)
+        dr_df.append(pd.DataFrame({'text': 'MS1',
+                                   'x': [[max_int, min_int]],
+                                   'color': colors[2]}))
     
     real_agcs = [real_agc]
     real_sts = [real_st]
@@ -386,10 +385,9 @@ def update_figure(selected_resolution, selected_agc, distribution, mit_clicked,
         
         labels_bc = ['BoxCar scan {}'.format(i) for i in range(1, params.nScans + 1)]
         
-        dr_df = dr_df.append(pd.DataFrame({'text': labels_bc,
-                                           'x':list(bc_spectra[:, 4:6]),
-                                           'color':colors[3:]}),
-                             ignore_index=True)
+        dr_df.append(pd.DataFrame({'text': labels_bc,
+                                   'x':[element[4:6] for element in bc_spectra],
+                                   'color':colors[3:]}))
 
         for bc_index, bc_label in enumerate(labels_bc):
             bc_spectrum = mechanics.get_profile_spectrum(bc_spectra[bc_index][0], resolution)
@@ -408,10 +406,9 @@ def update_figure(selected_resolution, selected_agc, distribution, mit_clicked,
             if bc_spectra[bc_index][5] > 0:
                 min_int = min(min_int, bc_spectra[bc_index][5])
 
-    dr_df = dr_df.append(pd.DataFrame({'text': 'Spectrum',
-                                       'x': [[max_int, min_int]],
-                                       'color': colors[0]}),
-                         ignore_index=True)
+    dr_df.append(pd.DataFrame({'text': 'Spectrum',
+                               'x': [[max_int, min_int]],
+                               'color': colors[0]}))
     
     observed_peptides = np.round(100 * len(peptides) / len(ion_data["sequence"].unique()), 1)
     
@@ -419,17 +416,18 @@ def update_figure(selected_resolution, selected_agc, distribution, mit_clicked,
     table = art.make_table(real_sts, real_agcs, ['MS1'] + labels_bc, resolution)
     
     #finalize dynamic range DataFrame
+    dr_df = pd.concat(dr_df)
     dr_df['y'] = [[i, i] for i in range(0, len(dr_df))]
     dr_df.index = dr_df['text']
     
     return [dbc.Table.from_dataframe(table),
             {'data': main_traces, 'layout': art.get_main_layout(x_range, y_range)},
             {'data': dr_df.apply(art.get_dynrange_trace, axis=1).tolist(),
-             'layout': art.get_dynrange_layout(dr_df)},        
+             'layout': art.get_dynrange_layout(dr_df)},
             {'data': art.get_obsPep_trace(observed_peptides, colors[0], colors[1]),
              'layout': art.get_obsPep_layout()}]
             
-def update_ms_counts(topN, method, data, selected_resolution, ms2_resolution, 
+def update_ms_counts(topN, method, data, selected_resolution, ms2_resolution,
                      parallel, mit_clicked, main_graph, mit_ms2, top_mode):
     '''
     Update counts of MS spectra, cycle time graph and ponts-per-peak plot
@@ -444,14 +442,14 @@ def update_ms_counts(topN, method, data, selected_resolution, ms2_resolution,
        return None #void return, before table data is ready
 
     #parse infromation table
-    data = art.tabletodf(data) 
+    data = art.tabletodf(data)
     data = data.iloc[:, 1:].apply(pd.to_numeric)
     
     #cycletime calculation paramters
     ccParam = {'resolution' : resolution,
                'ms2resolution': ms2_resolution,
                'ms2IT': mit_ms2,
-               'LC_time': params.LC_time, 
+               'LC_time': params.LC_time,
                'parallel': parallel}
     
     #translate topN and topSpeed

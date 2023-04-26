@@ -20,7 +20,7 @@ class Cycler:
             IS for ion source,
             OT for orbitrap,
             IT for ion trap
-        
+
         Parameters
         ----------
         parallel : bool
@@ -55,12 +55,12 @@ class Cycler:
             queueData = self.__getattribute__(queue)
         except:
             raise ValueError("Unknown queue name: {}".format(queue))
-        
+
         if len(queueData) > 0:
             return queueData[-1]
         else:
             return 0
-    
+
     def whenAllFree(self):
         '''
         Find timepoint when all queues are free
@@ -72,7 +72,7 @@ class Cycler:
 
         '''
         return max(self.whenFree('IS'), self.whenFree('IT'), self.whenFree('OT'))
-    
+
     def pushToQueue(self, queue, start, duration):
         '''
         Add element to a queue
@@ -314,7 +314,7 @@ def get_peptides(peptide_collection_size):
     Parameters
     ----------
     peptide_collection_size : int, number of peptides to be selected.
-    
+
     Return peptides list
     '''
     peptides = pd.read_csv('./assets/peptides.csv')
@@ -381,7 +381,7 @@ def expand_isotopes(peptide, charge_states=[2, 3]):
     formula=''.join(['{}{}'.format(x, y) for x, y in mass.Composition(peptide['sequence']).items()])
     cluster = IsoSpecPy.IsoThreshold(formula=formula, threshold=0.005, absolute=True)
     mz0 = cluster.np_masses()
-    int0 = cluster.np_probs()    
+    int0 = cluster.np_probs()
     mz = np.concatenate([get_ions(mz0, z) for z in charge_states])
     ic = np.concatenate([int0 * peptide['{}+'.format(z)] for z in charge_states])
     charge = np.concatenate([np.repeat(z, mz0.shape[0]) for z in charge_states])
@@ -540,7 +540,7 @@ def get_boxcar_spectra(ion_data, distribution, agc_target, max_it, nBoxes, nScan
                 [[mz0, intensity0],
                  [mz1, intensity1],
                  ....
-                 [mzN, intensityN]]        
+                 [mzN, intensityN]]
         2. required scan time in milliseconds
         3. acquired number of ions
         4. set of observed peptide sequences
@@ -583,7 +583,7 @@ def get_boxcar_spectra(ion_data, distribution, agc_target, max_it, nBoxes, nScan
         BCscans.append((mzdata[dyn_range_filter, :], scan_time*1000, agc,
                         peptides, max_int, min_int))
     
-    return np.array(BCscans)
+    return BCscans
 
 def get_MS_counts(scan_method, acc_time, resolution, ms2resolution,
                   ms2IT, LC_time, parallel=False, **kwargs):

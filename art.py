@@ -105,7 +105,7 @@ def tabletodf(data):
     if data['type'] == 'Table':
         for child in data['props']['children']:
             if child['type'] == 'Thead':
-                headers = getContent(child['props']['children'])
+                headers = getContent(child['props']['children'][0])
             elif child['type'] == 'Tbody':
                 data = getRows(child)
                 
