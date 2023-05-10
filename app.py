@@ -145,6 +145,7 @@ def block_MS1_html():
                                 max=len(params.agc_list)-1,
                                 value=2,
                                 marks={i: '{:.0e}'.format(agc) for i, agc in enumerate(params.agc_list)},
+                                step=1
                                 )
                              ],
                              style=small_panel_style),
