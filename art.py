@@ -19,24 +19,24 @@ def get_zoom(relayout_data, min_x, max_x, min_y, max_y):
     '''
     x_range = []
     y_range = []
-    
+
     if 'xaxis.range[0]' in relayout_data.keys():
         x_range = [ relayout_data['xaxis.range[0]'],
                     relayout_data['xaxis.range[1]'] ]
     else:
         x_range = [min_x, max_x]
-        
+
     if 'yaxis.range[0]' in (relayout_data.keys()):
             y_range= [ relayout_data['yaxis.range[0]'],
                        relayout_data['yaxis.range[1]'] ]
     else:
         y_range = [min_y, max_y]
-        
+
     return x_range, y_range
 
 def make_table(real_ats, real_agcs, labels, resolution):
     '''
-    Create a table with acquisition parameters 
+    Create a table with acquisition parameters
 
     Parameters
     ----------
@@ -90,17 +90,17 @@ def tabletodf(data):
         for child in row['props']['children']:
             if child['type'] == 'Td' or child['type'] == 'Th':
                 content.append(child['props']['children'])
-        
+
         return content
-    
+
     def getRows(data):
         rows = []
         for child in data['props']['children']:
             if child['type'] == 'Tr':
                 rows.append(getContent(child))
-        
+
         return rows
-    
+
     #function body
     if data['type'] == 'Table':
         for child in data['props']['children']:
@@ -108,11 +108,11 @@ def tabletodf(data):
                 headers = getContent(child['props']['children'][0])
             elif child['type'] == 'Tbody':
                 data = getRows(child)
-                
+
         return pd.DataFrame(data, columns=headers)
     else:
         raise Exception("Not a Table")
-    
+
 def lightening_color(rgb_color):
     '''
     Lighten the color tone
@@ -133,14 +133,14 @@ def lightening_color(rgb_color):
     r, g, b = [int(i) / 255 for i in rgb_color[4:-1].split(',')]
     hsv_color = list(rgb_to_hsv(r,g,b))
     hsv_color[1] *= 0.5 #desaturate 50%
-    
+
     if hsv_color[1] == 0: # gray tones (magic stuff)
-        hsv_color[2] = min(1.0, hsv_color[2] * 1.7) 
+        hsv_color[2] = min(1.0, hsv_color[2] * 1.7)
     else:
         hsv_color[2] = min(1.0, hsv_color[2] * 1.2)
-        
+
     r, g, b = [int(i * 255) for i in hsv_to_rgb(*hsv_color)]
-    
+
     return 'rgb({}, {}, {})'.format(r, g, b)
 
 def get_colors(n_scans):
@@ -159,8 +159,8 @@ def get_colors(n_scans):
 
     '''
     colors = ['rgb(171, 226, 251)', qualitative.Dark2[-1], qualitative.D3[0]]
-    
-    #colors forBoxCar plots  
+
+    #colors forBoxCar plots
     c = qualitative.D3[1:3] + qualitative.Antique
     additional =  c * (n_scans // len(c)) + c [:n_scans % len(c)] #cycling palette
     colors += additional
@@ -194,8 +194,8 @@ def get_dynrange_trace(row):
                       y=row['y'],
                       line={'width': 7, 'color':row['color']},
                       mode='lines+text',
-                      text=['{:.2f}'.format(np.log10(row['x'][0] / row['x'][1])), row['text']],        
-                      textposition=['middle right', 'middle left']) 
+                      text=['{:.2f}'.format(np.log10(row['x'][0] / row['x'][1])), row['text']],
+                      textposition=['middle right', 'middle left'])
 
 def get_dynrange_layout(dr_df):
     '''
@@ -212,7 +212,7 @@ def get_dynrange_layout(dr_df):
                      xaxis={'title': 'Abundance',
                             'type': 'log',
                             'exponentformat': 'power',
-                            'range': [np.log10(dr_df.at['Peptide','x'][1]) - 2, 
+                            'range': [np.log10(dr_df.at['Peptide','x'][1]) - 2,
                                       np.log10(dr_df.at['Peptide','x'][0]) + 1] },
                      yaxis={'visible': False,
                             'range': [-1, len(dr_df)] },
@@ -242,7 +242,7 @@ def get_obsPep_trace(observed_peptides, observed_color, missing_color):
                    text=str(observed_peptides),
                    textposition='inside',
                    marker_color=observed_color),
-            
+
             go.Bar(x=[0],
                    y=[100 - observed_peptides],
                    width=1,
@@ -288,7 +288,7 @@ def get_range(theta_range, step=1):
     step = -1 * step if theta_range[1] < theta_range[0] else step
     theta = np.arange(theta_range[0], theta_range[1], step)
     return np.append(theta, theta_range[1])
-    
+
 def get_cycle_grid():
     '''
     Circular grid of cycle time plot with annotations
@@ -300,7 +300,7 @@ def get_cycle_grid():
                                    'color': '#cccccc'},
                              showlegend=False,
                              hoverinfo='skip'),
-        
+
              go.Scatterpolar(r=[0.57, 0.77, 0.97],
                              theta=[0] * 3,
                              mode='text',
@@ -325,13 +325,13 @@ def get_cycle_texts(cycletime, topN, ms1_scan_text, ms2_scan_text):
     ms2_scan_text : string
         Text with MS2 scan information.
     '''
-    
+
     #calculte the location of text elements
     theta1 = 130
     theta2 = 136
     r1 = 1.05
     r2 = r1 * math.sin(theta1 * math.pi / 180) / math.sin(theta2 * math.pi / 180)
-    
+
     text_trace = go.Scatterpolar(r=[0.07, 0.07, r1, r2],
                                  theta=[0, 180, theta1, theta2],
                                  mode='text',
@@ -343,7 +343,7 @@ def get_cycle_texts(cycletime, topN, ms1_scan_text, ms2_scan_text):
                                  textposition=['middle center'] * 2 + ['bottom right'] * 2,
                                  hoverinfo='skip')
     return text_trace
-    
+
 def get_cycle_trace(row):
     '''
     Single trace in a circular plot
@@ -379,7 +379,7 @@ def get_cycle_layout():
 def get_ppp_trace(tX, tY, tC, sX, sY, sC, peptide):
     '''
     Data traces for points-per-peak plot
-    
+
     Parameters
     ----------
     tX : `np.array`
@@ -394,26 +394,28 @@ def get_ppp_trace(tX, tY, tC, sX, sY, sC, peptide):
         observed trace, y-array
     sC : string
         observed trace, color
-    peptide : `pd.Series`
-        `ion_data` element for the most abundant peak in all mass traces
+    peptide : string
+        space separated (sequence, mz, z)
     '''
-    texts = [peptide['sequence'],
-             'm/z {:.2f} {}+'.format(peptide['mz'], peptide['z'])]
-    
+    sequence, mz, z = peptide.split()
+
+    texts = [sequence,
+             'm/z {} {}+'.format(mz, z)]
+
     return [go.Scatter(x=tX, #theoretical points
                        y=tY,
                        mode='lines',
                        name='Theoretical',
                        fill='tozeroy',
                        line={'color': tC}),
-            
+
             go.Scatter(x=sX, #sampling points
                        y=sY,
                        mode='lines+markers',
                        name='Observed',
                        fill='tozeroy',
                        line={'color': sC}),
-            
+
             go.Scatter(x=[19.5, 19.5], #peptide info
                        y=[0.64, 0.58],
                        mode='text',
@@ -421,7 +423,7 @@ def get_ppp_trace(tX, tY, tC, sX, sY, sC, peptide):
                        text=texts,
                        textposition='bottom left',
                        textfont={'size': 14}),
-                       
+
             go.Scatter(x=[19.5], #points per peak info
                        y=[0.75],
                        mode='text',

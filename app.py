@@ -59,7 +59,7 @@ def table_dynRange_html():
                         ],
                         id='i-observed-peptides',
                         style={'height': '210px', 'padding-top': '30px'}),
-                
+
                 tooltips.text_tooltip(tooltips.info_table, 'table-header'),
                 tooltips.text_tooltip(tooltips.info_table, 'i-table'),
                 tooltips.text_tooltip(tooltips.dynamic_range, 'dynamic-range-header'),
@@ -88,7 +88,7 @@ def block_global_html():
                                     ],
                             value='lognormal'),
                             style=small_panel_style),
-    
+
                     html.H6('Total Ion Current (charges/sec)', id='ion-current-header'),
                     html.Img(id='i-ion-current', src=i_src, style=info_style),
                     html.Div(dcc.Slider(
@@ -99,7 +99,7 @@ def block_global_html():
                                 marks={i: '{:1.0e}'.format(v) for i, v in enumerate(params.TIC)},
                                 step=1),
                             style=small_panel_style),
-    
+
                     html.H6('Acquisition Method', id='acquisition-meth-header'),
                     html.Img(id='i-acquisition-meth', src=i_src, style=info_style),
                     html.Div(dcc.RadioItems(
@@ -110,7 +110,7 @@ def block_global_html():
                                     ],
                             value='ms1'),
                             style=small_panel_style),
-                    
+
                     tooltips.text_tooltip(tooltips.peptide_distribution, 'peptide-distr-header'),
                     tooltips.text_tooltip(tooltips.peptide_distribution, 'i-peptide-distr'),
                     tooltips.text_tooltip(tooltips.ion_current, 'ion-current-header'),
@@ -158,7 +158,7 @@ def block_MS1_html():
                         ],
                         style=small_panel_style
                         ),
-                    
+
                     tooltips.text_tooltip(tooltips.resolution, 'MS1-resolution-header'),
                     tooltips.text_tooltip(tooltips.resolution, 'i-ms1-res'),
                     tooltips.text_tooltip(tooltips.AGC, 'MS1-AGC-header'),
@@ -193,7 +193,7 @@ def block_MS2_html():
                             ],
                             style=small_panel_style),
 
-                    dcc.RadioItems(id='topN-topSpeed-choice', 
+                    dcc.RadioItems(id='topN-topSpeed-choice',
                                    options=[
                                            {'label': 'TopN', 'value': 'topN'},
                                            {'label': 'TopSpeed', 'value': 'topSpeed'}
@@ -209,7 +209,7 @@ def block_MS2_html():
                                          marks={i: '{}'.format(i) for i in range(0, 41, 5)},
                                          tooltip={'placement': 'bottom'})],
                              style=small_panel_style),
-                    
+
                     dcc.Checklist(id='paral-checklist',
                                   options=[{'label': 'Parallelization', 'value': 'on'},],
                                   value=['on'],
@@ -251,7 +251,7 @@ def cycle_time_html():
                             html.Img(id='i-cycle-time', src=i_src, style=info_style),
                             dcc.Graph(id='cycle-time-graph')
                             ]),
-                        
+
                             tooltips.text_tooltip(tooltips.cycle_time, 'cycle-time-header'),
                             tooltips.text_tooltip(tooltips.cycle_time, 'i-cycle-time')
                     ],
@@ -277,10 +277,10 @@ app.layout = html.Div([
                         'transform': 'rotate(-10deg) skewY(4deg)'}),
         tooltips.logo_tooltip()
              ], style={'display': 'flex', 'padding-bottom': '1rem'}),
-    
+
     #upper part - info table, dynamic range plot, observed peptides
     table_dynRange_html(),
-    
+
     #simulated mass spectrum and points-pep-peak graph
     html.Div([
             dcc.Graph(id='main-graph', style=main_graph_style),
@@ -288,11 +288,12 @@ app.layout = html.Div([
                     html.H6('Peptide Elution Profile', id='ppp-header'),
                     html.Img(id='i-ppp-graph', src=i_src, style=info_style),
                     dcc.Graph(id='ppp-graph', config={'displayModeBar': False}),
-                    
+
                     tooltips.text_tooltip(tooltips.ppp, 'i-ppp-graph'),
                     tooltips.text_tooltip(tooltips.ppp, 'ppp-header')
-                    ], style=ppp_figure_style)
-           
+                    ], style=ppp_figure_style),
+                    html.P('', id='ppp-sequence', hidden=True)
+
             ], style=big_panel_style),
 
     #model parameters switches
@@ -316,7 +317,7 @@ app.layout = html.Div([
         html.Img(src='/assets/sdu_logo.png',
                  style={'height': '30px'}),
              ], style={'textAlign': 'center'}),
-                 
+
     html.Div([
         html.P('Department of Biochemistry and Molecular Biology, University of Southern Denmark'),
         html.P(['Do you have any questions and suggestions about HUMOS? Contact us via ',
@@ -324,9 +325,9 @@ app.layout = html.Div([
 			   u' write to vgor (\u0430t) bmb.sdu.dk or juliabubis (\u0430t) gmail.com'
                ])
             ], style={'textAlign': 'center'}),
-    
+
         ], style={'margin': '25px'}
-        
+
     ) #end layout
 ### End main window ###
 
@@ -336,29 +337,29 @@ def update_figure(selected_resolution, selected_agc, distribution, mit_clicked,
     '''
     Update of the main graph, dynamic range graph and information table
     '''
-    
+
     boxCar = (method == 'bc')
     resolution = params.resolutions_list[selected_resolution]
     agc = params.agc_list[selected_agc]
     ionFlux = params.TIC[ionFlux]
 
     mechanics.scale_ion_currents(ion_data, ionFlux) #apply TIC value
-    
+
     centroid_spectrum, real_st, real_agc, peptides, max_int, min_int = \
                mechanics.get_full_spectrum(ion_data, distribution, agc, max_it)
-    
+
     #DataFrame with dynamic range information
-    dr_df = [pd.DataFrame({'text':['Peptide'], 
+    dr_df = [pd.DataFrame({'text':['Peptide'],
                            'x': [[ion_data['ic_' + distribution].max(),
                                   ion_data['ic_' + distribution].min()]],
                            'color': colors[1]})]
-    
+
     #Check if MS1 spectrum was empty
     if max_int > 0 and min_int > 0:
         dr_df.append(pd.DataFrame({'text': 'MS1',
                                    'x': [[max_int, min_int]],
                                    'color': colors[2]}))
-    
+
     real_agcs = [real_agc]
     real_sts = [real_st]
     main_spectrum = mechanics.get_profile_spectrum(centroid_spectrum, resolution)
@@ -373,19 +374,19 @@ def update_figure(selected_resolution, selected_agc, distribution, mit_clicked,
                                     max(main_spectrum[0]) + 0.5,
                                     0,
                                     max(main_spectrum[1]) * 1.01)
-    
+
     main_traces = [go.Scatter(x=main_spectrum[0],
                               y=main_spectrum[1],
                               name='MS1 spectrum')]
-    
+
     #process BoxCar spectra
     labels_bc = []
     if boxCar:
         bc_spectra = mechanics.get_boxcar_spectra(ion_data, distribution,
                                                   agc, max_it, params.nBoxes, params.nScans)
-        
+
         labels_bc = ['BoxCar scan {}'.format(i) for i in range(1, params.nScans + 1)]
-        
+
         dr_df.append(pd.DataFrame({'text': labels_bc,
                                    'x':[element[4:6] for element in bc_spectra],
                                    'color':colors[3:]}))
@@ -395,7 +396,7 @@ def update_figure(selected_resolution, selected_agc, distribution, mit_clicked,
             main_traces.append(go.Scatter(x=bc_spectrum[0],
                                           y=bc_spectrum[1],
                                           name=bc_label))
-            
+
             real_agcs.append(bc_spectra[bc_index][2])
             real_sts.append(bc_spectra[bc_index][1])
             peptides.update(bc_spectra[bc_index][3])
@@ -403,56 +404,73 @@ def update_figure(selected_resolution, selected_agc, distribution, mit_clicked,
             #check if BoxCar spectrum was empty
             if bc_spectra[bc_index][4] > 0:
                 max_int = max(max_int, bc_spectra[bc_index][4])
-            
+
             if bc_spectra[bc_index][5] > 0:
                 min_int = min(min_int, bc_spectra[bc_index][5])
 
     dr_df.append(pd.DataFrame({'text': 'Spectrum',
                                'x': [[max_int, min_int]],
                                'color': colors[0]}))
-    
+
+    #Detect highest peak in all spectra
+    maxMz = 0
+    maxInt = 0
+    for trace in main_traces:
+        maxI = np.argmax(trace['y'])
+        if trace['y'][maxI] > maxInt:
+            maxInt = trace['y'][maxI]
+            maxMz = trace['x'][maxI]
+
+    if maxInt > 0: #non-empty spectrum
+        topPeptide = ion_data.loc[(ion_data['mz'] - maxMz).abs().idxmin(), :]
+        topPeptide = '{} {:.2f} {}'.format(topPeptide['sequence'], topPeptide['mz'],
+                                       topPeptide['z'])
+    else:
+        topPeptide = ''
+
     observed_peptides = np.round(100 * len(peptides) / len(ion_data["sequence"].unique()), 1)
-    
+
     #information table
     table = art.make_table(real_sts, real_agcs, ['MS1'] + labels_bc, resolution)
-    
+
     #finalize dynamic range DataFrame
     dr_df = pd.concat(dr_df)
     dr_df['y'] = [[i, i] for i in range(0, len(dr_df))]
     dr_df.index = dr_df['text']
-    
+
     return [dbc.Table.from_dataframe(table),
             {'data': main_traces, 'layout': art.get_main_layout(x_range, y_range)},
             {'data': dr_df.apply(art.get_dynrange_trace, axis=1).tolist(),
              'layout': art.get_dynrange_layout(dr_df)},
             {'data': art.get_obsPep_trace(observed_peptides, colors[0], colors[1]),
-             'layout': art.get_obsPep_layout()}]
-            
+             'layout': art.get_obsPep_layout()},
+            topPeptide]
+
 def update_ms_counts(topN, method, data, selected_resolution, ms2_resolution,
-                     parallel, mit_clicked, main_graph, mit_ms2, top_mode):
+                     parallel, mit_clicked, topPeptide, mit_ms2, top_mode):
     '''
     Update counts of MS spectra, cycle time graph and ponts-per-peak plot
     '''
-    
+
     boxCar = (method == 'bc')
     parallel = True if len(parallel) > 0 else False #value is a list of selected options
     ms2_resolution = params.resolutions_list[ms2_resolution]
     resolution = params.resolutions_list[selected_resolution]
-    
+
     if data == None:
        return None #void return, before table data is ready
 
     #parse infromation table
     data = art.tabletodf(data)
     data = data.iloc[:, 1:].apply(pd.to_numeric)
-    
+
     #cycletime calculation paramters
     ccParam = {'resolution' : resolution,
                'ms2resolution': ms2_resolution,
                'ms2IT': mit_ms2,
                'LC_time': params.LC_time,
                'parallel': parallel}
-    
+
     #translate topN and topSpeed
     if top_mode == 'topN':
         ccParam['topN'] = topN
@@ -469,26 +487,26 @@ def update_ms_counts(topN, method, data, selected_resolution, ms2_resolution,
 
     #perform calculation
     cycletime, topN, ms1_scan_n, ms2_scan_n, queues = mechanics.get_MS_counts(**ccParam)
-    
+
     ms1_scan_text = 'MS1 Scans in {} minutes: {}'.format(params.LC_time, ms1_scan_n)
     ms2_scan_text = 'MS2 Scans in {} minutes: {}'.format(params.LC_time, ms2_scan_n)
-    
+
     #preparing data for cycle plot
     #Add all data for accumulation traces;
     #labels are hovering above blocks, names are used in the legend
     ia_labels = ['Accumulation ' + i for i in list(data.columns) + ['MS2 ' + str(j) for j in range(1, topN + 1)]]
     ia_names = ['Accumulation ' + i for i in list(data.columns) + ['MS2'] * topN]
-    
+
     #Add MS1 and BoxCar scans to OT traces
-    ot_labels = ['Acquisition ' + i for i in list(data.columns)] 
+    ot_labels = ['Acquisition ' + i for i in list(data.columns)]
     ot_names = ot_labels[:]
-    
+
     #Converting linear coordinates to circular
     theta_start = queues['IS'][:, 0] / cycletime * 360
     theta_end = queues['IS'][:, 1] / cycletime * 360
     theta_start = np.concatenate((theta_start, queues['OT'][:, 0] / cycletime * 360))
     theta_end = np.concatenate((theta_end, queues['OT'][:, 1] / cycletime * 360))
-    
+
     if queues['IT'].shape[0] > 0: #IT was used
         it_labels = ['Acquisition MS2 ' + str(i) for i in range(1, topN + 1)]
         it_names = ['Acquisition MS2'] * topN
@@ -499,10 +517,10 @@ def update_ms_counts(topN, method, data, selected_resolution, ms2_resolution,
         it_names = []
         ot_labels += ['Acquisition MS2 ' + str(i) for i in range(1, topN + 1)]
         ot_names += ['Acquisition MS2'] * topN
-    
+
     #colors of traces
     main_colors = colors[2: 2 + len(data.columns)] + [qualitative.Dark2[-1]] * topN
-    
+
     #select information to be shown in the legend
     #show names for MS1 and BoxCar (data.columns) and one label for MS2 (if there any MS2)
     #repeat twice, first for accumulation traces, second for acquisition traces
@@ -526,71 +544,61 @@ def update_ms_counts(topN, method, data, selected_resolution, ms2_resolution,
                             })
 
     cycle_df['theta'] = cycle_df.loc[:, ['start', 'end']].apply(art.get_range, axis=1)
-    
+
     #collecting traces
     cycle_traces = art.get_cycle_grid()
     cycle_traces += cycle_df.apply(art.get_cycle_trace, axis=1).tolist()
     cycle_traces.append(art.get_cycle_texts(cycletime, topN, ms1_scan_text, ms2_scan_text))
-    
+
     ##Points per peak plot
     ppp_data = [] #default data is empty
-    
-    #Detect highest peak in all spectra
-    maxMz = 0
-    maxInt = 0
-    for trace in main_graph['data']:
-        maxI = np.argmax(trace['y'])
-        if trace['y'][maxI] > maxInt:
-            maxInt = trace['y'][maxI]
-            maxMz = trace['x'][maxI]
-    
-    if maxInt > 0: #non-empty spectrum
-        topPeptide = ion_data.loc[(ion_data['mz'] - maxMz).abs().idxmin(), :]
-        
+
+
+    if topPeptide != '': #non-empty spectrum
         #parameters of LC peak
         center = 6
         width = 4
         top = 1
-        
+
         #theoretical LC peak
         tRT = np.linspace(0, 20, 125)
         tProfile = mechanics.get_LC_profile(center, top, width, tRT)
-        
-        #scale cycle time according to LC_time from parameters and convert it 
+
+        #scale cycle time according to LC_time from parameters and convert it
         #to seconds
         _cycletime = cycletime * 60 / params.LC_time / 1000
-        
+
         #sampling LC peak
         sRT = np.arange(-_cycletime/2, 20, _cycletime)
         sRT = np.append(sRT, sRT[-1] + _cycletime) #last point
         sProfile = mechanics.get_LC_profile(center, top, width, sRT)
-    
+
         ppp_data = art.get_ppp_trace(tRT, tProfile, colors[1],#theoretical
                                      sRT, sProfile, colors[0],#sampling
                                      topPeptide)
-    
+
     return  [{'data': cycle_traces, 'layout': art.get_cycle_layout()},
              {'data': ppp_data, 'layout': art.get_ppp_layout()}]
-                      
+
 def update_resolution_graph(selected_resolution):
     '''
     Update resolution graph
     '''
     #ion trap has resolution ~1000 (0.1 Th) at 100
     resolution = 1000 if selected_resolution == 0 else params.resolutions_list[selected_resolution]
-    
+
     resolution_spectrum = mechanics.get_profile_spectrum(tmt_spectrum, resolution, points=51)
     resolution_traces = [go.Scatter(x=resolution_spectrum[0],
                                     y=resolution_spectrum[1],
                                     name=' '.join(['R = ', str(resolution)])),
-        
+
                          go.Scatter(x=[tmt_spectrum[0,0], tmt_spectrum[0,0]],
                                     y=[0, tmt_spectrum[0,1]],
                                     text='TMT 127N',
                                     name='',
                                     mode='lines',
                                     line={'color': qualitative.Dark2[5]}),
-                                    
+
                          go.Scatter(x=[tmt_spectrum[1,0], tmt_spectrum[1,0]],
                                     y=[0, tmt_spectrum[1,1]],
                                     text='TMT 127C',
@@ -631,7 +639,8 @@ app.callback(
     [Output('table', 'children'),
      Output('main-graph', 'figure'),
      Output('dynamic-range-bar','figure'),
-     Output('observed-peptides', 'figure')],
+     Output('observed-peptides', 'figure'),
+     Output('ppp-sequence', 'children')],
     [Input('resolution-slider', 'value'),
      Input('AGC-slider', 'value'),
      Input('distribution', 'value'),
@@ -651,7 +660,7 @@ app.callback(
      Input('resolution-ms2-slider', 'value'),
      Input('paral-checklist', 'value'),
      Input('it-ms2-button','n_clicks')],
-    [State('main-graph', 'figure'),
+    [State('ppp-sequence', 'children'),
      State('mit-ms2-box', 'value'),
      State('topN-topSpeed-choice', 'value')])(update_ms_counts)
 
