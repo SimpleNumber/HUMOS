@@ -56,7 +56,7 @@ def make_table(real_ats, real_agcs, labels, resolution):
 
     '''
     real_sts = [max(acc_time, params.transients[resolution]) for acc_time in real_ats]
-    df = pd.DataFrame([real_ats, real_agcs, real_sts], index = ["AT", "AGC", "ST"])
+    df = pd.DataFrame([real_ats, real_agcs, real_sts], index = ["AT", "AGC", "ST"], dtype='object')
     df.loc['ST', :] = df.loc['ST', :].map('{:.2f}'.format)
     df.loc['AT', :] = df.loc['AT', :].map('{:.2f}'.format)
     df.loc['AGC', :] = df.loc['AGC', :].map('{:.1e}'.format)
@@ -285,9 +285,9 @@ def get_range(theta_range, step=1):
         range points.
 
     '''
-    step = -1 * step if theta_range[1] < theta_range[0] else step
-    theta = np.arange(theta_range[0], theta_range[1], step)
-    return np.append(theta, theta_range[1])
+    step = -1 * step if theta_range.iloc[1] < theta_range.iloc[0] else step
+    theta = np.arange(theta_range.iloc[0], theta_range.iloc[1], step)
+    return np.append(theta, theta_range.iloc[1])
 
 def get_cycle_grid():
     '''
